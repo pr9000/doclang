@@ -22,6 +22,10 @@ The ISO standard for doctags has as a goal to tackle the following problems
 	9. ability to add meta-data and summaries
 3. Be efficient in token representation for LLM 
 
+### Grammar
+
+The link to an initial grammar can be found here: [link](https://github.ibm.com/DeepSearch/SmolDocling_RL/tree/main/src/sqlreinforce/ANTLR)
+
 ### Semantic information
 
 The [current semantic labels](https://github.com/docling-project/docling-core/blob/bbe6243833c7b360344d1293686ff279afafb555/docling_core/types/doc/labels.py#L7) are:
