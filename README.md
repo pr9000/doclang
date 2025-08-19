@@ -1,4 +1,4 @@
-# doctags-iso-standard
+# Doctags ISO-standard
 
 This repo keeps all the documentation for the ISO standardization of doctags.
 
@@ -12,7 +12,10 @@ The ISO standard for doctags has as a goal to tackle the following problems
 	2. content with formatting (bold, italic, etc) and text-direction
 	3. location and pagination [optional] with 
 	4. chart content (chart-type, table representation, )
-	5. code (code-language)
+	5. math and code (code-language)
+		1. inline code/math
+		2. external code snippets
+		3. external equations 	
 	6. complex nesting (captions, footnotes, lists)
 	7. complex breaks (across columns, pages, ...) for text, tables etc
 	8. internal referencing  
