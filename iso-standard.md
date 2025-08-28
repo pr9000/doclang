@@ -12,21 +12,20 @@ The proliferation of digital documents across diverse formats (PDF, HTML, Word, 
 
 DocTags addresses these challenges by providing a minimalist, unambiguous markup format that:
 - Preserves complete document structure and semantics
-- Maintains spatial and layout information
-- Supports complex document elements including tables, formulas, code, and charts
-- Enables lossless round-trip conversion between formats
-- Optimizes for both human readability and machine processing
+- Maintains spatial and layout information (if appropriate)
+- Supports complex document elements including tables, formulas, code, nested lists, and charts
+- Enables lossless round-trip conversion between formats regarding content
 
-This standard builds upon research in document understanding and the practical implementation of the Optimized Table Structure Language (OTSL), extending these concepts to encompass complete document representation.
+This standard builds upon research in document understanding and is intended to represent the content of a document as accurate as possible but ignores visual representation.
 
-## 1 Scope
+## Scope of DocTags
 
 This International Standard specifies:
 - The syntax and semantics of the DocTags markup language
 - Rules for encoding document structure, content, and metadata
 - Mechanisms for representing spatial layout and pagination
 - Methods for preserving formatting and text direction
-- Specifications for complex document elements (tables, charts, formulas, code)
+- Specifications for complex document elements (tables, charts, formulas, code, form)
 - Requirements for conforming implementations
 
 This standard is applicable to:
@@ -36,60 +35,47 @@ This standard is applicable to:
 - Digital archival systems
 - Accessibility tools for document content
 
-## 2 Normative References
 
-The following documents are referred to in the text in such a way that some or all of their content constitutes requirements of this document.
+## DocTags Structure
 
-- ISO 8601, Date and time format
-- ISO 639, Language codes
-- ISO 3166, Country codes
-- ISO/IEC 10646, Universal Coded Character Set (UCS)
-- RFC 3986, Uniform Resource Identifier (URI): Generic Syntax
-- W3C XML 1.0 (Fifth Edition)
+### Comparison to XML
 
-## 3 Terms and Definitions
+- Doctags is a simplified and constrained XML
+- Doctags has a finite number of tags
+- Doctags does not have attributes
+- Doctags is a character based 
 
-For the purposes of this document, the following terms and definitions apply.
+The material in this section is based on the XML Specification (verbatim from Wikipedia). This is not an exhaustive list of all the constructs that appear in XML; it provides an introduction to the key constructs.
 
-### 3.1 document
-structured collection of content elements organized hierarchically with semantic, spatial, and formatting information
+**Character**
 
-### 3.2 token
-atomic unit of the DocTags format, enclosed in angle brackets and following XML syntax
+An XML document is a string of characters. Every legal Unicode character (except Null) may appear in an (1.1) XML document (while some are discouraged).
 
-### 3.3 element
-logical unit of document content identified by semantic tags
+**Processor and application**
 
-### 3.4 bounding box
-rectangular region defining the spatial extent of an element on a page
+The processor analyzes the markup and passes structured information to an application. The specification places requirements on what an XML processor must do and not do, but the application is outside its scope. The processor (as the specification calls it) is often referred to colloquially as an XML parser.
 
-### 3.5 OTSL (Optimized Table Structure Language)
-specialized subset of DocTags for representing table structures
+**Markup and content**
 
-### 3.6 location resolution
-granularity of the coordinate grid used for spatial positioning (default: 512)
+The characters making up an XML document are divided into markup and content, which may be distinguished by the application of simple syntactic rules. Generally, strings that constitute markup either begin with the character < and end with a >, or they begin with the character & and end with a ;. Strings of characters that are not markup are content. However, in a CDATA section, the delimiters <![CDATA[ and ]]> are classified as markup, while the text between them is classified as content. In addition, whitespace before and after the outermost element is classified as markup.
 
-## 4 Conformance
+**Tag**
 
-A conforming DocTags document shall:
-- Use well-formed XML syntax
-- Include required document wrapper tags
-- Follow the token vocabulary specified in this standard
-- Adhere to nesting and syntax rules
-- Validate against the DocTags schema
+A tag is a markup construct that begins with < and ends with >. There are three types of tag:
 
-A conforming DocTags processor shall:
-- Parse valid DocTags documents without error
-- Preserve semantic and structural information
-- Handle optional elements gracefully
-- Support multiple location resolutions
-- Report syntax violations clearly
+- start-tag, such as <text>;
+- end-tag, such as </text>;
+- empty-element tag, such as <page_break/>.
 
-## 5 DocTags Structure
+There is a finite set of allowed tags in doctags, which will depend on the version. A few type of tags are allowed to have a (specific) pattern. 
 
-### 5.1 Document Organization
+**Element**
 
-Every DocTags document SHALL be wrapped in a root `<doctag>` element:
+An element is a logical document component that either begins with a start-tag and ends with a matching end-tag or consists only of an empty-element tag. The characters between the start-tag and end-tag, if any, are the element's content, and may contain markup, including other elements, which are called child elements. An example is <greeting>Hello, world!</greeting>. Another is <line-break />.
+
+### Document definition, meta data and versioning
+
+Every DocTags document shall be wrapped in a root `<doctag>` element:
 
 ```xml
 <doctag>
@@ -97,19 +83,28 @@ Every DocTags document SHALL be wrapped in a root `<doctag>` element:
 </doctag>
 ```
 
-The root element MAY include a version specification:
+The root element MAY include a version specification. Version numbering shall follow Semantic Versioning (MAJOR.MINOR.PATCH). The root element pattern `<doctag_vN>` encodes the MAJOR version number. When no version is specified, the default is v1.0.0.
 
 ```xml
-<doctag_v1>
+<doctag_v1.0.0>
   <!-- document content -->
-</doctag_v1>
+</doctag_v1.0.0>
 ```
 
-Version numbering follows the pattern `<doctag_vN>` where N is the major version number. When no version is specified, version 1 is assumed.
+Meta data can be included with the document using the `<meta>` tags. Meta data is optional and the data content in the meta data needs to be in strict xml format. If meta data is included, we expect also a `<body>` tag, otherwise it is optional,
 
-### 5.2 Page Structure
+```xml
+<doctag_v1.0.0>
+  <meta>
+    ...
+  </meta>
+  <body>
+  <!-- document content -->
+  </body>
+</doctag_v1.0.0>
+```
 
-Documents MAY be divided into pages using the self-closing `<page_break/>` token:
+Documents may be divided into pages. For this, we will use the self-closing `<page_break/>` token:
 
 ```xml
 <doctag>
@@ -119,36 +114,280 @@ Documents MAY be divided into pages using the self-closing `<page_break/>` token
 </doctag>
 ```
 
-### 5.3 Hierarchical Structure
+
+### Token Vocabulary
+
+There are generally speaking XX types of tokens, namely the **semantic**, **location**, **group**, **structural** (eg for tables), **content**, **formatting** and the **connection** tokens.
+
+The interpretation of these tokens is as follows,
+
+#### **semantic token**
+
+These tokens represent the intent of the content in the document. In the context of documents with pagination, sementic items typically have associated locations (see `Hierarchical structure`). The list of allowed semantic tokens are, 
+
+| Token | Description |
+|-------|-------------|
+| `<caption>` | Caption for floating elements | 
+| `<footnote>` | Footnote content | 
+| `<formula>` | Mathematical expression | 
+| `<code>` | code expression | 
+| `<title>` | Document or section title | 
+| `<section_header_level_N>` | Section header (N starts with 1) | 
+| `<text>` | Generic text content | 
+| `<list_item>` | Generic text content | 
+| `<page_header>` | Page header content | 
+| `<page_footer>` | Page footer content | 
+| `<checkbox_selected>` | Generic text content | 
+| `<checkbox_unselected>` | Generic text content | 
+| `<document_index>` | Generic text content | 
+| `<table>` | Generic text content | 
+| `<form>` | Generic text content | 
+| `<picture>` | Generic text content | 
+
+
+#### **group token**
+
+These tokens allow the semantic content to be grouped. The list of allowed grouping tokens are, 
+
+| Token | Description |
+|-------|-------------|
+| `<group>`| Unspecified grouping |
+| `<inline>`| Inline text grouping |
+| `<ordered_list>`| Unspecified grouping |
+| `<unordered_list>`| Unspecified grouping |
+| `<section_level_N>` | Section header (N starts with 1) |
+| `<chapter>` | Section header (N starts with 1) |
+
+#### **location token**
+
+These tokens represent a numerical value and follow the format `<loc_ll_rr>` where `rr` represents the dimension in integer resolution (default is 512). `ll` represents the integer location in the page (and thus `0<=ll<=r`). 
+
+there are a few conventions:
+- A coordinate (x, y) is defined as 2 location tokens with the convention of `<loc_x0><loc_y0>` and `x0<=x1` and `y0<=y1`.
+- Bounding boxes are represented as 4 location tokens with the convention of `<loc_x0><loc_y0><loc_x1><loc_y1>` and `x0<=x1` and `y0<=y1`. 
+
+#### **structural token**
+
+The structural tokens are used to represent complex structural elements such as tables, forms, key-value regions etc.
+
+##### **structural tokens for tables**: OTSL
+
+| Token | Description |
+|-------|-------------|
+| `<otsl>` | start of table data structure |
+| `<dcel/>`| Diagonal cell with content (text follows token) |
+| `<fcel/>`| Cell with content (text follows token) |
+| `<ecel/>`| Empty cell |
+| `<lcel/>`| Left-looking cell (horizontal span) |
+| `<ucel/>`| Up-looking cell (vertical span) |
+| `<xcel/>`| Cross cell (2D span) |
+| `<nl/>`| New line (row separator) |
+| `<ched/>`| Column header (text follows token) |
+| `<rhed/>`| Row header (text follows token) |
+| `<srow/>`| Section row (text follows token) |
+
+##### **structural tokens for forms**: 
+
+| Token | Description |
+|-------|-------------|
+| `<key>`| Cell with content (text follows token) |
+| `<implicit_key>`| Cell with content (text follows token) |
+| `<value>`| Empty cell |
+
+#### **content token**
+
+The content tokens specify what is contained in the items and how the content can flow across page breaks. Whatever is contained within the `<content> ... </content>` tokens can be taken "as is". This allows for the mentioning of key-items without breaking the XML structure.
+
+| Token | Description |
+|-------|-------------|
+| `<content>`| content of the item |
+| `<list_marker>`| content of marker (eg `i`, `ii`, etc) for list items, section-headers, etc |
+| `<class>`| associate a class (eg language, chart type, coding-language, etc) |
+| `<continue_N>`| Indicate that the content continues in another document item (N starts with 1) |
+
+#### **formatting token**
+
+| Token | Description |
+|-------|-------------|
+| `<bold>`| ... |
+| `<italic>`| ... |
+| `<strike_through>`| ... |
+| `<sup>`| ... |
+| `<sub>`| ... |
+
+
+### Grammar
 
 DocTags supports hierarchical nesting of elements to represent document structure:
+
 - Block-level elements (paragraphs, sections, tables)
-- Inline elements (formatting, references)
+- Inline elements (formatting)
 - Container elements (lists, groups)
 
-## 6 Token Vocabulary
+#### Hierarchical structure
 
-### 6.1 Semantic Elements
+Doctags natively supports hierarchical structure. This grouping is done either via grouping elements or through semantic elements. Semantic elements that are of type `text` (see table in **semantic token** section) can only have `<inline>` group as a child. Semantic elements that are of type `structure` can have caption, footnotes and other structural data fields (eg `otsl`). A very simple example of a document is,
 
-#### 6.1.1 Text Elements
+```xml
+<doctag>
+  <title><!-- title content --></title>
+  <section_header_1>Abstract</section_header_1> 
+  <text>Lorem ipsum ... </text>
+  <section_header_1>Introduction</section_header_1> 
+  ...
+</doctag>
+```
 
-| Token | Description | Closing Required |
-|-------|-------------|------------------|
-| `<title>` | Document or section title | Yes |
-| `<section_header_level_N>` | Section header (N = 1-6) | Yes |
-| `<text>` | Generic text content | Yes |
-| `<paragraph>` | Paragraph block | Yes |
-| `<caption>` | Caption for floating elements | Yes |
-| `<footnote>` | Footnote content | Yes |
-| `<reference>` | Bibliographic reference | Yes |
+Note that the above has no explicit grouping. If you want it explicit, one can introduce groupings,
+
+```xml
+<doctag>
+  <title><!-- title content --></title>
+  <section_level_1>
+    <section_header_1>Abstract</section_header_1> 
+    <text>Lorem ipsum ... </text>
+  </section_level_1>
+  <section_level_1>
+    <section_header_1>Introduction</section_header_1> 
+    ...
+    <page_break/>
+    ...
+    <!-- page 2 content -->
+  </section_level_1>
+</doctag>
+```
+
+Note that the page breaks can be introduced in certain groupings (more on that in the section `page-breaks and continuation`)
+
+There are a few strict patterns with semantic and grouping elements. These are for lists, tables, forms, code and pictures,
+
+##### **lists**
+
+We have two types of lists, namely the ordered and unordered list. Each child of a list-group can only be of type `<list_item>`, ` <checkbox_selected>` or `<checkbox_unselected>`. The opposite is also true, the parent of `<list_item>`, ` <checkbox_selected>` or `<checkbox_unselected>` can only be a `<ordered_list>` or `<unordered_list>`. List items can specify their custom markers using the `<marker>` token.
+
+```xml
+<ordered_list>
+  <list_item>First item</list_item>
+  ...
+  <unordered_list>
+    <list_item><marker>*</marker>Bullet item</list_item>
+    ...
+  </unordered_list>
+  <unordered_list>
+    <checkbox_selected>Bullet item</checkbox_selected>
+    ...
+  </unordered_list>
+</ordered_list>
+```
+
+##### **tables**
+
+Tables have at most three direct children, namely `<caption>`, `<otsl>` and `<footnote>`. Each of them can of course of location tokens, unless we have list-groups 
+
+```xml
+<table>
+  <caption><loc_100/><loc_20/><loc_400/><loc_30/>
+  Table 1. Lorem Ipsum ...
+  </caption>
+  <otsl><loc_100/><loc_50/><loc_400/><loc_150/>
+    <fcel/>Header 1<fcel/>Header 2<nl/>
+    <fcel/>Data 1<fcel/>Data 2<nl/>
+  </otsl>
+  <footnote>
+    <unordered_list>
+      <list_item><loc_100/><loc_160/><loc_400/><loc_180/><marker>*</marker>Lorem Ipsum ...</list_item>
+      ...
+    </unordered_list>
+  </footnote>
+</table>
+```
+
+We use the OTSL vocabulary within `<otsl>` tags to capture the structure of the table. All OTSL cell tokens are self-closing and follow a strict pattern with the following rules,
+
+1. every atomic row (== row-span 1) has the exact same number of of otsl tokens and ends with `<nl/>`
+2. every <lcell/>, <ucell/> or <xcell/> is needs to point to an <fcell/>, <ecell/>, <rhed/> or <ched/>. 
+3. the content of every otsl cell can be of arbirary hierachical structure
+
+##### **pictures**
+
+Pictures are similar to table.
+
+```xml
+<picture>
+  <caption><loc_100/><loc_20/><loc_400/><loc_30/>
+  Picture 1. Lorem Ipsum ...
+  </caption>
+  <picture><loc_100/><loc_50/><loc_400/><loc_150/></picture>
+  <footnote>
+    <unordered_list>
+      <list_item><loc_100/><loc_160/><loc_400/><loc_180/><marker>*</marker>Lorem Ipsum ...</list_item>
+      ...
+    </unordered_list>
+  </footnote>
+</picture>
+```
+
+You can have grouped pictures,
+
+```xml
+<picture>
+  <caption><loc_100/><loc_20/><loc_400/><loc_30/>
+  Picture 1. Lorem Ipsum ...
+  </caption>
+  <group>
+    <picture><loc_100/><loc_50/><loc_200/><loc_150/></picture>
+    <picture><loc_300/><loc_50/><loc_400/><loc_150/></picture>
+    ...
+  </group>
+</picture>
+```
+
+You can also have OTSL data associated with pictures (eg for charts)
+
+```xml
+<table>
+  <caption><loc_100/><loc_20/><loc_400/><loc_30/>
+  Picture 1. Lorem Ipsum ...
+  </caption>
+  <picture><loc_100/><loc_50/><loc_400/><loc_150/>
+    <class>bar_chart</class>
+    <otsl>
+      <fcel/>year<fcel/>revenue<nl/>
+      <fcel/>2020<fcel/>1.543M<nl/>
+    </otsl>
+  </picture>
+</table>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #### 6.1.2 Structural Elements
 
 | Token | Description | Closing Required |
 |-------|-------------|------------------|
-| `<document_index>` | Table of contents or index | Yes |
-| `<page_header>` | Page header content | Yes |
-| `<page_footer>` | Page footer content | Yes |
+| `<document_index>` | Table of contents or index | 
 | `<page_break/>` | Page boundary marker | No (self-closing) |
 
 ### 6.2 List Elements
@@ -180,15 +419,6 @@ Tables use the OTSL vocabulary within `<otsl>` tags. All OTSL cell tokens are se
 ```
 
 OTSL tokens (all self-closing):
-- `<fcel/>`: Cell with content (text follows token)
-- `<ecel/>`: Empty cell
-- `<lcel/>`: Left-looking cell (horizontal span)
-- `<ucel/>`: Up-looking cell (vertical span)
-- `<xcel/>`: Cross cell (2D span)
-- `<nl/>`: New line (row separator)
-- `<ched/>`: Column header (text follows token)
-- `<rhed/>`: Row header (text follows token)
-- `<srow/>`: Section row (text follows token)
 
 #### 6.3.2 Pictures and Charts
 
@@ -441,7 +671,7 @@ Implementations SHALL:
 ### 13.1 Version Compatibility
 
 Processors SHALL:
-1. Assume version 1 when no version is specified
+1. Assume v1.0.0 when no version is specified
 2. Process version 1 documents using version 1 rules
 3. Report unsupported version numbers clearly
 4. Maintain backward compatibility for minor versions
@@ -452,6 +682,7 @@ For compatibility with pre-standard implementations:
 1. Processors MAY accept non-self-closing location tokens with warnings
 2. Processors MAY accept non-self-closing OTSL tokens with warnings
 3. Processors SHALL generate only standard-compliant output
+
 
 ## Annex A (Normative) - Complete Token Reference
 
