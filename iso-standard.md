@@ -8,7 +8,7 @@ This International Standard specifies the DocTags format, a universal markup lan
 
 ## Introduction
 
-The proliferation of digital documents across diverse formats (PDF, HTML, Word, etc.) has created significant challenges in document processing, conversion, and understanding. Current approaches often result in loss of semantic information, structural relationships, or spatial context during document conversion.
+The proliferation of digital documents across diverse formats (PDF, HTML, Word, etc.) has created significant challenges in document processing, conversion, and understanding. Current popular approach of format unification rely on conversion to various text-based formats with markup features such as Markdown, LaTeX, etc. This often result in loss of semantic information, structural relationships, or spatial context during such document conversion.
 
 DocTags addresses these challenges by providing a minimalist, unambiguous markup format that:
 - Preserves complete document structure and semantics
@@ -184,21 +184,24 @@ there are a few conventions:
 
 The structural tokens are used to represent complex structural elements such as tables, forms, key-value regions etc.
 
-##### **structural tokens for tables**: OTSL
+##### **Structural tokens for tables**: OTSL
+
+Tabular structure and semantics in doctags represented by optimized table-structure language (OTSL) tokens, that are interleaved by table cell content.
+OTSL representation has minimized vocabulary and specific rules. The benefits of describing tables with OTSL in reducing number of structural tokens (5 in OTSL vs 28+ in HTML) and shorten structural sequence length to half of HTML representation on average. Additionally to tokens that define the structure: columns, rows, merged cells; we introduced tokens that describe semantics: column-headers, row-headers, section row separators, as well as corner-headers
 
 | Token | Description |
 |-------|-------------|
 | `<otsl>` | start of table data structure |
-| `<dcel/>`| Diagonal cell with content (text follows token) |
-| `<fcel/>`| Cell with content (text follows token) |
-| `<ecel/>`| Empty cell |
-| `<lcel/>`| Left-looking cell (horizontal span) |
-| `<ucel/>`| Up-looking cell (vertical span) |
-| `<xcel/>`| Cross cell (2D span) |
-| `<nl/>`| New line (row separator) |
-| `<ched/>`| Column header (text follows token) |
-| `<rhed/>`| Row header (text follows token) |
-| `<srow/>`| Section row (text follows token) |
+| `<fcel/>`| Structure: cell with content (text follows token) |
+| `<ecel/>`| Structure: empty cell |
+| `<lcel/>`| Structure: left-looking cell (horizontal span) |
+| `<ucel/>`| Structure: up-looking cell (vertical span) |
+| `<xcel/>`| Structure: cross cell (2D span) |
+| `<nl/>`| Structure: new line (row separator) |
+| `<ched/>`| Semantic: column header (text follows token) |
+| `<rhed/>`| Semantic: row header (text follows token) |
+| `<corn/>`| Semantic: corner header (text follows token) |
+| `<srow/>`| Semantic: section row (text follows token) |
 
 ##### **structural tokens for forms**: 
 
