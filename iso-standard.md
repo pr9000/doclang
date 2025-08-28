@@ -433,17 +433,30 @@ You can also have OTSL data associated with pictures (eg for charts)
 
 ### Inline structure
 
-The inline structure allows the document to have complex representation of text. Children of the inline group can not have location tokens. 
+The inline structure allows the document to have complex representation of text. Children of the inline group are not required to have location tokens. 
 
 ```xml
 <inline><loc_50/><loc_100/><loc_200/><loc_130/>
   <text>The superconducting transition temperature</text>
   <formula>T^c</formula>
   ...
-<inline>
+</inline>
 ```
 
-For any complex notation in text items (including section-headers, list-items, text items, captions etc)
+For any complex notation in text items (including section-headers, list-items, text items, captions etc). Notice that inline groups can also be used to capture flowing text across columns, eg
+
+```xml
+<inline>
+  <inline><loc_50/><loc_100/><loc_100/><loc_130/>
+    <text>The superconducting transition temperature</text>
+    <formula>T^c</formula>
+    ...
+  </inline>
+    <inline><loc_110/><loc_100/><loc_200/><loc_130/>
+    ...
+  </inline>
+</inline>  
+```
 
 ### Formatting
 
@@ -453,26 +466,44 @@ Formatting may be preserved through nested tags or escape sequences:
 - Superscript, subscript
 - Text direction markers
 
+### Page breaking
 
-### Page breaking content
+Page breaks are complex components that interupt the flow of a document. They can interupt paragraphs, tables, lists, etc. In general, we follow two rules,
 
-#### Text breaking
+1. If we have content that jumps over one (or more) page-breaks, we append the `<continue_N>` token to the item. The same token is then used in the beginning of the item that continues the content.
+2. For the follow up content of the page, we follow a reading order and close all open tokens before the `<page_break/>` token is introduced.
 
-#### List breaking
+An easy example is below,
+
+```xml
+<doctags>
+  <text>...<continue_1/></text>
+  <page_break/>
+  <text><continue_1/>...</text>
+</doctags>
+```
+
+A more complicated example is below in which we break the content of a list-item,
+
+```xml
+<doctags>
+  <ordered_list>
+    <list_item>First item</list_item>
+    <list_item>Second <continue_1/></list_item>
+    ...
+  </ordered_list>
+  <page_footer>...</page_footer>
+  <page_break/>
+  <ordered_list>
+    <list_item><continue_1/> Item</list_item>
+  </ordered_list>
+  ...
+</doctags>
+```
 
 #### Table breaking
 
-Content spanning multiple columns or pages SHALL maintain continuity markers:
-
-```xml
-<text continued="true">First part of text...</text>
-<column_break/>
-<text continuation="true">...continuation of text</text>
-```
-
-
-
-
+For tables that are broken across pages, we need to introduce two differnt tokens, namely the `<continue_col_N/>` and `<continue_row_N/>`.
 
 
 ## Implementation Requirements
