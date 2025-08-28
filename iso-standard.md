@@ -412,15 +412,38 @@ You can also have OTSL data associated with pictures (eg for charts)
 ### Form
 
 ```xml
-<key_value_region>
-  <loc_50/><loc_100/><loc_450/><loc_200/>
-  <key_1><loc_50/><loc_100/><loc_200/><loc_130/>Name:<link_2/></key_1>
-  <value_2><loc_210/><loc_100/><loc_450/><loc_130/>John Doe</value_2>
-</key_value_region>
+<form><loc_50/><loc_100/><loc_450/><loc_200/>
+  <unordered_list>
+    <list_item><loc_50/><loc_100/><loc_200/><loc_130/>
+      <key>Name:</key>
+      <value>John</value>
+    </list_item>
+    <list_item><loc_50/><loc_100/><loc_200/><loc_130/>
+      <blind_key></blind_key>
+      <value>19 Dec 2020</value>
+    </list_item>
+    <checked_box>Male
+    </checked_box>
+    <unchecked_box>Female
+    </unchecked_box>
+    ...
+  </unordered_list>
+</form>
 ```
 
 ### Inline structure
 
+The inline structure allows the document to have complex representation of text. Children of the inline group can not have location tokens. 
+
+```xml
+<inline><loc_50/><loc_100/><loc_200/><loc_130/>
+  <text>The superconducting transition temperature</text>
+  <formula>T^c</formula>
+  ...
+<inline>
+```
+
+For any complex notation in text items (including section-headers, list-items, text items, captions etc)
 
 ### Formatting
 
