@@ -366,6 +366,8 @@ In case of page-layout information, the coordinates are provided at the semantic
 </form>
 ```
 
+Extensive list of examples: [link](./form-examples/form-examples.md)
+
 ### Inline structure
 
 The inline structure allows the document to have complex representation of text. Children of the inline group are not required to have location tokens. 
