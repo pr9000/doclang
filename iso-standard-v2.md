@@ -145,19 +145,38 @@ If no resolution is provided, coordinates are normalized to the document's defau
 
 #### Table Structure (OTSL - Optimized Table Structure Language)
 
-Tables use OTSL vocabulary within `<otsl>` elements:
+Tabular structure and header semantics in DocTags represented by optimized table-structure language (OTSL) tokens.
+Each new cell OTSL token (`<fcel/>` with it's semantic variants) is interleaved by the sequence of approptiate table cell content tokens (texts, lists, etc.).
+OTSL representation has minimized vocabulary and specific rules.
+The benefits of describing tables with OTSL in reducing number of structural tokens (5 essential in OTSL vs 28+ in HTML) and shorten structural sequence length to half of HTML representation on average.
+Structural tokens define the structure of a table: columns, rows, cells, merged cells. Each cell can then be specified with semantic vatiant token if it's: column-header, row-header, section row separator, or corner-header.
+Semantic variants of `<fcel/>` token are following the same rules as `<fcel/>` token, and used just to distinguish a function of a table cell: type of header or separator.
 
-| Token | Description |
-|-------|-------------|
-| `<otsl>` | Table structure container |
-| `<fcel/>` | Cell with content (text follows) |
-| `<ecel/>` | Empty cell |
-| `<lcel/>` | Left-spanning cell reference |
-| `<ucel/>` | Up-spanning cell reference |
-| `<xcel/>` | Cross-spanning cell reference |
-| `<nl/>` | New row |
-| `<ched/>` | Column header |
-| `<rhed/>` | Row header |
+| Token | Semantic variant | Description |
+|-------|---------|-------------|
+| `<otsl>` | - | start of table data structure |
+| `<fcel/>`| `<fcel/>` | a new cell |
+|          | `<ched/>`| a new column header cell |
+|          | `<rhed/>`| a new row header cell |
+|          | `<corn/>`| a new corner header cell |
+|          | `<srow/>`| a new section row cell |
+| `<lcel/>`| - | left-looking cell, merging with the left neighbor cell to create a horizontal span |
+| `<ucel/>`| - | up-looking cell, merging structure with the upper neighbor cell to create a vertical span |
+| `<xcel/>`| - | cross cell to merge with both left and upper neighbor cells, for 2D spans |
+| `<nl/>`| - | new line, table row separator |
+
+OTSL enables easy error detection and correction during sequence generation, making it LLM friendly.
+A notable attribute of OTSL is that it has the capability of achieving lossless conversion to HTML.
+
+The OTSL representation follows these syntax rules:
+
+- Left-looking cell rule: The left neighbour of an `<lcel/>` must be either another `<lcel/>` or one of the variants of `<fcel/>`.
+- Up-looking cell rule: The upper neighbour of a `<ucel/>` must be either another `<ucel/>` or one of the variants of `<fcel/>`.
+- Cross cell rule: The left neighbour of an `<xcel/>` cell must be either another `<xcel/>` or a `<ucel/>`, and the upper neighbour of an `<xcel/>` must be either another `<xcel/>` or an `<lcel/>`.
+- First row rule: Only `<lcel/>` and `<fcel/>`(with variants) are allowed in the first row.
+- First column rule: Only `<ucel/>` cells and `<fcel/>`(with variants) are allowed in the first column.
+- Rectangular rule: The table representation of structural OTSL tokens is always rectangular - all rows must have an equal number of OTSL tokens, terminated with `<nl/>` token.
+
 
 #### Form Structure
 
