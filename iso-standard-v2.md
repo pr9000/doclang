@@ -2,7 +2,7 @@
 
 ## Foreword
 
-This document was prepared by Peter Staar and (FILL IN!). This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, spatial, and formatting information.
+This document was prepared by Peter Staar, Maroun touma and (FILL IN!). This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, spatial, and formatting information.
 
 ## Introduction
 
@@ -215,6 +215,18 @@ For content spanning page breaks:
 | `<continue id="N"/>` | Content continues (N is unique identifier) |
 | `<continue_row id="N"/>` | Content continues row-wise for the table (N is unique identifier), only used in OTSL |
 | `<continue_col id="N"/>` | Content continues column-wise (N is unique identifier), only used in OTSL |
+
+### Attributes Tokens
+
+Documents can have attributes:
+
+| Token | Description |
+|-------|-------------|
+| `<language_identification id="N"/>` | Identify language such as english, german, french, spanish, japanese, etc. |
+| `<document_quality classifier="C" class="N" score="S"/>` | Content quality assessment using standard algorithms such as DCLM, gneissweb, etc. |
+| `<document_readability score="R"/>` | Indicates how easy a a document can be undertood by a general audiance |
+| `<general_topic topic="T"/>` | topic that the document is most likely to fall in such as Science and Technology, Legal, etc. |
+
 
 ## Grammar and Structure Rules
 
