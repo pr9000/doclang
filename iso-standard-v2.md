@@ -218,14 +218,14 @@ For content spanning page breaks:
 
 ### Attributes Tokens
 
-Documents can have attributed:
+Documents can have attributes:
 
 | Token | Description |
 |-------|-------------|
-| `<language_identification id="N"/>` | Identify language such as english, german, french, spanish, japanense, etc. |
+| `<language_identification id="N"/>` | Identify language such as english, german, french, spanish, japanese, etc. |
 | `<document_quality classifier="C" class="N" score="S"/>` | Content quality assessment using standard algorithms such as DCLM, gneissweb, etc. |
-| `<document_readability id="R"/>` | Indicates how easy a a document can be undertood by a general audiance |
-| `<general_topic id="T"/>` | topic that the document most likely to fall in such as Science and Technology, Legal, etc. |
+| `<document_readability score="R"/>` | Indicates how easy a a document can be undertood by a general audiance |
+| `<general_topic topic="T"/>` | topic that the document is most likely to fall in such as Science and Technology, Legal, etc. |
 
 
 ## Grammar and Structure Rules
