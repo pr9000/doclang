@@ -16,12 +16,16 @@ There are a few rules we should follow with inline groups,
 ![inline-00](./inline_00.png)
 
 ```xml
-<text>
-    <inline><loc value=x0/><loc value=y0/><loc value=x1/><loc valuey1/>
+<text><loc value=x0/><loc value=y0/><loc value=x1/><loc valuey1/>
+    <inline>
         <text>where τ<subscript>x,y,z</subscript> </text>
 	<text>are the Pauli matrices acting on Nambu space. We consider a circular-shaped boundary, the nor-</text>
     </inline>
-    <inline><loc value=x2/><loc value=y2/><loc value=x3/><loc value=y3/>
+    <continue id="1">
+</text>
+<text><loc value=x2/><loc value=y2/><loc value=x3/><loc value=y3/>
+    <continue id="1">
+    <inline>
         <text>mal direction of the boundary tangent for arbitrary angle θ is </text>
 	<formula>ˆx⊥ = (cos θ, sin θ)</formula>
 	<text>. Next, we assume an ansatz</text>
@@ -36,3 +40,11 @@ There are a few rules we should follow with inline groups,
     </inline>    
 </text>
 ```
+
+
+
+
+
+
+
+
