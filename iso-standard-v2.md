@@ -136,8 +136,8 @@ Special semantic tokens for list structures:
 
 Spatial information uses a set of location elements with value (and optional resolution) attributes of the format `<loc value="integer" resolution="integer">` with 0<=value<=resolution.
 
-- Single coordinate at (100, 200): `<loc value="100"/><loc v="200"/>`
-- Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<loc value="100"/><loc v="200"/>`<loc v="300"/>`<loc v="400"/>`
+- Single coordinate at (100, 200): `<loc value="100"/><loc value="200"/>`
+- Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<loc value="100"/><loc value="200"/>`<loc value="300"/>`<loc value="400"/>`
 
 If no resolution is provided, coordinates are normalized to the document's default resolution from the `metadata` (default: 512×512).
 
