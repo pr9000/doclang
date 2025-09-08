@@ -2,7 +2,7 @@
 
 ## Foreword
 
-This document was prepared by Peter Staar, Maroun touma and (FILL IN!). This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, spatial, and formatting information.
+This document was prepared by Peter Staar, Maroun touma, Panos Vagenas and (FILL IN!). This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, spatial, and formatting information.
 
 ## Introduction
 
@@ -136,8 +136,8 @@ Special semantic tokens for list structures:
 
 Spatial information uses a set of location elements with value (and optional resolution) attributes of the format `<loc value="integer" resolution="integer">` with 0<=value<=resolution.
 
-- Single coordinate at (100, 200): `<loc value="100"/><loc v="200"/>`
-- Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<loc value="100"/><loc v="200"/>`<loc v="300"/>`<loc v="400"/>`
+- Single coordinate at (100, 200): `<loc value="100"/><loc value="200"/>`
+- Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<loc value="100"/><loc value="200"/>`<loc value="300"/>`<loc value="400"/>`
 
 If no resolution is provided, coordinates are normalized to the document's default resolution from the `metadata` (default: 512×512).
 
@@ -212,7 +212,7 @@ For content spanning page breaks:
 
 | Token | Description |
 |-------|-------------|
-| `<continue id="N"/>` | Content continues (N is unique identifier) |
+| `<thread_N/>` | Content continues (N is unique identifier) |
 | `<continue_row id="N"/>` | Content continues row-wise for the table (N is unique identifier), only used in OTSL |
 | `<continue_col id="N"/>` | Content continues column-wise (N is unique identifier), only used in OTSL |
 
@@ -252,7 +252,7 @@ Documents can have attributes:
 
 #### Simple Document Structure
 
-In the simplest document example, document elements are in a flat list, 
+In the simplest document example, document elements are in a flat list,
 
 ```xml
 <doctag version="1.0.0">
@@ -271,16 +271,16 @@ The user is allowed to add sections or groups as he sees fit, but it is not a st
 ```xml
 <doctag version="1.0.0">
   <title>Research Paper Title</title>
-  
+
   <section level="1">
     <section_header level="1">Abstract</section_header>
     <text>This paper presents...</text>
   </section>
-  
+
   <section level="1">
     <section_header level="1">Introduction</section_header>
     <text>In recent years...</text>
-    
+
     <section level="2">
       <section_header level="2">Background</section_header>
       <text>Previous work has shown...</text>
@@ -297,7 +297,7 @@ In case of page-layout information, the coordinates are provided at the semantic
     <loc value="10"/><loc value="20"/><loc value="30"/><loc value="40"/>
     Research Paper Title
   </title>
-  
+
   <section level="1">
     <section_header level="1">
       <loc value="10"/><loc value="20"/><loc value="30"/><loc value="40"/>
@@ -308,11 +308,11 @@ In case of page-layout information, the coordinates are provided at the semantic
       This paper presents...
     </text>
   </section>
-  
+
   <section level="1">
     <section_header level="1">Introduction</section_header>
     <text>In recent years...</text>
-    
+
     <section level="2">
       <section_header level="2">Background</section_header>
       <text>Previous work has shown...</text>
@@ -382,7 +382,7 @@ Extensive list of examples: [link](./form-examples/form-examples.md)
 
 ### Inline structure
 
-The inline structure allows the document to have complex representation of text. Children of the inline group are not required to have location tokens. 
+The inline structure allows the document to have complex representation of text. Children of the inline group are not required to have location tokens.
 
 ```xml
 <inline><loc_50/><loc_100/><loc_200/><loc_130/>
@@ -404,7 +404,7 @@ For any complex notation in text items (including section-headers, list-items, t
   <inline><loc_110/><loc_100/><loc_200/><loc_130/>
     ...
   </inline>
-</text>  
+</text>
 ```
 
 ### Formatting
@@ -427,9 +427,10 @@ An easy example is below,
 
 ```xml
 <doctag>
-  <text>This paragraph spans across <continue id="1"/></text>
+  <text><thread_1/>This paragraph spans across</text>
+  <caption>Some caption</caption>
   <page_break/>
-  <text><continue id="1"/>multiple pages.</text>
+  <text><thread_1/>multiple pages.</text>
 </doctag>
 ```
 
@@ -438,20 +439,25 @@ Often, we have more complicated page breaks, in which a (nested) list is split a
 A more complicated example is shown below in which we break the content of a list-item,
 
 ```xml
-<doctags>
+<doctag>
   <ordered_list>
+    <thread_1/>
     <list_item>First item</list_item>
-    <list_item>Second <continue id="1"/></list_item>
+    <list_item><thread_2/>Second </list_item>
     ...
   </ordered_list>
   <page_footer>...</page_footer>
   <page_break/>
   <ordered_list>
-    <list_item><continue id="1"/> Item</list_item>
+    <thread_1/>
+    <list_item><thread_2/>item</list_item>
   </ordered_list>
   ...
-</doctags>
+</doctag>
 ```
+
+Above, `thread_1` captures the fact that the list itself is split, while `thread_2` captures the fact that a particular
+list item is split.
 
 For tables that are broken across pages, we need to introduce two differnt tokens, namely the `<continue_col id=.../>` and `<continue_row id="..."/>`. Same principle applies, if the OTSL starts/ends with any of these tokens, we know the the tables needs to be merged.
 
@@ -521,7 +527,7 @@ The `<class>` token supports extensible vocabularies:
 ## Bibliography
 
 1. SmolDocling: An ultra-compact vision-language model for end-to-end multi-modal document conversion
-2. Optimized Table Tokenization for Table Structure Recognition  
+2. Optimized Table Tokenization for Table Structure Recognition
 3. DoclingDocument API Specification
 4. W3C XML 1.0 Specification (Fifth Edition)
 5. W3C HTML5 Specification
@@ -538,7 +544,7 @@ DocTags Tokens
 │   └── <doctag version="X.Y.Z">
 ├── Semantic Tokens
 │   ├── Text Type: title, section_header, text, caption, footnote, page_header, page_footer
-│   ├── Structural Type: table, picture, form, formula, code, document_index  
+│   ├── Structural Type: table, picture, form, formula, code, document_index
 │   └── List Type: list_item, checkbox_selected, checkbox_unselected
 ├── Grouping Tokens
 │   ├── section, group, inline
@@ -551,7 +557,7 @@ DocTags Tokens
 │   └── Form: key, implicit_key, value
 ├── Content Tokens
 │   ├── content, marker, class
-│   └── <continue id="N"/>
+│   └── <thread_N/>
 ├── Formatting Tokens
 │   └── bold, italic, strikethrough, superscript, subscript, rtl
 └── Special Elements
