@@ -212,7 +212,7 @@ For content spanning page breaks:
 
 | Token | Description |
 |-------|-------------|
-| `<continue id="N"/>` | Content continues (N is unique identifier) |
+| `<thread_N/>` | Content continues (N is unique identifier) |
 | `<continue_row id="N"/>` | Content continues row-wise for the table (N is unique identifier), only used in OTSL |
 | `<continue_col id="N"/>` | Content continues column-wise (N is unique identifier), only used in OTSL |
 
@@ -427,9 +427,10 @@ An easy example is below,
 
 ```xml
 <doctag>
-  <text>This paragraph spans across <continue id="1"/></text>
+  <text><thread_1/>This paragraph spans across</text>
+  <caption>Some caption</caption>
   <page_break/>
-  <text><continue id="1"/>multiple pages.</text>
+  <text><thread_1/>multiple pages.</text>
 </doctag>
 ```
 
@@ -438,20 +439,25 @@ Often, we have more complicated page breaks, in which a (nested) list is split a
 A more complicated example is shown below in which we break the content of a list-item,
 
 ```xml
-<doctags>
+<doctag>
   <ordered_list>
+    <thread_1/>
     <list_item>First item</list_item>
-    <list_item>Second <continue id="1"/></list_item>
+    <list_item><thread_2/>Second </list_item>
     ...
   </ordered_list>
   <page_footer>...</page_footer>
   <page_break/>
   <ordered_list>
-    <list_item><continue id="1"/> Item</list_item>
+    <thread_1/>
+    <list_item><thread_2/>item</list_item>
   </ordered_list>
   ...
-</doctags>
+</doctag>
 ```
+
+Above, `thread_1` captures the fact that the list itself is split, while `thread_2` captures the fact that a particular
+list item is split.
 
 For tables that are broken across pages, we need to introduce two differnt tokens, namely the `<continue_col id=.../>` and `<continue_row id="..."/>`. Same principle applies, if the OTSL starts/ends with any of these tokens, we know the the tables needs to be merged.
 
@@ -551,7 +557,7 @@ DocTags Tokens
 │   └── Form: key, implicit_key, value
 ├── Content Tokens
 │   ├── content, marker, class
-│   └── <continue id="N"/>
+│   └── <thread_N/>
 ├── Formatting Tokens
 │   └── bold, italic, strikethrough, superscript, subscript, rtl
 └── Special Elements
