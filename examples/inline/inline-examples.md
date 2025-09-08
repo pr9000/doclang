@@ -21,7 +21,8 @@ Top-level tags which belong to the same item should have the same continuation I
 
 ```xml
 <text loc_x0="10" loc_y0="20" loc_x1="30" loc_y1="40" continue_id="1">
-    where τ<subscript>x,y,z</subscript> are the Pauli matrices acting on Nambu space. We consider a circular-shaped boundary, the nor-
+    where τ<subscript>x,y,z</subscript> are the Pauli matrices acting
+    on Nambu space. We consider a circular-shaped boundary, the nor-
 </text>
 
 <caption loc_x0="15" loc_y0="25" loc_x1="35" loc_y1="45">
