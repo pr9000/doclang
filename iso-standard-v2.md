@@ -2,7 +2,7 @@
 
 ## Foreword
 
-This document was prepared by Peter Staar, Maroun touma and (FILL IN!). This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, spatial, and formatting information.
+This document was prepared by Peter Staar, Maroun touma, Panos Vagenas and (FILL IN!). This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, spatial, and formatting information.
 
 ## Introduction
 
@@ -252,7 +252,7 @@ Documents can have attributes:
 
 #### Simple Document Structure
 
-In the simplest document example, document elements are in a flat list, 
+In the simplest document example, document elements are in a flat list,
 
 ```xml
 <doctag version="1.0.0">
@@ -271,16 +271,16 @@ The user is allowed to add sections or groups as he sees fit, but it is not a st
 ```xml
 <doctag version="1.0.0">
   <title>Research Paper Title</title>
-  
+
   <section level="1">
     <section_header level="1">Abstract</section_header>
     <text>This paper presents...</text>
   </section>
-  
+
   <section level="1">
     <section_header level="1">Introduction</section_header>
     <text>In recent years...</text>
-    
+
     <section level="2">
       <section_header level="2">Background</section_header>
       <text>Previous work has shown...</text>
@@ -297,7 +297,7 @@ In case of page-layout information, the coordinates are provided at the semantic
     <loc value="10"/><loc value="20"/><loc value="30"/><loc value="40"/>
     Research Paper Title
   </title>
-  
+
   <section level="1">
     <section_header level="1">
       <loc value="10"/><loc value="20"/><loc value="30"/><loc value="40"/>
@@ -308,11 +308,11 @@ In case of page-layout information, the coordinates are provided at the semantic
       This paper presents...
     </text>
   </section>
-  
+
   <section level="1">
     <section_header level="1">Introduction</section_header>
     <text>In recent years...</text>
-    
+
     <section level="2">
       <section_header level="2">Background</section_header>
       <text>Previous work has shown...</text>
@@ -382,7 +382,7 @@ Extensive list of examples: [link](./form-examples/form-examples.md)
 
 ### Inline structure
 
-The inline structure allows the document to have complex representation of text. Children of the inline group are not required to have location tokens. 
+The inline structure allows the document to have complex representation of text. Children of the inline group are not required to have location tokens.
 
 ```xml
 <inline><loc_50/><loc_100/><loc_200/><loc_130/>
@@ -404,7 +404,7 @@ For any complex notation in text items (including section-headers, list-items, t
   <inline><loc_110/><loc_100/><loc_200/><loc_130/>
     ...
   </inline>
-</text>  
+</text>
 ```
 
 ### Formatting
@@ -521,7 +521,7 @@ The `<class>` token supports extensible vocabularies:
 ## Bibliography
 
 1. SmolDocling: An ultra-compact vision-language model for end-to-end multi-modal document conversion
-2. Optimized Table Tokenization for Table Structure Recognition  
+2. Optimized Table Tokenization for Table Structure Recognition
 3. DoclingDocument API Specification
 4. W3C XML 1.0 Specification (Fifth Edition)
 5. W3C HTML5 Specification
@@ -538,7 +538,7 @@ DocTags Tokens
 │   └── <doctag version="X.Y.Z">
 ├── Semantic Tokens
 │   ├── Text Type: title, section_header, text, caption, footnote, page_header, page_footer
-│   ├── Structural Type: table, picture, form, formula, code, document_index  
+│   ├── Structural Type: table, picture, form, formula, code, document_index
 │   └── List Type: list_item, checkbox_selected, checkbox_unselected
 ├── Grouping Tokens
 │   ├── section, group, inline

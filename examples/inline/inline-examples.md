@@ -15,36 +15,31 @@ There are a few rules we should follow with inline groups,
 
 ![inline-00](./inline_00.png)
 
+Each block that has location information is a top-level tag of the corresponding label, e.g. "text".
+
+Top-level tags which belong to the same item should have the same continuation ID.
+
 ```xml
-<text><loc value=x0/><loc value=y0/><loc value=x1/><loc valuey1/>
-    <inline>
-        <text>where τ<subscript>x,y,z</subscript> </text>
-	<text>are the Pauli matrices acting on Nambu space. We consider a circular-shaped boundary, the nor-</text>
-    </inline>
-    <continue id="1">
+<text loc_x0="10" loc_y0="20" loc_x1="30" loc_y1="40" continue_id="1">
+    where τ<subscript>x,y,z</subscript> are the Pauli matrices acting on Nambu space. We consider a circular-shaped boundary, the nor-
 </text>
-<text><loc value=x2/><loc value=y2/><loc value=x3/><loc value=y3/>
-    <continue id="1">
-    <inline>
-        <text>mal direction of the boundary tangent for arbitrary angle θ is </text>
-	<formula>ˆx⊥ = (cos θ, sin θ)</formula>
-	<text>. Next, we assume an ansatz</text>
-        <text>for the edge state wave function at θ as </text>
+
+<caption loc_x0="15" loc_y0="25" loc_x1="35" loc_y1="45">
+    FIG. 3. The modules of the inner product of two MES spinors
+    <formula>...<formula/>
+    ...
+</caption>
+
+<text loc_x0="20" loc_y0="30" loc_x1="40" loc_y1="50" continue_id="1">
+    mal direction of the boundary tangent for arbitrary angle θ is
+    <formula>ˆx⊥ = (cos θ, sin θ)</formula>
+    . Next, we assume an ansatz for the edge state wave function at θ as
 	<formula>Ψu/l(x⊥) =eλx⊥ eik∥ x∥ ξu/l </formula>
-	<text>with </text>
+	with
 	<formula>k∥ = sin θkx − cos θky</formula>
-	<text>. Here, |ξu⟩ and |ξl⟩ represent the spinors ...  of the chiral MESs with </text>
+	Here, |ξu⟩ and |ξl⟩ represent the spinors ...  of the chiral MESs with
 	<formula>φu = 0</formula>
-	<text>and</text>
+    and
 	<formula>φl = φ:</formula>
-    </inline>    
 </text>
 ```
-
-
-
-
-
-
-
-
