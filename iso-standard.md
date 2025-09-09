@@ -104,9 +104,9 @@ Documents can have attributes in the `<metadata>`:
 
 ## Token Vocabulary
 
-DocTags defines seven categories of tokens: **formatting**, **semantic**, **spatial**, **grouping**, **structural**, **content**,  and **continuation** tokens.
+DocTags defines seven categories of tokens: **formatting**, **spatial**, **semantic**,  **grouping**, **structural**, **content**, and **continuation** tokens.
 
-### Formatting Tokens
+### String Formatting Tokens
 
 In every string, we can add (recursively) formatting tokens. These formatting tokens can only appear within a string, i.e. within the range of the formatting, only other formatting strings are allowed. 
 
@@ -114,14 +114,14 @@ In every string, we can add (recursively) formatting tokens. These formatting to
 |-------|-------------|
 | `<bold>` | Bold text |
 | `<italic>` | Italic text |
-| `<strikethrough>` | Struck-through text |
+| `<strikethrough>` | Strike-through text |
 | `<superscript>` | Superscript |
 | `<subscript>` | Subscript |
 | `<rtl>` | Right-to-left text direction |
-| `<inline_formula>` | inlined formula |
-| `<inline_code>` | inlined code |
-| `<br/>`| break line |
-| `<marker>`| identifies the text as a marker (eg for in section-header, list-item, etc) |
+| `<inline_formula>` | Inline formula |
+| `<inline_code>` | Inline code |
+| `<br/>`| Break line |
+
 
 ### Spatial Tokens
 
@@ -149,6 +149,8 @@ These tokens represent the semantic content of document. For each semantic block
 | `<form_item>` | Form item (with 1 key and 1 or more values as children) | 
 | `<form_header>` | Form item | 
 | `<form_text>` | Form text | 
+| `<key>` | key of the form item: can only be a child of `form_item` |
+| `<value>` | value of the form item: can only be a child of `form_item`  |
 | `<checkbox selected=true>` | Selected checkbox item | 
 | `<checkbox selected=false>` | Unselected checkbox item | 
 | `<otsl>` | Table structure | 
@@ -164,22 +166,18 @@ These tokens organize semantic content into logical structures. Groups can in no
 | Token | Description | Allowed Children |
 |-------|-------------|------------------|
 | `<section level="N">` | Document section (N ≥ 1) | semantic, grouping |
-| `<group>` | Generic grouping | semantic, grouping |
-| `<inline>` | Inline grouping (only for text elements)| semantic (text-type only) |
 | `<list ordered=true>` | Numbered list | list\_item, checkbox\_* |
 | `<list ordered=false>` | Bulleted list | list\_item, checkbox\_* |
-| `<table_group>` | | allows to add as children: `caption`, `footnote`, `otsl`| 
-| `<document_index_group>` | | allows to add as children: `caption`, `footnote`, `otsl` | 
-| `<form_group>` | | allows to add as children: `caption`, `footnote`, `form` |
-| `<formula_group>` | | allows to add as children: `caption`, `footnote`, `formula` |
-| `<code_group>` | | allows to add as children: `caption`, `footnote`, `code` |
-| `<picture_group>` | | allows to add as children: `caption`, `footnote`, `picture` |
+| `<group type="table">` | | allows to add as children: `caption`, `footnote`, `otsl`| 
+| `<group type="document_index">` | | allows to add as children: `caption`, `footnote`, `otsl` | 
+| `<group type="form">` | | allows to add as children: `caption`, `footnote`, `form` |
+| `<group type="formula">` | | allows to add as children: `caption`, `footnote`, `formula` |
+| `<group type="code">` | | allows to add as children: `caption`, `footnote`, `code` |
+| `<group type="picture">` | | allows to add as children: `caption`, `footnote`, `picture` |
 
 **footnote**: What we currently have as instantiations of `FloatingItem` (eg TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (eg the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and foornotes will have their own `ProvenanceItem`. 
 
-### Structural Tokens
-
-#### Table Structure (OTSL - Optimized Table Structure Language)
+### Optimized Table Structure Language (OTSL)
 
 Tabular structure and header semantics in DocTags represented by optimized table-structure language (OTSL) tokens.
 
@@ -216,25 +214,14 @@ The OTSL representation follows these syntax rules:
 - First column rule: Only `<ucel/>` cells and `<fcel/>`(with variants) are allowed in the first column.
 - Rectangular rule: The table representation of structural OTSL tokens is always rectangular - all rows must have an equal number of OTSL tokens, terminated with `<nl/>` token.
 
-
-#### Form Structure
-
-| Token | Description |
-|-------|-------------|
-| `<key>` | Form field label |
-| `<implicit_key>` | Implied field label |
-| `<value>` | Form field value |
-
 ### Content Tokens
 
 | Token | Description |
 |-------|-------------|
 | `<content>` | Explicit content wrapper: this wrapper is mostly optional but can be useful for the case os escaping. |
 | `<summary>` | This token allows to provide a short summary of the content. |
-| `<marker>` | List marker (e.g., "i", "ii", "•") |
 | `<class>` | Classification (language, chart type, etc.) |
-
-
+| `<marker>`| Marker (eg for in section-header, list-item, etc) |
 
 ### Continuation Tokens
 
@@ -247,30 +234,10 @@ For content spanning page breaks:
 | `<continue_col id="N"/>` | Content continues column-wise (N is unique identifier), only used in OTSL |
 
 
-
 ## Grammar and Structure Rules
 
-### Hierarchical Nesting Rules
 
-1. **Text-type semantic elements** (title, section_header, text, caption, etc.) may only contain:
-   - Content tokens
-   - Formatting tokens
-   - Inline grouping
-   - Other text-type semantic elements
-
-2. **Structural-type semantic elements** (table, picture, form, etc.) may contain:
-   - Caption, footnote
-   - Structural tokens
-   - Spatial tokens
-   - Content tokens
-
-3. **List structures** follow strict parent-child relationships:
-   - `<ordered_list>` and `<unordered_list>` may only contain list item tokens
-   - List item tokens may only appear within list groupings
-
-### Document Examples
-
-#### Simple Document Structure
+### Simple Document Structure
 
 In the simplest document example, document elements are in a flat list,
 
@@ -341,54 +308,52 @@ In case of page-layout information, the coordinates are provided only at the sem
 </doctag>
 ```
 
-#### Tables
+### Tables
 
 ```xml
-<table>
-  <caption>
+<table_group>
+  <caption><loc value=x0/>...<loc value=y1/>
     Table 1: Experimental Results
   </caption>
-  <otsl>
+  <otsl><loc value=x0/>...<loc value=y1/>
     <ched/>Method<ched/>Accuracy<nl/>
     <fcel/>Baseline<fcel/>0.85<nl/>
     <fcel/>Proposed<fcel/>0.92<nl/>
   </otsl>
-</table>
+</table_group>
 ```
 
-#### Lists
+### Lists
 
 ```xml
 <unordered_list>
-  <list_item>
+  <list_item><loc value=x0/>...<loc value=y1/>
     <marker>•</marker>
     First item with <bold>bold</bold> text
   </list_item>
-  <list_item>
+  <list_item><loc value=x0/>...<loc value=y1/>
     <marker>•</marker>
     Second item
   </list_item>
-  <checkbox_selected>Completed task</checkbox_selected>
-  <checkbox_unselected>Pending task</checkbox_unselected>
+  <checkbox selected=true><loc value=x0/>...<loc value=y1/>
+      Completed task
+  </checkbox>
+  <checkbox selected=false><loc value=x0/>...<loc value=y1/>
+      Pending task
+  </checkbox>
 </unordered_list>
 ```
 
 ### Forms
+
+Fundamentally, forms are complex list with special list-items. This is why we introduced several new semantic items in the token-space
 
 ```xml
 <form>
 </form>
 ```
 
-
-<details>
-<summary><strong>Example 0</strong></summary>
-
-<table>
-<tr>
-<td>
-
-<textarea readonly rows="16" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<details><summary><strong>Example 1</strong></summary><table><tr><td><textarea readonly rows="16" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
 <form>
     <form_item>
         <key>Firma:</key>
@@ -404,18 +369,171 @@ In case of page-layout information, the coordinates are provided only at the sem
         <value>Quartiarer Sand + Kies</value>
     </form_item>
 </form>
-</textarea>
-
-</td>
-<td>
-
+</textarea></td><td>
 <img src="examples/form/form_00.png" alt="form-00" width="100%">
+</td></tr></table></details>
 
-</td>
-</tr>
-</table>
+<details><summary><strong>Example 2</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<form>
+    <form_header>
+        <marker>14.</marker>
+        Transport Information
+    </form_header>
+    <form>
+        <form_header>
+            Land transport ... (Germany)
+        </form_header>
+        <form_item>
+            <key>GGVS/GGVE class:</key>
+            <value>8</value>
+        </form_item>
+        <form_item>
+            <key>ADR/RID class:</key>
+            <value>8</value>
+        </form_item>
+        ...
+    </form>
+    <form_item>
+        <key>River transport ADN/ADNR</key>
+        <value>not examined</value>
+    </form_item>
+    <form>
+        <form_header>
+            Sea transport IMDG
+        </form_header>
+        ...
+    </form>
+    ...
+    <form_text>
+        The transport ... considered.
+    </form_text>
+    <form_text>
+        THESE TRANSPORT ... PACK!
+    </form_text>
+</form>
+</textarea></td><td>
+<img src="examples/form/form_01.png" alt="form-00" width="100%">
+</td></tr></table></details>
 
-</details>
+<details><summary><strong>Example 3</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<form>
+    <form_item>
+        <key>Description</key>
+        <value>A.A. Cat</value>
+    </form_item>
+    <form_item>
+        <key>Quant.</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <key>Un</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <key>Measure</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <key>Price (in currency)</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <key>Un</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <key>Total</key>
+        <value></value>
+    </form_item>
+    <form_text></form_text>
+    <form>
+        <form_item>
+            <key>Delivery Cost</key>
+            <value></value>
+        </form_item>
+        <form_item>
+            <key>Maintenance</key>
+            <value></value>
+        </form_item>
+        ...
+    <form>
+    <form>
+        <form_item>
+            <key>Date and time of delivery:</key>
+            <value></value>
+        </form_item>
+        ...
+        <form_item>
+            <key>Guarantee</key>
+            <value></value>
+        </form_item>
+        <form_text>
+            Delivery Supplies ... Finance Department
+        </form_text>
+    </form>
+    ...
+</form>
+</textarea></td><td>
+<img src="examples/form/form_02.png" alt="form-00" width="100%">
+</td></tr></table></details>
+
+<details><summary><strong>Example 4</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<form>
+    <form_header>Information about you</form_header>
+    <form_item>
+        <key>
+            \*Family Name (Last Name)
+        </key>
+        <value>staar</value>
+    </form_item>
+    <form_item>
+        <key>\*Given Name (First Name)</key>
+        <value>peter</value>
+    </form_item>
+    <form_item>
+        <key>\*Middle Name (if applicable)</key>
+        <value>WJ</value>
+    </form_item>
+    <form_item>
+        <key>I am in the United States as a:</key>
+        <checkbox selected="false">Visitor</checkbox>
+        <checkbox selected="false">Student</checkbox>
+        <checkbox selected="false">Permanent Resident</checkbox>
+        <checkbox selected="false">Other (Specify)</checkbox>
+        <text></text>
+    <form_item>
+    <form_item>
+        <key>Country of Citizenship</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <key>\*Date of Birth</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <key>Alien Registration Number (A-Number) (if any)</key>
+        <value></value>
+    </form_item>
+    <form_header>Information About Your Address</form_header>
+    <text>\*Present Physical Address ()No Po Boxes</text>
+    <form_item>
+        <key>\*Street ... Name</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <key>Apt.</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <key>Ste.</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    ...
+
+</form>
+</textarea></td><td>
+<img src="examples/form/form_03.png" alt="form-00" width="100%">
+</td></tr></table></details>
 
 
 ### Cross-page structure
