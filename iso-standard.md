@@ -346,12 +346,32 @@ In case of page-layout information, the coordinates are provided only at the sem
 
 ### Forms
 
-Fundamentally, forms are complex list with special list-items. This is why we introduced several new semantic items in the token-space
+Fundamentally, forms are complex list with special list-items. This is why we introduced several new semantic items in the token-space,
+
+| Token | Description | 
+|-------|-------------|
+| `<form_item>` | Form item (with 1 key and 1 or more values as children) | 
+| `<form_header>` | Form item: this is specifically for headers in the form. | 
+| `<form_text>` | Form text: this is specifically for text-blocks in the form | 
+| `<key>` | key of the form item: can only be a child of `form_item` |
+| `<value>` | value of the form item: can only be a child of `form_item`  |
+| `<form>` | Form structure | 
+
+Notice that if we have captions or footnotes for the form, we will always start with the group of type form. Next, we can start with the form.
 
 ```xml
-<form>
-</form>
+<group type="form">
+   <form>
+     	... # (nested list of form, form_items, etc)
+   </form>
+</group>
 ```
+
+If no caption/footnotes are present, one can skip the group of type form. In order to represent the hierarchy, we use the concept of nested forms. The children of a form item are supposed to be on the same level and the form-headers will be in reading-order, i.e. the form-items following the form-header will belong to that form header (similarly to items following the section-headers).
+
+One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a child, but potentially one or more children of the type of `<value>` and `<checkbox>`
+
+#### Form Examples
 
 <details><summary><strong>Example 1</strong></summary><table><tr><td><textarea readonly rows="16" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
 <form>
