@@ -104,43 +104,24 @@ Documents can have attributes in the `<metadata>`:
 
 ## Token Vocabulary
 
-DocTags defines seven categories of tokens: **semantic**, **spatial**, **grouping**, **structural**, **content**, **formatting**, and **continuation** tokens.
+DocTags defines seven categories of tokens: **formatting**, **semantic**, **spatial**, **grouping**, **structural**, **content**,  and **continuation** tokens.
 
-### Semantic Tokens
+### Formatting Tokens
 
-These tokens represent the semantic intent of document content:
+In every string, we can add (recursively) formatting tokens. These formatting tokens can only appear within a string, i.e. within the range of the formatting, only other formatting strings are allowed. 
 
-| Token | Description | Content Type |
-|-------|-------------|--------------|
-| `<title>` | Document or section title | text |
-| `<section_header level="N">` | Section header (N ≥ 1) | text |
-| `<text>` | Generic text content | text |
-| `<caption>` | Caption for floating elements | text |
-| `<footnote>` | Footnote content | text |
-| `<page_header>` | Page header content | text |
-| `<page_footer>` | Page footer content | text |
-| `<list_item>` | List item | text |
-| `<checkbox selected=true>` | Selected checkbox item | text |
-| `<checkbox selected=false>` | Unselected checkbox item | text |
-| `<table>` | Table structure | structural |
-| `<document_index>` | Table of contents or index | structural |
-| `<formula>` | Mathematical expression | structural |
-| `<code>` | Code block | structural |
-| `<picture>` | Image or graphic element | structural |
-| `<form>` | Form structure | structural |
-
-### Grouping Tokens
-
-These tokens organize semantic content into logical structures:
-
-| Token | Description | Allowed Children |
-|-------|-------------|------------------|
-| `<section level="N">` | Document section (N ≥ 1) | semantic, grouping |
-| `<group>` | Generic grouping | semantic, grouping |
-| `<inline>` | Inline text grouping | semantic (text-type only) |
-| `<ordered_list>` | Numbered list | list\_item, checkbox_* |
-| `<unordered_list>` | Bulleted list | list\_item, checkbox_* |
-
+| Token | Description |
+|-------|-------------|
+| `<bold>` | Bold text |
+| `<italic>` | Italic text |
+| `<strikethrough>` | Struck-through text |
+| `<superscript>` | Superscript |
+| `<subscript>` | Subscript |
+| `<rtl>` | Right-to-left text direction |
+| `<inline_formula>` | inlined formula |
+| `<inline_code>` | inlined code |
+| `<br/>`| break line |
+| `<marker>`| identifies the text as a marker (eg for in section-header, list-item, etc) |
 
 ### Spatial Tokens
 
@@ -150,6 +131,51 @@ Spatial information uses a set of location elements with value (and optional res
 - Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<loc value="100"/><loc value="200"/><loc value="300"/><loc value="400"/>`
 
 If no resolution is provided, coordinates are normalized to the document's default resolution from the `metadata` (default: 512×512).
+
+### Semantic Tokens
+
+These tokens represent the semantic content of document. For each semantic block, it should be allowed to add bounding box information via the spatial tokens.   
+
+| Token | Description | 
+|-------|-------------|
+| `<title>` | Document or section title | 
+| `<section_header level="N">` | Section header (N ≥ 1) | 
+| `<text>` | Generic text content | 
+| `<caption>` | Caption for floating elements |
+| `<footnote>` | Footnote content |
+| `<page_header>` | Page header content |
+| `<page_footer>` | Page footer content |
+| `<list_item>` | List item |
+| `<form_item>` | Form item (with 1 key and 1 or more values as children) | 
+| `<form_header>` | Form item | 
+| `<form_text>` | Form text | 
+| `<checkbox selected=true>` | Selected checkbox item | 
+| `<checkbox selected=false>` | Unselected checkbox item | 
+| `<otsl>` | Table structure | 
+| `<formula>` | Mathematical expression | 
+| `<code>` | Code block | 
+| `<picture>` | Image or graphic element | 
+| `<form>` | Form structure | 
+
+### Grouping Tokens
+
+These tokens organize semantic content into logical structures. Groups can in not have any location tokens and are intended to create the semantic tree.
+
+| Token | Description | Allowed Children |
+|-------|-------------|------------------|
+| `<section level="N">` | Document section (N ≥ 1) | semantic, grouping |
+| `<group>` | Generic grouping | semantic, grouping |
+| `<inline>` | Inline grouping (only for text elements)| semantic (text-type only) |
+| `<list ordered=true>` | Numbered list | list\_item, checkbox\_* |
+| `<list ordered=false>` | Bulleted list | list\_item, checkbox\_* |
+| `<table_group>` | | allows to add as children: `caption`, `footnote`, `otsl`| 
+| `<document_index_group>` | | allows to add as children: `caption`, `footnote`, `otsl` | 
+| `<form_group>` | | allows to add as children: `caption`, `footnote`, `form` |
+| `<formula_group>` | | allows to add as children: `caption`, `footnote`, `formula` |
+| `<code_group>` | | allows to add as children: `caption`, `footnote`, `code` |
+| `<picture_group>` | | allows to add as children: `caption`, `footnote`, `picture` |
+
+**footnote**: What we currently have as instantiations of `FloatingItem` (eg TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (eg the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and foornotes will have their own `ProvenanceItem`. 
 
 ### Structural Tokens
 
@@ -208,16 +234,7 @@ The OTSL representation follows these syntax rules:
 | `<marker>` | List marker (e.g., "i", "ii", "•") |
 | `<class>` | Classification (language, chart type, etc.) |
 
-### Formatting Tokens
 
-| Token | Description |
-|-------|-------------|
-| `<bold>` | Bold text |
-| `<italic>` | Italic text |
-| `<strikethrough>` | Struck-through text |
-| `<superscript>` | Superscript |
-| `<subscript>` | Subscript |
-| `<rtl>` | Right-to-left text direction |
 
 ### Continuation Tokens
 
@@ -292,7 +309,7 @@ The user is allowed to add sections or groups as he sees fit, but it is not a st
 </doctag>
 ```
 
-In case of page-layout information, the coordinates are provided at the semantic element level,
+In case of page-layout information, the coordinates are provided only at the semantic element level. Coordinates are not allowed at the group level.
 
 ```xml
 <doctag version="1.0.0">
@@ -324,7 +341,7 @@ In case of page-layout information, the coordinates are provided at the semantic
 </doctag>
 ```
 
-#### Table Example
+#### Tables
 
 ```xml
 <table>
@@ -339,7 +356,7 @@ In case of page-layout information, the coordinates are provided at the semantic
 </table>
 ```
 
-#### List Example
+#### Lists
 
 ```xml
 <unordered_list>
@@ -356,7 +373,7 @@ In case of page-layout information, the coordinates are provided at the semantic
 </unordered_list>
 ```
 
-### Form
+### Forms
 
 ```xml
 <form>
@@ -400,7 +417,6 @@ In case of page-layout information, the coordinates are provided at the semantic
 
 </details>
 
-Extensive list of examples: [link](./examples/form/form-examples.md)
 
 ### Cross-page structure
 
