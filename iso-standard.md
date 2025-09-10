@@ -555,6 +555,55 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 <img src="examples/form/form_03.png" alt="form-00" width="100%">
 </td></tr></table></details>
 
+<details><summary><strong>Example 5</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<form>
+</form>
+</textarea></td><td>
+<img src="examples/form/form_04.png" alt="form-00" width="100%">
+</td></tr></table></details>
+
+<details><summary><strong>Example 6</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<form>
+</form>
+</textarea></td><td>
+<img src="examples/form/form_05.png" alt="form-00" width="100%">
+</td></tr></table></details>
+
+Example 7 has a classical duality between tables and explicit key-values,
+
+<details><summary><strong>Example 7</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<form>
+    <form_item>
+        <key>Adjusted CVSS v3.1 Score</key>
+        <value>10.0</value>        
+    </form_item>
+    <form_item>
+        <key>Vector</key>
+        <value>AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H</value>        
+    </form_item>
+    <form_item>
+        <key>Likelihood</key>
+        <value>Very High</value>        
+    </form_item>
+    <form_item>
+        <key>Impact</key>
+        <value>Catastrophic</value>        
+    </form_item>
+    <form_header>
+    	 Affected Systems
+    </form_header>
+    <otsl>
+    <ched/>IP Address<ched/>Port<ched/>Service<ched/>Version<nl/>
+    <fcell/>10.0.0.101<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+    <fcell/>10.0.0.102<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+    <fcell/>10.0.0.103<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>        
+    </otsl>
+</form>
+</textarea></td><td>
+<img src="examples/form/form_06.png" alt="form-00" width="100%">
+</td></tr></table></details>
+
+
 
 ### Cross-page structure
 
