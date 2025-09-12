@@ -172,6 +172,7 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `footnote` | Footnote content |
 | `page_header` | Page header content |
 | `page_footer` | Page footer content |
+| `watermark` | Page contains watermark | <!-- watermark can be text or image - do we want to capture that? also do we want to know if watermark is in background or overlay?--> 
 | `list_item` | List item |
 | `form_item` | Form item (with 1 key and 1 or more values as children) |
 | `form_header` | Form item |
