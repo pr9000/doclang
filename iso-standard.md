@@ -22,6 +22,7 @@ DocTags addresses these challenges by providing a minimalist, unambiguous markup
 - Supports complex document components including tables, formulas, code, nested lists, and charts
 - Enables lossless round-trip conversion between formats regarding content
 - Maintains token efficiency by defining limited set of tags and attributes for compact represetation without any loss of semantics
+- Eliminates ambiguity by enforcing a well defined set of tags with restricted, non generic usage ( and preserves semantic clarity )
 
 This standard builds upon research in document understanding and is intended to represent the content of a document as accurately as possible while maintaining implementation simplicity.
 
