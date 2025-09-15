@@ -6,20 +6,22 @@ This document was prepared by
 
 - Peter Staar,
 - Maroun touma,
-- Panos Vagenas and
+- Panos Vagenas
+- Santosh Borse and
 - (FILL IN!).
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
 
 ## Introduction
 
-The proliferation of digital documents across diverse formats (PDF, HTML, Word, etc.) has created significant challenges in document processing, conversion, and understanding. Current approaches often result in loss of semantic information, structural relationships, or geometric context during document conversion.
+The proliferation of digital documents across diverse formats (PDF, HTML, Word, etc.) has created significant challenges in document processing, conversion, and understanding. These were mainly designed for efficient rendering and often result in loss of semantic information, structural relationships, or geometric context during document conversion.
 
 DocTags addresses these challenges by providing a minimalist, unambiguous markup format that:
 - Preserves complete document structure and semantics
 - Maintains geometric and layout information when appropriate
 - Supports complex document components including tables, formulas, code, nested lists, and charts
 - Enables lossless round-trip conversion between formats regarding content
+- Maintains token efficiency by defining limited set of tags and attributes for compact represetation without any loss of semantics
 
 This standard builds upon research in document understanding and is intended to represent the content of a document as accurately as possible while maintaining implementation simplicity.
 
