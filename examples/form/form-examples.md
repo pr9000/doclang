@@ -187,70 +187,60 @@
     <form_header_1>M31</form_header_1>
     <form_header_2>REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_header_2>
     <form_item>
+    	 <marker>1</marker>
         <key>Tipo</key>
-        <value>
-        		<value_caption>1</value_caption>
-        </value>
+        <value></value>
     </form_item>
     <form_item>
+        <marker>2</marker>
         <key>Codice Stato estero</key>
-        <value>
-        		<value_caption>2</value_caption>
-        </value>
+        <value></value>
     </form_item>
     <form_item>
+        <marker>3</marker>
         <key>Ammontare reddito</key>
-        <value>
-        		<value_caption>3</value_caption>
-        </value>
+        <value></value>
     </form_item>
     <form_item>
+        <marker>4</marker>
         <key>Aliquota %</key>
-        <value>
-        		<value_caption>4</value_caption>
-        </value>
+        <value></value>
     </form_item>
     <form_item>
+        <marker>5</marker>
         <key>Credito IVCA</key>
-        <value>
-        		<value_caption>5</value_caption>
-        </value>
+        <value></value>
     </form_item>
     <form_item>
+        <marker>6</marker>
         <key>Proventi particolari</key>
-        <value>
-        		<value_caption>6</value_caption>
-        </value>
+        <value></value>
     </form_item>
     <form_item>
+        <marker>7</marker>
         <key>Opzione tassazione ordinaria</key>
-        <value>
-        		<value_caption>7</value_caption>
-        </value>
+        <value></value>
     </form_item>
 
     <form_header_1>M32</form_header_1>
     <form_header_2>PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</form_header_2>
     <form_item>
+        <marker>1</marker>
         <key>Ammontare reddito</key>
-        <value>
-        		<value_caption>1</value_caption>
-        </value>
+        <value></value>
     </form_item>
     <form_item>
+        <marker>2</marker>
         <key>Aliquota %</key>
-        <value>
-        		<value_caption>2</value_caption>
-        </value>
+        <value></value>
     </form_item>
 
     <form_header_1>M33</form_header_1>
     <form_header_2>PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</form_header_2>
     <form_item>
+        <marker>1</marker>
         <key>Ammontare reddito</key>
-        <value>
-        		<value_caption>1</value_caption>
-        </value>
+        <value></value>
     </form_item>
     ...
     
@@ -267,34 +257,28 @@
 <form>
     <form_header_1>W1</form_header_1>
     <form_item>
+        <marker>1</marker>
         <key>CODICE TITOLO POSSESSO</key>
-        <value>
-        		<value_caption>1</value_caption>
-        </value>
+        <value></value>
     </form_item>
     <form_item>
+        <marker>2</marker>
         <key>TIPO CONTRIBUENTE - IVAFE</key>
-        <value>
-        		<value_caption>2</value_caption>
-        </value>
+        <value></value>
     </form_item>
     ...
 
     <form_header_1>W2</form_header_1>
     <form_item>
-        <value>
-        		<value_caption>1</value_caption>
-        </value>
+        <marker>1</marker>
+        <value></value>
     </form_item>
     <form_item>
-        <value>
-        		<value_caption>2</value_caption>
-        </value>
-    </form_item>
+        <marker>2</marker>
+        <value></value>    </form_item>
     <form_item>
-        <value>
-        		<value_caption>3</value_caption>
-        </value>
+        <marker>3</marker>
+        <value></value>
     </form_item>
     ...
 
