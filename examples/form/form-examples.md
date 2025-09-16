@@ -182,55 +182,75 @@
 ![form-03](./form_07.png)
 
 ```xml
+<section_header_1>SEZIONE II A - REDDITI SOGGETTI A IMPOSTA SOSTITUTIVA</section_header_1>
 <form>
-    <form_header>SEZIONE II A - REDDITI SOGGETTI A IMPOSTA SOSTITUTIVA</form_header>
-    <section_header_1>M31</section_header_1>
-    <section_header_2>REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</section_header_2>
+    <form_header_1>M31</form_header_1>
+    <form_header_2>REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_header_2>
     <form_item>
         <key>Tipo</key>
-        <value></value>
+        <value>
+        		<value_caption>1</value_caption>
+        </value>
     </form_item>
     <form_item>
         <key>Codice Stato estero</key>
-        <value></value>
+        <value>
+        		<value_caption>2</value_caption>
+        </value>
     </form_item>
     <form_item>
         <key>Ammontare reddito</key>
-        <value></value>
+        <value>
+        		<value_caption>3</value_caption>
+        </value>
     </form_item>
     <form_item>
         <key>Aliquota %</key>
-        <value></value>
+        <value>
+        		<value_caption>4</value_caption>
+        </value>
     </form_item>
     <form_item>
         <key>Credito IVCA</key>
-        <value></value>
+        <value>
+        		<value_caption>5</value_caption>
+        </value>
     </form_item>
     <form_item>
         <key>Proventi particolari</key>
-        <value></value>
+        <value>
+        		<value_caption>6</value_caption>
+        </value>
     </form_item>
     <form_item>
         <key>Opzione tassazione ordinaria</key>
-        <value></value>
+        <value>
+        		<value_caption>7</value_caption>
+        </value>
     </form_item>
 
-    <section_header_1>M32</section_header_1>
-    <section_header_2>PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</section_header_2>
+    <form_header_1>M32</form_header_1>
+    <form_header_2>PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</form_header_2>
     <form_item>
         <key>Ammontare reddito</key>
-        <value></value>
+        <value>
+        		<value_caption>1</value_caption>
+        </value>
     </form_item>
     <form_item>
         <key>Aliquota %</key>
-        <value></value>
+        <value>
+        		<value_caption>2</value_caption>
+        </value>
     </form_item>
 
-    <section_header_1>M33</section_header_1>
-    <section_header_2>PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</section_header_2>
+    <form_header_1>M33</form_header_1>
+    <form_header_2>PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</form_header_2>
     <form_item>
         <key>Ammontare reddito</key>
-        <value></value>
+        <value>
+        		<value_caption>1</value_caption>
+        </value>
     </form_item>
     ...
     
@@ -243,31 +263,38 @@
 
 ```xml
 <section_header_1>QUADRO W - Investimenti e attività estere di natura finanziaria o patrimoniale</section_header_1>
+<section_header_2>SEZIONE I - DATI RELATIVI AGLI INVESTIMENTI E ALLE ATTIVITA'</section_header_2>
 <form>
-    <form_header>SEZIONE I - DATI RELATIVI AGLI INVESTIMENTI E ALLE ATTIVITA'</form_header>
-    <section_header_1>W1</section_header_1>
+    <form_header_1>W1</form_header_1>
     <form_item>
         <key>CODICE TITOLO POSSESSO</key>
-        <value></value>
+        <value>
+        		<value_caption>1</value_caption>
+        </value>
     </form_item>
     <form_item>
         <key>TIPO CONTRIBUENTE - IVAFE</key>
-        <value></value>
+        <value>
+        		<value_caption>2</value_caption>
+        </value>
     </form_item>
     ...
 
-    <section_header_1>W2</section_header_1>
+    <form_header_1>W2</form_header_1>
     <form_item>
-        <key>1</key>
-        <value></value>
+        <value>
+        		<value_caption>1</value_caption>
+        </value>
     </form_item>
     <form_item>
-        <key>2</key>
-        <value></value>
+        <value>
+        		<value_caption>2</value_caption>
+        </value>
     </form_item>
     <form_item>
-        <key>3</key>
-        <value></value>
+        <value>
+        		<value_caption>3</value_caption>
+        </value>
     </form_item>
     ...
 
