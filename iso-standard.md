@@ -78,10 +78,11 @@ DocTags defines the following categories of elements:
 - **special**,
 - **geometric**,
 - **semantic**, <!-- perhaps block-level? -->
-- **formatting**, <!-- perhaps inline?
+- **formatting**, <!-- perhaps inline? -->
 - **grouping**,
 - **structural**,
-- **content**, and
+- **content**,
+- **binary data**, and
 - **continuation** tokens.
 
 ### Special Elements
@@ -204,7 +205,7 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `otsl` | Table structure |
 | `formula` | Mathematical expression |
 | `code` | Code block |
-| `picture` | Image or graphic element |
+| `picture` | Image or graphic element; might have a binary data child (`base64` or `uri`) |
 | `form` | Form structure |
 
 ### Formatting Elements
@@ -221,7 +222,7 @@ Formatting elements represent formatting information within the content of a sem
 | `rtl` | Right-to-left text direction |
 | `inline_formula` | Inline formula |
 | `inline_code` | Inline code |
-| `inline_picture` | Inline picture |
+| `inline_picture` | Inline picture; might have a binary data child (`base64` or `uri`) |
 | `br`| Break line (empty-element tag) |
 
 <!-->
@@ -879,6 +880,8 @@ DocTags Tokens
 ├── Structural Tokens
 │   ├── OTSL: otsl, fcel, ecel, lcel, ucel, xcel, nl, ched, rhed
 │   └── Form: key, implicit_key, value
+├── Binary Data Tokens
+│   └── base64, uri
 ├── Content Tokens
 │   ├── content, marker, class
 │   └── <thread_N/>
@@ -891,3 +894,42 @@ DocTags Tokens
 ```
 
 This revised standard addresses the major inconsistencies while maintaining the core vision of DocTags as a universal document markup format.
+### Binary Data Elements
+
+Binary data elements encode non-text payloads that semantic content can reference or embed. They can appear directly under a page’s flow (page-level) or as children of elements that carry binary payloads.
+
+- `base64`: Embeds binary data as a base64-encoded string between the tags.
+- `uri`: Provides a reference to an external or local resource via a valid URI or filesystem path.
+
+Usage rules:
+- Allowed parents: `picture`, `inline_picture`, and page-level flow (i.e., between `page_break` markers) when associating a resource with the current page.
+- For `picture` and `inline_picture`, include at most one of `base64` or `uri` as a child.
+- Content of `base64` is a raw base64 string (no data URI prefix).
+- Content of `uri` must be a valid URI or filesystem path resolvable by the implementation.
+
+Examples:
+
+```xml
+<!-- Block image with a URI -->
+<picture>
+  <loc value="100"/><loc value="200"/><loc value="300"/><loc value="400"/>
+  <uri>assets/figures/fig1.png</uri>
+  <caption>Figure 1: System diagram</caption>
+</picture>
+
+<!-- Block image with embedded base64 -->
+<picture>
+  <loc value="50"/><loc value="60"/><loc value="450"/><loc value="360"/>
+  <base64>iVBORw0KGgoAAAANSUhEUgAA...truncated...5ErkJggg==</base64>
+</picture>
+
+<!-- Inline image referenced by URI inside text -->
+<text>
+  The logo <inline_picture><uri>assets/logo.png</uri></inline_picture> appears here.
+</text>
+
+<!-- Page-level binary payload associated with the current page -->
+<page_break/>
+<uri>assets/page_2_background.png</uri>
+<text>Page 2 content...</text>
+```
