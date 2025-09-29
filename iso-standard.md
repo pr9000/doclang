@@ -92,7 +92,9 @@ DocTags is a constrained subset of XML with the following characteristics:
 DocTags defines the following categories of elements:
 
 - **special**: Elements that establish document scope and pagination, such as `doctag`, `metadata`, and `page_break`.
-- **geometric**: Elements that capture spatial position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
+- **provenance**: Elements that can provide visual or time grounding. The visual grounding is necessary for documents with pagination, the temporal grounding is necessary for audio based documents (music and movies).
+	- **spatial**: Elements that capture spatial position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
+	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/>` for a timestamp and a double timestamp for time intervals.
 - **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
 - **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
 - **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
@@ -174,7 +176,7 @@ These annotations can provide semantic insights or quality assessments for post 
 
 #### The `page_break` Element
 
-A document may be divided into pages using the `<page_break/>` empty-element tag.
+A paginated document may be divided into pages using the `<page_break/>` empty-element tag.
 
 Here is an example:
 
@@ -186,7 +188,23 @@ Here is an example:
 </doctag>
 ```
 
-### Geometric Elements
+The content between two `<page_break/>` is in itself a doctag document, if it is sandwiched between `<doctag>...</doctag>`.
+
+#### The `time_break` Element
+
+A audio-based documents may be divided into timed segments. These timed segments can be indicated by the `<time_break/>` symbol.
+
+```xml
+<doctag>
+  <!-- first page content -->
+  <time_break/>
+  <!-- second page content -->
+</doctag>
+```
+
+The content between two `<time_break/>` is in itself a doctag document, if it is sandwiched between `<doctag>...</doctag>`.
+
+### Provenance Elements
 
 #### The `location` Element
 
@@ -196,6 +214,7 @@ The `location` element represents spatial information with value (and optional r
 - Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<location value="100"/><location value="200"/><location value="300"/><location value="400"/>`
 
 Coordinate system and encoding rules:
+
 - Origin: The origin of the coordinate system is the bottom-left corner of the page.
 - Point: Use exactly 2 consecutive `location` tokens to encode a point; the first token is x, the second is y.
 - Bounding box: Use exactly 4 consecutive `location` tokens to encode a bounding box in strict order: x0, y0, x1, y1.
@@ -203,6 +222,91 @@ Coordinate system and encoding rules:
 - Normalization: Each `location`’s `value` is an integer in `[0, resolution]`; if a `location` specifies a `resolution` attribute it is used for that token, otherwise the `metadata.default_resolution` applies. When neither is available, use `512×512` as the implicit default.
 
 The `location` element may only be used in elements which are meant to be interpreted as block-level, as specified further below.
+
+Usage examples:
+
+```xml
+<!-- Bounding box on a title -->
+<title>
+  <location value="100"/><location value="620"/>
+  <location value="900"/><location value="680"/>
+  Annual Report
+  </title>
+
+<!-- Paragraph anchored by a bounding box -->
+<text>
+  <location value="120"/><location value="540"/>
+  <location value="880"/><location value="520"/>
+  This paragraph is spatially anchored on the page.
+</text>
+
+<!-- Picture with 8-point rotated rectangle -->
+<picture>
+  <location value="200"/><location value="200"/>
+  <location value="400"/><location value="180"/>
+  <location value="420"/><location value="380"/>
+  <location value="220"/><location value="400"/>
+  <uri>assets/fig2.png</uri>
+  <caption>Figure 2: Rotated component</caption>
+</picture>
+
+<!-- Mixed per-token resolution overriding default -->
+<text>
+  <location value="100" resolution="1000"/>
+  <location value="200" resolution="1000"/>
+  <location value="900" resolution="1000"/>
+  <location value="800" resolution="1000"/>
+  Coordinates expressed in a 1000×1000 grid.
+</text>
+```
+
+#### The `timestamp` Element
+
+The `timestamp` element represents temporal provenance using three self-closing tokens:
+`<hour value="integer"/>`, `<minute value="integer"/>`, and `<second value="integer"/>`.
+
+- Point in time: Use exactly 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
+- Time interval: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
+
+Examples:
+
+- Single timestamp at 0:01:23: `<hour value="0"/><minute value="1"/><second value="23"/>`
+- Single timestamp at 12:34:56: `<hour value="12"/><minute value="34"/><second value="56"/>`
+- Interval from 00:00:10 to 00:01:05:
+  `<hour value="0"/><minute value="0"/><second value="10"/><hour value="0"/><minute value="1"/><second value="5"/>`
+- Interval across hours, 01:20:00–02:05:30:
+  `<hour value="1"/><minute value="20"/><second value="0"/><hour value="2"/><minute value="5"/><second value="30"/>`
+
+Encoding rules:
+
+- Ordering: The token order is strictly `hour`, then `minute`, then `second`; for intervals, emit start triplet first, then end triplet.
+- Ranges: `hour.value` is a non-negative integer (no upper bound); `minute.value` and `second.value` are integers in `[0, 59]`.
+- Normalization: Out-of-range carry is not allowed. Producers MUST pre-normalize (e.g., 0h 61m 5s must be encoded as 1h 1m 5s).
+- Monotonicity (intervals): The end timestamp MUST represent a time that is greater than or equal to the start timestamp when converted to total seconds. Equal start and end encodes a zero-length anchor.
+- Granularity: Precision is to whole seconds in this version. Sub-second precision is not defined.
+- Placement: Timestamp tokens MAY only be used on elements intended to be interpreted as block-level (see Semantic Elements). When present, they MUST precede the element’s textual content and any inline formatting tokens.
+- Coexistence with location: When both spatial `location` tokens and `timestamp` tokens are present, both sets MUST appear before content. The relative order between spatial and temporal tokens has no semantic impact; serializers SHOULD use a consistent order.
+- Interpretation: Timestamps are relative to the media’s timeline (e.g., an audio/video track or timed transcript) and are not wall-clock times; time zones and dates do not apply.
+
+Usage examples:
+
+```xml
+<text>
+  <hour value="0"/><minute value="2"/><second value="15"/>
+  Speaker starts the introduction.
+  <br/>
+  Main points follow.
+  <br/>
+  Conclusion.
+  <br/>
+</text>
+
+<text>
+  <hour value="0"/><minute value="5"/><second value="0"/>
+  <hour value="0"/><minute value="6"/><second value="30"/>
+  Applause segment
+</text>
+```
 
 ### Semantic Elements
 
@@ -250,19 +354,6 @@ Formatting elements represent formatting information within the content of a sem
 | `inline_picture` | Inline picture; might have a binary data child (`base64` or `uri`) |
 | `br`| Break line (empty-element tag) |
 
-<!-->
-### Floating Elements
-
-Floating elements are elements whose interpretation depends on the context:
-
-- When used as direct content of a semantic element, they are treated as inline elements and do not have geometric information
-- Otherwise, they are treated as block-level elements and can begin with a bounding box
-
-| `formula` | Mathematical expression |
-| `code` | Code block |
-| `picture` | Image or graphic element |
--->
-
 ### Grouping Elements
 
 These elements organize semantic content into logical structures. Groups can not have any location tokens and are intended to create the semantic tree.
@@ -279,7 +370,7 @@ These elements organize semantic content into logical structures. Groups can not
 | `<group type="code">` | | allows to add as children: `caption`, `footnote`, `code` |
 | `<group type="picture">` | | allows to add as children: `caption`, `footnote`, `picture` |
 
-**footnote**: What we currently have as instantiations of `FloatingItem` (eg TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (eg the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and foornotes will have their own `ProvenanceItem`.
+**footnote regarding docling-core**: What we currently have as instantiations of `FloatingItem` (eg TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (eg the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and foornotes will have their own `ProvenanceItem`.
 
 ### Optimized Table Structure Language (OTSL)
 
@@ -336,6 +427,52 @@ For content spanning page breaks:
 | `<thread id="N"/>` | Content continues (N is a unique identifier) |
 | `<continue_row id="N"/>` | Content continues row-wise for the table (N is unique identifier), only used in OTSL |
 | `<continue_col id="N"/>` | Content continues column-wise (N is unique identifier), only used in OTSL |
+
+### Binary Data Elements
+
+Binary data elements encode non-text payloads that semantic content can reference or embed. They can appear directly under a page’s flow (page-level) or as children of elements that carry binary payloads.
+
+- `base64`: Embeds binary data as a base64-encoded string between the tags.
+- `uri`: Provides a reference to an external or local resource via a valid URI or filesystem path.
+
+Usage rules:
+- Allowed parents: `picture`, `inline_picture`, and page-level flow (i.e., between `page_break` markers) when associating a resource with the current page.
+- For `picture` and `inline_picture`, include at most one of `base64` or `uri` as a child.
+- Content of `base64` is a raw base64 string (no data URI prefix).
+- Content of `uri` must be a valid URI or filesystem path resolvable by the implementation.
+
+Examples:
+
+```xml
+<!-- Block image with a URI -->
+<picture>
+  <location value="100"/><location value="200"/><location value="300"/><location value="400"/>
+  <uri>assets/figures/fig1.png</uri>
+  <caption>Figure 1: System diagram</caption>
+</picture>
+
+<!-- Block image with embedded base64 -->
+<picture>
+  <location value="50"/><location value="60"/><location value="450"/><location value="360"/>
+  <base64>iVBORw0KGgoAAAANSUhEUgAA...truncated...5ErkJggg==</base64>
+</picture>
+
+<!-- Inline image referenced by URI inside text -->
+<text>
+  The logo <inline_picture><uri>assets/logo.png</uri></inline_picture> appears here.
+</text>
+
+<!-- Page-level binary payload associated with the current page -->
+<page_break/>
+<uri>assets/page_2_background.png</uri>
+<text>Page 2 content...</text>
+```
+
+### Vector graphics Elements
+
+If you want to include vector graphics elements, the doctags allow you to include
+
+1. SVG: enclosed in `<svg> ... </svg>` 
 
 ## Grammar and Structure Rules
 
@@ -410,7 +547,17 @@ In case of page-layout information, the coordinates are provided only at the sem
 </doctag>
 ```
 
+### Code snippets
+
+
+
+### Math and Equations
+
+
+
 ### Tables
+
+To do: 
 
 ```xml
 <group type="table">
@@ -727,33 +874,6 @@ The basic structure is shown below, e.g. for a `text` tag:
 
 Detailed examples: [link](./examples/cross_page/index.md)
 
-### Inline structure
-
-The inline structure allows the document to have complex representation of text. Children of the inline group are not required to have location tokens.
-
-```xml
-<inline><location value="50"/><location value="100"/><location value="200"/><location value="130"/>
-  <text>The superconducting transition temperature</text>
-  <formula>T^c</formula>
-  ...
-</inline>
-```
-
-For any complex notation in text items (including section-headers, list-items, text items, captions etc). Notice that inline groups can also be used to capture flowing text across columns, eg
-
-```xml
-<text>
-  <inline><location value="50"/><location value="100"/><location value="100"/><location value="130"/>
-    <text>The superconducting transition temperature</text>
-    <formula>T^c</formula>
-    ...
-  </inline>
-  <inline><location value="110"/><location value="100"/><location value="200"/><location value="130"/>
-    ...
-  </inline>
-</text>
-```
-
 ### Formatting
 
 Formatting may be preserved through nested tags or escape sequences:
@@ -848,6 +968,19 @@ A conforming DocTags serializer SHALL:
 - Rotated rectangle: Exactly 8 consecutive `location` tokens are required in order x0, y0, x1, y1, x2, y2, x3, y3; the segment (x0, y0)→(x1, y1) lies along the bottom edge in reading order.
 - Geometric elements should appear in reading order when possible.
 
+#### Temporal Validation
+
+- Components: Timestamps are encoded with `hour`, `minute`, and `second` tokens in strict order.
+- Ranges: `hour.value` is a non-negative integer; `minute.value` and `second.value` are integers in [0, 59].
+- Point: Exactly 3 consecutive tokens are required (hour, then minute, then second).
+- Interval: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
+- Normalization: Out-of-range carry is not allowed; producers MUST pre-normalize values (e.g., 61 minutes becomes 1 hour and 1 minute).
+- Monotonicity (intervals): End time MUST be greater than or equal to start time when converted to total seconds.
+- Placement: Timestamp tokens MAY only appear on block-level elements and MUST precede textual content and inline formatting when present.
+- Coexistence: When both spatial and temporal tokens are present, both appear before content; relative order has no semantic effect.
+- Granularity: Precision is to whole seconds; sub-second precision is not defined in this version.
+- Interpretation: Values are relative to a media timeline (not wall-clock), so dates/time zones do not apply.
+
 #### Content Validation
 
 - Text content must be valid Unicode (excluding null character)
@@ -885,75 +1018,83 @@ The `<class>` token supports extensible vocabularies:
 
 ## Appendix A: Complete Token Reference
 
-### Token Hierarchy
+### Token Table
 
-```
-DocTags Tokens
-├── Root Elements
-│   └── <doctag version="X.Y.Z">
-├── Semantic Tokens
-│   ├── Text Type: title, section_header, text, caption, footnote, page_header, page_footer
-│   ├── Structural Type: table, picture, form, formula, code, document_index
-│   └── List Type: list_item, checkbox
-├── Grouping Tokens
-│   ├── section, group, inline
-│   └── list
-├── Geometric Tokens
-│   └── <location value={integer}/>
-├── Structural Tokens
-│   ├── OTSL: otsl, fcel, ecel, lcel, ucel, xcel, nl, ched, rhed
-│   └── Form: key, implicit_key, value
-├── Binary Data Tokens
-│   └── base64, uri
-├── Content Tokens
-│   └── content, marker, class
-├── Continuation Tokens
-│   └── thread, continue_row, continue_col
-├── Formatting Tokens
-│   └── bold, italic, strikethrough, superscript, subscript, rtl
-└── Special Elements
-    ├── <page_break/>
-    ├── <metadata>
-    └── <body>
-```
+| # | Category | Token | Self-Closing [Yes/No] | Parametrized [Yes,No] | Description |
+|---|----------|-------|-----------------------|-----------------------|-------------|
+| 1 | Root Elements | `doctag` | No | Yes | Root container; optional `version` attribute. |
+| 2 | Special Elements | `page_break` | Yes | No | Page delimiter. |
+| 3 |  | `time_break` | Yes | No | Temporal segment delimiter. |
+| 4 |  | `metadata` | No | No | Document metadata container. |
+| 5 | Geometric Tokens | `location` | Yes | Yes | Spatial coordinate; attributes: `value`, optional `resolution`. |
+| 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` (non-negative integer). |
+| 7 |  | `minute` | Yes | Yes | Minutes component of a timestamp; attribute: `value` in [0, 59]. |
+| 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` in [0, 59]. |
+| 9 | Semantic Tokens | `title` | No | No | Document or section title. |
+| 10 |  | `section_header` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
+| 11 |  | `text` | No | No | Generic text content. |
+| 12 |  | `caption` | No | No | Caption for floating/grouped elements. |
+| 13 |  | `footnote` | No | No | Footnote content. |
+| 14 |  | `page_header` | No | No | Page header content. |
+| 15 |  | `page_footer` | No | No | Page footer content. |
+| 16 |  | `watermark` | No | No | Watermark indicator or content. |
+| 17 |  | `picture` | No | No | Image/graphic; may contain `base64` or `uri`. |
+| 18 |  | `form` | No | No | Form structure container. |
+| 19 |  | `formula` | No | No | Mathematical expression block. |
+| 20 |  | `code` | No | No | Code block; may include classification via `class` token. |
+| 21 |  | `list_item` | No | No | List item content. |
+| 22 |  | `checkbox` | No | Yes | Checkbox item; attribute: `selected`. |
+| 23 | Grouping Tokens | `section` | No | Yes | Document section; attribute: `level` (N ≥ 1). |
+| 24 |  | `list` | No | Yes | List container; attribute: `ordered` (true/false). |
+| 25 |  | `group` | No | Yes | Generic group; attribute: `type` (e.g., table, form, code). |
+| 26 |  | `inline` | No | No | Inline grouping container. |
+| 27 | Formatting Tokens | `bold` | No | No | Bold text. |
+| 28 |  | `italic` | No | No | Italic text. |
+| 29 |  | `strikethrough` | No | No | Strike-through text. |
+| 30 |  | `superscript` | No | No | Superscript text. |
+| 31 |  | `subscript` | No | No | Subscript text. |
+| 32 |  | `rtl` | No | No | Right-to-left text direction. |
+| 33 |  | `inline_formula` | No | No | Inline formula. |
+| 34 |  | `inline_code` | No | No | Inline code. |
+| 35 |  | `inline_picture` | No | No | Inline image/graphic. |
+| 36 |  | `br` | Yes | No | Line break. |
+| 37 | Structural Tokens (OTSL) | `otsl` | No | No | Table structure container. |
+| 38 |  | `fcel` | Yes | No | New cell with content. |
+| 39 |  | `ecel` | Yes | No | New cell without content. |
+| 40 |  | `ched` | Yes | No | Column header cell. |
+| 41 |  | `rhed` | Yes | No | Row header cell. |
+| 42 |  | `corn` | Yes | No | Corner header cell. |
+| 43 |  | `srow` | Yes | No | Section row separator cell. |
+| 44 |  | `lcel` | Yes | No | Merge with left neighbor (horizontal span). |
+| 45 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
+| 46 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
+| 47 |  | `nl` | Yes | No | New line (row separator). |
+| 48 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker; attribute: `id`. |
+| 49 |  | `continue_row` | Yes | Yes | Row continuation; attribute: `id`. |
+| 50 |  | `continue_col` | Yes | Yes | Column continuation; attribute: `id`. |
+| 51 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
+| 52 |  | `uri` | No | No | External resource reference. |
+| 53 | Content Tokens | `marker` | No | No | List/form marker content. |
+| 54 |  | `class` | No | No | Classification token (e.g., language, chart type). |
+| 55 |  | `content` | No | No | Generic content wrapper. |
+| 56 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
+| 57 |  | `implicit_key` | No | No | Implicit key in forms. |
+| 58 |  | `value` | No | No | Form item value (child of `form_item`). |
 
-This revised standard addresses the major inconsistencies while maintaining the core vision of DocTags as a universal document markup format.
-### Binary Data Elements
+### Metadata Sub-elements
 
-Binary data elements encode non-text payloads that semantic content can reference or embed. They can appear directly under a page’s flow (page-level) or as children of elements that carry binary payloads.
-
-- `base64`: Embeds binary data as a base64-encoded string between the tags.
-- `uri`: Provides a reference to an external or local resource via a valid URI or filesystem path.
-
-Usage rules:
-- Allowed parents: `picture`, `inline_picture`, and page-level flow (i.e., between `page_break` markers) when associating a resource with the current page.
-- For `picture` and `inline_picture`, include at most one of `base64` or `uri` as a child.
-- Content of `base64` is a raw base64 string (no data URI prefix).
-- Content of `uri` must be a valid URI or filesystem path resolvable by the implementation.
-
-Examples:
-
-```xml
-<!-- Block image with a URI -->
-<picture>
-  <location value="100"/><location value="200"/><location value="300"/><location value="400"/>
-  <uri>assets/figures/fig1.png</uri>
-  <caption>Figure 1: System diagram</caption>
-</picture>
-
-<!-- Block image with embedded base64 -->
-<picture>
-  <location value="50"/><location value="60"/><location value="450"/><location value="360"/>
-  <base64>iVBORw0KGgoAAAANSUhEUgAA...truncated...5ErkJggg==</base64>
-</picture>
-
-<!-- Inline image referenced by URI inside text -->
-<text>
-  The logo <inline_picture><uri>assets/logo.png</uri></inline_picture> appears here.
-</text>
-
-<!-- Page-level binary payload associated with the current page -->
-<page_break/>
-<uri>assets/page_2_background.png</uri>
-<text>Page 2 content...</text>
-```
+| # | Token | Self-Closing [Yes/No] | Parametrized [Yes,No] | Description |
+|---|-------|-----------------------|-----------------------|-------------|
+| 1 | `version` | No | No | Document version string (semantic versioning). |
+| 2 | `title` | No | No | Document title (metadata context). |
+| 3 | `author` | No | No | Author entry; may contain `affiliation` children and text. |
+| 4 | `affiliation` | No | No | Author affiliation; child of `author`. |
+| 5 | `date` | No | No | Document date in ISO 8601 format (e.g., YYYY-MM-DD). |
+| 6 | `language` | No | Yes | Language code (ISO 639-3); attributes: `classifier`, `score`. |
+| 7 | `default_resolution` | Yes | Yes | Default coordinate resolution; attributes: `width`, `height`. |
+| 8 | `document_quality` | No | Yes | Quality score; attribute: `classifier`; content is a number [0,1]. |
+| 9 | `document_readability` | No | Yes | Readability score; attribute: `classifier`; content is a number [0,1]. |
+| 10 | `general_topic` | No | Yes | Topic label; attributes: `topic_taxonomy`, `classifier`, `score`. |
+| 11 | `document_hash` | No | Yes | Document hash value; attribute: `hash_function` (e.g., SHA-256). |
+| 12 | `custom_attribute` | No | Yes | Custom key/value; attributes: `key`, `name`; content is value. |
+| 13 | `processing_tool` | No | No | Name of the processing tool (e.g., docling). |
