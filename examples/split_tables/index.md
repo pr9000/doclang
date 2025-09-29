@@ -2,23 +2,25 @@
 
 ## Example 0
 
-Let's consider the following table:
+The table shown on the left may be split across pages, e.g. as shown on the middle. The figure on the right visualizes
+the thread elements (more details further below):
 
-
-The table on the left may be split across pages, e.g. as shown on the right:
-
-
-<table>
+<table style="min-width: 1800px">
     <tr>
         <td>
             Original table:
             <br />
-            <img src="./original_table.png" height="900" />
+            <img src="./original_table.png" height="900" width="644" />
         </td>
         <td>
             Table split across pages:
             <br />
-            <img src="./split_table.png" height="900" />
+            <img src="./split_table.png" height="900" width="644" />
+        </td>
+        <td>
+            Table threads:
+            <br />
+            <img src="./table_threads.png" height="900" width="644" />
         </td>
     </tr>
 </table>
