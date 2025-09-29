@@ -18,6 +18,7 @@ This International Standard specifies the DocTags format, a universal markup lan
 The proliferation of digital documents across diverse formats (PDF, HTML, Word, etc.) has created significant challenges in document processing, conversion, and understanding. These were mainly designed for efficient rendering and often result in loss of semantic information, structural relationships, or geometric context during document conversion.
 
 DocTags addresses these challenges by providing a minimalist, unambiguous markup format that:
+
 - Preserves complete document structure and semantics
 - Maintains geometric and layout information when appropriate
 - Supports complex document components including tables, formulas, code, nested lists, and charts
@@ -43,18 +44,22 @@ This International Standard specifies:
 Relevant terms:
 
 Abstract concepts:
+
 - **document component**: A cohesive and meaningful part of the document, e.g. a table or a bold piece of text.
 
 From XML:
+
 - **element**: An XML element.
 - **attribute**: An XML attribute.
 - **tag**: An XML tag: can be a start-tag, an end-tag, or an empty-element tag (AKA self-closing tag).
 
 From HTML:
+
 - **flow content** AKA **block-level element**: An element that is meant to be interpreted or displayed as a block, i.e. starting on a new line and occupying the full width of its container; a typical HTML example is the `p` element (paragraph).
 - **phrasing content** AKA **inline element**: An element that can be used within flow content to shape its in-line structure; a typical HTML example is the `span` element.
 
 DocTags:
+
 - **(DocTags) token**: A low-level symbol capturing some aspect of a document or of a component thereof, expressed as a tag.
 
 <!-- for internal use:
@@ -106,6 +111,7 @@ Here is an example:
 #### The `metadata` Element
 
 The document can optionally begin with a `<metadata>` element, which can contain the following optional special elements:
+
 - `version`
 - `title`  <!-- NOTE: conflicts with semantic element -->
 - `author`, whereby multiple instances are allowed
@@ -197,10 +203,10 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `footnote` | Footnote content |
 | `page_header` | Page header content |
 | `page_footer` | Page footer content |
-| `watermark` | Page contains watermark | <!-- watermark can be text or image - do we want to capture that? also do we want to know if watermark is in background or overlay?--> 
+| `watermark` | Page contains watermark | <!-- watermark can be text or image - do we want to capture that? also do we want to know if watermark is in background or overlay?-->
 | `list_item` | List item |
 | `form_item` | Form item (with 1 key and 1 or more values as children) |
-| `form_header` | Form item |
+| `form_header` | Form header |
 | `form_text` | Form text |
 | `key` | key of the form item: can only be a child of `form_item` |
 | `value` | value of the form item: can only be a child of `form_item`  |
@@ -233,6 +239,7 @@ Formatting elements represent formatting information within the content of a sem
 ### Floating Elements
 
 Floating elements are elements whose interpretation depends on the context:
+
 - When used as direct content of a semantic element, they are treated as inline elements and do not have geometric information
 - Otherwise, they are treated as block-level elements and can begin with a bounding box
 
@@ -243,7 +250,7 @@ Floating elements are elements whose interpretation depends on the context:
 
 ### Grouping Elements
 
-These elements organize semantic content into logical structures. Groups can in not have any location tokens and are intended to create the semantic tree.
+These elements organize semantic content into logical structures. Groups can not have any location tokens and are intended to create the semantic tree.
 
 | Element | Description | Allowed Children |
 |-------|-------------|------------------|
@@ -315,9 +322,7 @@ For content spanning page breaks:
 | `<continue_row id="N"/>` | Content continues row-wise for the table (N is unique identifier), only used in OTSL |
 | `<continue_col id="N"/>` | Content continues column-wise (N is unique identifier), only used in OTSL |
 
-
 ## Grammar and Structure Rules
-
 
 ### Simple Document Structure
 
@@ -433,7 +438,7 @@ Fundamentally, forms are complex list with special list-items. This is why we in
 | Token | Description |
 |-------|-------------|
 | `<form_item>` | Form item (with 1 key and 1 or more values as children) |
-| `<form_header>` | Form item: this is specifically for headers in the form. |
+| `<form_header>` | Form header: this is specifically for headers in the form. |
 | `<form_text>` | Form text: this is specifically for text-blocks in the form |
 | `<key>` | key of the form item: can only be a child of `form_item` |
 | `<value>` | value of the form item: can only be a child of `form_item`  |
@@ -444,7 +449,7 @@ Notice that if we have captions or footnotes for the form, we will always start 
 ```xml
 <group type="form">
    <form>
-     	... # (nested list of form, form_items, etc)
+      ... # (nested list of form, form_items, etc)
    </form>
 </group>
 ```
@@ -672,7 +677,7 @@ Example 7 has a classical duality between tables and explicit key-values,
         <value>Catastrophic</value>
     </form_item>
     <form_header>
-    	 Affected Systems
+      Affected Systems
     </form_header>
     <otsl>
     <ched/>IP Address<ched/>Port<ched/>Service<ched/>Version<nl/>
@@ -684,8 +689,6 @@ Example 7 has a classical duality between tables and explicit key-values,
 </textarea></td><td>
 <img src="examples/form/form_06.png" alt="form-00" width="100%">
 </td></tr></table></details>
-
-
 
 ### Cross-page structure
 
@@ -744,7 +747,6 @@ Formatting may be preserved through nested tags or escape sequences:
 - Superscript, subscript
 - Text direction markers
 
-
 #### Page Break with Continuation
 
 Page breaks are complex components that interupt the flow of a document. They can interupt paragraphs, tables, lists, etc. In general, we follow two rules,
@@ -763,7 +765,7 @@ An easy example is below,
 </doctag>
 ```
 
-Often, we have more complicated page breaks, in which a (nested) list is split across pages and further interupted by other semantic elements (think page-footers). In this case, we demand that all elements of the first page are added and/or closed __before__ the page break and then opened again in the appropriate way after the page break, with the intent that the content in between the page breaks is valid Doctags tree.
+Often, we have more complicated page breaks, in which a (nested) list is split across pages and further interupted by other semantic elements (think page-footers). In this case, we demand that all elements of the first page are added and/or closed **before** the page break and then opened again in the appropriate way after the page break, with the intent that the content in between the page breaks is valid Doctags tree.
 
 A more complicated example is shown below in which we break the content of a list-item,
 
