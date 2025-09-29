@@ -44,11 +44,11 @@ This International Standard specifies:
 The motivation for this new markup language is twofold,
 
 1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text
-2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between dogtags tokens and LLM tokens) and efficiently (== minimal token count). 
+2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count). 
 
 As a consequence of point 2, we need to ensure that there is limited number or semantic tags and attributes. In general, we intend that the number of semantic tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
 
-There is an exception for the meta-data. The meta-data is not intended to be used by the LLM's, so it is in general possible to have a more expanded set of protected keys. Nevertheless, we do want to normalize as juch as possible the representation. 
+There is an exception for the meta-data. The meta-data is not intended to be used by the LLM's, so it is in general possible to have a more expanded set of protected keys. Nevertheless, we do want to normalize as much as possible the representation. 
 
 
 ## Terminology
@@ -131,7 +131,7 @@ The document can optionally begin with a `<metadata>` element, which can contain
 - `date`
 - `language`, whereby multiple instances are allowed
 - `default_resolution`
-- `language`, Identify language such as english, german, french, spanish, japanese, etc. The values should be from [iso-639-3](https://iso639-3.sil.org/about) identifiers for languages, classifier is the classifier used to classify document's language and score is the confidence score of classifier for given language where 0<=Scores<=1. This can be one or more.
+- `language`, Identifies the document language (e.g., English, German, French, Spanish, Japanese). The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
 - `document_quality`,Content quality assessment score using standard algorithms such as DCLM, gneissweb, etc. where 0<=Scores<=1
 - `document_readability`,Indicates how easy a a document can be undertood by a general audiance. Classifier defines known classifier or method used to produce score where 0<=Scores<=1
 - `general_topic`,Topic that the document is most likely to fall in such as Science and Technology, Legal, etc. The topics should preferrably come from some taxonomy. Classifier defines the classifier used for classifying into the given topic and score is the confidence score of classifier and 0<=Scores<=1. This can be one or more.  
@@ -152,10 +152,10 @@ Here is an example:
       Author 2 Name
     </author>
     <date>2024-01-01</date>
-    <language classifier="fastext" score="0.7">eng</language>
-    <language classifier="fastext" score="0.2">esp</language>
+    <language classifier="fastText" score="0.7">eng</language>
+    <language classifier="fastText" score="0.2">spa</language>
     <document_quality classifier="dclm">0.8</document_quality>
-    <document_readability classifier="fastext_readability">0.4</document_readability>
+    <document_readability classifier="fastText_readability">0.4</document_readability>
     <general_topic topic_taxonomy="taxonomy" classifier="WatsonNLP" score="0.5">Technology</general_topic>
     <general_topic topic_taxonomy="taxonomy" classifier="WatsonNLP" score="0.5">Math</general_topic>
     <document_hash hash_function="sha256sum"/>75f2db0c6124527bf6dd48440f95fc864a5108d28517633f937923a7d8199185</document_hash>
@@ -192,7 +192,7 @@ The content between two `<page_break/>` is in itself a doctag document, if it is
 
 #### The `time_break` Element
 
-A audio-based documents may be divided into timed segments. These timed segments can be indicated by the `<time_break/>` symbol.
+Audio-based documents may be divided into timed segments. These timed segments can be indicated by the `<time_break/>` symbol.
 
 ```xml
 <doctag>
@@ -352,7 +352,7 @@ Formatting elements represent formatting information within the content of a sem
 | `inline_formula` | Inline formula |
 | `inline_code` | Inline code |
 | `inline_picture` | Inline picture; might have a binary data child (`base64` or `uri`) |
-| `br`| Break line (empty-element tag) |
+| `br`| Line break (empty-element tag) |
 
 ### Grouping Elements
 
@@ -370,17 +370,17 @@ These elements organize semantic content into logical structures. Groups can not
 | `<group type="code">` | | allows to add as children: `caption`, `footnote`, `code` |
 | `<group type="picture">` | | allows to add as children: `caption`, `footnote`, `picture` |
 
-**footnote regarding docling-core**: What we currently have as instantiations of `FloatingItem` (eg TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (eg the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and foornotes will have their own `ProvenanceItem`.
+**footnote regarding docling-core**: What we currently have as instantiations of `FloatingItem` (e.g., TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (e.g., the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and footnotes will have their own `ProvenanceItem`.
 
 ### Optimized Table Structure Language (OTSL)
 
 Tabular structure and header semantics in DocTags represented by optimized table-structure language (OTSL) tokens.
 
-Each new cell OTSL token (`<fcel/>` with it's semantic variants) is interleaved by the sequence of approptiate table cell content tokens (texts, lists, etc.).
+Each new cell OTSL token (`<fcel/>` with its semantic variants) is interleaved by the sequence of appropriate table cell content tokens (texts, lists, etc.).
 OTSL representation has minimized vocabulary and specific rules.
 The benefits of describing tables with OTSL in reducing number of structural tokens (5 essential in OTSL vs 28+ in HTML) and shorten structural sequence length to half of HTML representation on average.
 
-Structural tokens define the structure of a table: columns, rows, cells, merged cells. Each cell can then be specified with semantic vatiant token if it's: column-header, row-header, section row separator, or corner-header.
+Structural tokens define the structure of a table: columns, rows, cells, merged cells. Each cell can then be specified with a semantic variant token if it is a column header, row header, section row separator, or corner header.
 Semantic variants of `<fcel/>` token are following the same rules as `<fcel/>` token, and used just to distinguish a function of a table cell: type of header or separator.
 
 | Token | Semantic variant | Description |
@@ -492,7 +492,7 @@ In the simplest document example, document elements are in a flat list,
 </doctag>
 ```
 
-The user is allowed to add sections or groups as he sees fit, but it is not a strong requirement,
+The user is allowed to add sections or groups as they see fit, but it is not a strong requirement,
 
 ```xml
 <doctag version="1.0.0">
@@ -769,7 +769,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <checkbox selected="false">Student</checkbox>
         <checkbox selected="false">Permanent Resident</checkbox>
         <checkbox selected="false">Other (Specify)</checkbox>
-        <text></text>
+        <form_text></form_text>
     <form_item>
     <form_item>
         <key>Country of Citizenship</key>
@@ -784,7 +784,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <value></value>
     </form_item>
     <form_header>Information About Your Address</form_header>
-    <text>\*Present Physical Address ()No Po Boxes</text>
+    <form_text>\*Present Physical Address ()No Po Boxes</form_text>
     <form_item>
         <key>\*Street ... Name</key>
         <value></value>
@@ -884,7 +884,7 @@ Formatting may be preserved through nested tags or escape sequences:
 
 #### Page Break with Continuation
 
-Page breaks are complex components that interupt the flow of a document. They can interupt paragraphs, tables, lists, etc. In general, we follow two rules,
+Page breaks are complex components that interrupt the flow of a document. They can interrupt paragraphs, tables, lists, etc. In general, we follow two rules,
 
 1. If content spans across one (or more) page breaks, add `<thread id="N"/>` to the item and reuse the same `id` in the continuing item.
 2. For the follow up content of the page, we follow a reading order and close all open tokens before the `<page_break/>` token is introduced.
@@ -900,7 +900,7 @@ An easy example is below,
 </doctag>
 ```
 
-Often, we have more complicated page breaks, in which a (nested) list is split across pages and further interupted by other semantic elements (think page-footers). In this case, we demand that all elements of the first page are added and/or closed **before** the page break and then opened again in the appropriate way after the page break, with the intent that the content in between the page breaks is valid Doctags tree.
+Often, we have more complicated page breaks, in which a (nested) list is split across pages and further interrupted by other semantic elements (think page footers). In this case, we demand that all elements of the first page are added and/or closed **before** the page break and then opened again in the appropriate way after the page break, with the intent that the content in between the page breaks is a valid DocTags tree.
 
 A more complicated example is shown below in which we break the content of a list-item,
 
@@ -1047,39 +1047,38 @@ The `<class>` token supports extensible vocabularies:
 | 23 | Grouping Tokens | `section` | No | Yes | Document section; attribute: `level` (N ≥ 1). |
 | 24 |  | `list` | No | Yes | List container; attribute: `ordered` (true/false). |
 | 25 |  | `group` | No | Yes | Generic group; attribute: `type` (e.g., table, form, code). |
-| 26 |  | `inline` | No | No | Inline grouping container. |
-| 27 | Formatting Tokens | `bold` | No | No | Bold text. |
-| 28 |  | `italic` | No | No | Italic text. |
-| 29 |  | `strikethrough` | No | No | Strike-through text. |
-| 30 |  | `superscript` | No | No | Superscript text. |
-| 31 |  | `subscript` | No | No | Subscript text. |
-| 32 |  | `rtl` | No | No | Right-to-left text direction. |
-| 33 |  | `inline_formula` | No | No | Inline formula. |
-| 34 |  | `inline_code` | No | No | Inline code. |
-| 35 |  | `inline_picture` | No | No | Inline image/graphic. |
-| 36 |  | `br` | Yes | No | Line break. |
-| 37 | Structural Tokens (OTSL) | `otsl` | No | No | Table structure container. |
-| 38 |  | `fcel` | Yes | No | New cell with content. |
-| 39 |  | `ecel` | Yes | No | New cell without content. |
-| 40 |  | `ched` | Yes | No | Column header cell. |
-| 41 |  | `rhed` | Yes | No | Row header cell. |
-| 42 |  | `corn` | Yes | No | Corner header cell. |
-| 43 |  | `srow` | Yes | No | Section row separator cell. |
-| 44 |  | `lcel` | Yes | No | Merge with left neighbor (horizontal span). |
-| 45 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
-| 46 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
-| 47 |  | `nl` | Yes | No | New line (row separator). |
-| 48 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker; attribute: `id`. |
-| 49 |  | `continue_row` | Yes | Yes | Row continuation; attribute: `id`. |
-| 50 |  | `continue_col` | Yes | Yes | Column continuation; attribute: `id`. |
-| 51 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
-| 52 |  | `uri` | No | No | External resource reference. |
-| 53 | Content Tokens | `marker` | No | No | List/form marker content. |
-| 54 |  | `class` | No | No | Classification token (e.g., language, chart type). |
-| 55 |  | `content` | No | No | Generic content wrapper. |
-| 56 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
-| 57 |  | `implicit_key` | No | No | Implicit key in forms. |
-| 58 |  | `value` | No | No | Form item value (child of `form_item`). |
+| 26 | Formatting Tokens | `bold` | No | No | Bold text. |
+| 27 |  | `italic` | No | No | Italic text. |
+| 28 |  | `strikethrough` | No | No | Strike-through text. |
+| 29 |  | `superscript` | No | No | Superscript text. |
+| 30 |  | `subscript` | No | No | Subscript text. |
+| 31 |  | `rtl` | No | No | Right-to-left text direction. |
+| 32 |  | `inline_formula` | No | No | Inline formula. |
+| 33 |  | `inline_code` | No | No | Inline code. |
+| 34 |  | `inline_picture` | No | No | Inline image/graphic. |
+| 35 |  | `br` | Yes | No | Line break. |
+| 36 | Structural Tokens (OTSL) | `otsl` | No | No | Table structure container. |
+| 37 |  | `fcel` | Yes | No | New cell with content. |
+| 38 |  | `ecel` | Yes | No | New cell without content. |
+| 39 |  | `ched` | Yes | No | Column header cell. |
+| 40 |  | `rhed` | Yes | No | Row header cell. |
+| 41 |  | `corn` | Yes | No | Corner header cell. |
+| 42 |  | `srow` | Yes | No | Section row separator cell. |
+| 43 |  | `lcel` | Yes | No | Merge with left neighbor (horizontal span). |
+| 44 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
+| 45 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
+| 46 |  | `nl` | Yes | No | New line (row separator). |
+| 47 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker; attribute: `id`. |
+| 48 |  | `continue_row` | Yes | Yes | Row continuation; attribute: `id`. |
+| 49 |  | `continue_col` | Yes | Yes | Column continuation; attribute: `id`. |
+| 50 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
+| 51 |  | `uri` | No | No | External resource reference. |
+| 52 | Content Tokens | `marker` | No | No | List/form marker content. |
+| 53 |  | `class` | No | No | Classification token (e.g., language, chart type). |
+| 54 |  | `content` | No | No | Generic content wrapper. |
+| 55 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
+| 56 |  | `implicit_key` | No | No | Implicit key in forms. |
+| 57 |  | `value` | No | No | Form item value (child of `form_item`). |
 
 ### Metadata Sub-elements
 
