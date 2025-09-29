@@ -28,7 +28,7 @@ DocTags addresses these challenges by providing a minimalist, unambiguous markup
 
 This standard builds upon research in document understanding and is intended to represent the content of a document as accurately as possible while maintaining implementation simplicity.
 
-## Scope
+## Scope 
 
 This International Standard specifies:
 
@@ -39,9 +39,19 @@ This International Standard specifies:
 - Specifications for complex document components (tables, charts, formulas, code, forms)
 - Requirements for conforming implementations
 
-## Terminology
+## Motivation
 
-Relevant terms:
+The motivation for this new markup language is twofold,
+
+1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text
+2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between dogtags tokens and LLM tokens) and efficiently (== minimal token count). 
+
+As a consequence of point 2, we need to ensure that there is limited number or semantic tags and attributes. In general, we intend that the number of semantic tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
+
+There is an exception for the meta-data. The meta-data is not intended to be used by the LLM's, so it is in general possible to have a more expanded set of protected keys. Nevertheless, we do want to normalize as juch as possible the representation. 
+
+
+## Terminology
 
 Abstract concepts:
 
@@ -81,15 +91,15 @@ DocTags is a constrained subset of XML with the following characteristics:
 
 DocTags defines the following categories of elements:
 
-- **special**,
-- **geometric**,
-- **semantic**, <!-- perhaps block-level? -->
-- **formatting**, <!-- perhaps inline? -->
-- **grouping**,
-- **structural**,
-- **content**,
-- **binary data**, and
-- **continuation** tokens.
+- **special**: Elements that establish document scope and pagination, such as `doctag`, `metadata`, and `page_break`.
+- **geometric**: Elements that capture spatial position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
+- **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
+- **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
+- **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
+- **structural**: Sequence tokens that define internal structure for complex constructs (primarily OTSL table layout: `otsl`, `fcel`, `ecel`, `lcel`, `ucel`, `xcel`, `nl`, `ched`, `rhed`, `corn`, `srow`; and form parts like `key`/`value`).
+- **content**: Lightweight content helpers used inside semantic blocks for explicit payload and annotations (e.g., `content`, `summary`, `class`, `marker`).
+- **binary data**: Elements that embed or reference non-text payloads for media—either inline as `base64` or via `uri`—allowed under `picture`, `inline_picture`, or at page level.
+- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `<thread id="N"/>`, `continue_row`, `continue_col`) to stitch fragmented content.
 
 ### Special Elements
 
@@ -178,16 +188,21 @@ Here is an example:
 
 ### Geometric Elements
 
-#### The `loc` Element
+#### The `location` Element
 
-The `loc` (location) element represents spatial information with value (and optional resolution) attributes of the format `<loc value="integer" resolution="integer">` with 0<=value<=resolution.
+The `location` element represents spatial information with value (and optional resolution) attributes of the format `<location value="integer" resolution="integer"/>` with 0 <= value <= resolution.
 
-- Single coordinate at (100, 200): `<loc value="100"/><loc value="200"/>`
-- Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<loc value="100"/><loc value="200"/><loc value="300"/><loc value="400"/>`
+- Single coordinate at (100, 200): `<location value="100"/><location value="200"/>`
+- Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<location value="100"/><location value="200"/><location value="300"/><location value="400"/>`
 
-If no resolution is provided, coordinates are normalized to the document's default resolution from the `metadata` (default: 512×512).
+Coordinate system and encoding rules:
+- Origin: The origin of the coordinate system is the bottom-left corner of the page.
+- Point: Use exactly 2 consecutive `location` tokens to encode a point; the first token is x, the second is y.
+- Bounding box: Use exactly 4 consecutive `location` tokens to encode a bounding box in strict order: x0, y0, x1, y1.
+- Rotated rectangle: Use exactly 8 consecutive `location` tokens to encode a (potentially rotated) rectangle in strict order: x0, y0, x1, y1, x2, y2, x3, y3; x0, y0 and x1, y1 lie along the bottom edge in reading order.
+- Normalization: Each `location`’s `value` is an integer in `[0, resolution]`; if a `location` specifies a `resolution` attribute it is used for that token, otherwise the `metadata.default_resolution` applies. When neither is available, use `512×512` as the implicit default.
 
-The `loc` element may only be used in elements which are meant to be interpreted as block-level, as specified further below.
+The `location` element may only be used in elements which are meant to be interpreted as block-level, as specified further below.
 
 ### Semantic Elements
 
@@ -255,8 +270,8 @@ These elements organize semantic content into logical structures. Groups can not
 | Element | Description | Allowed Children |
 |-------|-------------|------------------|
 | `<section level="N">` | Document section (N ≥ 1) | semantic, grouping |
-| `<list ordered=true>` | Numbered list | list\_item, checkbox\_* |
-| `<list ordered=false>` | Bulleted list | list\_item, checkbox\_* |
+| `<list ordered=true>` | Numbered list | list\_item, checkbox |
+| `<list ordered=false>` | Bulleted list | list\_item, checkbox |
 | `<group type="table">` | | allows to add as children: `caption`, `footnote`, `otsl`|
 | `<group type="document_index">` | | allows to add as children: `caption`, `footnote`, `otsl` |
 | `<group type="form">` | | allows to add as children: `caption`, `footnote`, `form` |
@@ -318,7 +333,7 @@ For content spanning page breaks:
 
 | Token | Description |
 |-------|-------------|
-| `<thread_N/>` | Content continues (N is unique identifier) |
+| `<thread id="N"/>` | Content continues (N is a unique identifier) |
 | `<continue_row id="N"/>` | Content continues row-wise for the table (N is unique identifier), only used in OTSL |
 | `<continue_col id="N"/>` | Content continues column-wise (N is unique identifier), only used in OTSL |
 
@@ -368,17 +383,17 @@ In case of page-layout information, the coordinates are provided only at the sem
 ```xml
 <doctag version="1.0.0">
   <title>
-    <loc value="10"/><loc value="20"/><loc value="30"/><loc value="40"/>
+    <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
     Research Paper Title
   </title>
 
   <section level="1">
     <section_header level="1">
-      <loc value="10"/><loc value="20"/><loc value="30"/><loc value="40"/>
+      <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
       Abstract
     </section_header>
     <text>
-      <loc value="10"/><loc value="20"/><loc value="30"/><loc value="40"/>
+      <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
       This paper presents...
     </text>
   </section>
@@ -398,37 +413,37 @@ In case of page-layout information, the coordinates are provided only at the sem
 ### Tables
 
 ```xml
-<table_group>
-  <caption><loc value=x0/>...<loc value=y1/>
+<group type="table">
+  <caption><location value=x0/>...<location value=y1/>
     Table 1: Experimental Results
   </caption>
-  <otsl><loc value=x0/>...<loc value=y1/>
+  <otsl><location value=x0/>...<location value=y1/>
     <ched/>Method<ched/>Accuracy<nl/>
     <fcel/>Baseline<fcel/>0.85<nl/>
     <fcel/>Proposed<fcel/>0.92<nl/>
   </otsl>
-</table_group>
+</group>
 ```
 
 ### Lists
 
 ```xml
-<unordered_list>
-  <list_item><loc value=x0/>...<loc value=y1/>
+<list ordered=false>
+  <list_item><location value=x0/>...<location value=y1/>
     <marker>•</marker>
     First item with <bold>bold</bold> text
   </list_item>
-  <list_item><loc value=x0/>...<loc value=y1/>
+  <list_item><location value=x0/>...<location value=y1/>
     <marker>•</marker>
     Second item
   </list_item>
-  <checkbox selected=true><loc value=x0/>...<loc value=y1/>
+  <checkbox selected=true><location value=x0/>...<location value=y1/>
       Completed task
   </checkbox>
-  <checkbox selected=false><loc value=x0/>...<loc value=y1/>
+  <checkbox selected=false><location value=x0/>...<location value=y1/>
       Pending task
   </checkbox>
-</unordered_list>
+</list>
 ```
 
 ### Forms
@@ -692,20 +707,20 @@ Example 7 has a classical duality between tables and explicit key-values,
 
 ### Cross-page structure
 
-We can capture content that is split across pages using the `thread_N` token, where `N` is a unique identifier.
+We can capture content that is split across pages using the `<thread id="N"/>` token, where `N` is a unique identifier.
 
 The basic structure is shown below, e.g. for a `text` tag:
 
 ```xml
 <text>
-  <thread_1/>
+  <thread id="1"/>
   This text item starts here
 </text>
 ...
 <page_break/>
 ...
 <text>
-  <thread_1/>
+  <thread id="1"/>
   and continues here.
 </text>
 ```
@@ -717,7 +732,7 @@ Detailed examples: [link](./examples/cross_page/index.md)
 The inline structure allows the document to have complex representation of text. Children of the inline group are not required to have location tokens.
 
 ```xml
-<inline><loc_50/><loc_100/><loc_200/><loc_130/>
+<inline><location value="50"/><location value="100"/><location value="200"/><location value="130"/>
   <text>The superconducting transition temperature</text>
   <formula>T^c</formula>
   ...
@@ -728,12 +743,12 @@ For any complex notation in text items (including section-headers, list-items, t
 
 ```xml
 <text>
-  <inline><loc_50/><loc_100/><loc_100/><loc_130/>
+  <inline><location value="50"/><location value="100"/><location value="100"/><location value="130"/>
     <text>The superconducting transition temperature</text>
     <formula>T^c</formula>
     ...
   </inline>
-  <inline><loc_110/><loc_100/><loc_200/><loc_130/>
+  <inline><location value="110"/><location value="100"/><location value="200"/><location value="130"/>
     ...
   </inline>
 </text>
@@ -751,17 +766,17 @@ Formatting may be preserved through nested tags or escape sequences:
 
 Page breaks are complex components that interupt the flow of a document. They can interupt paragraphs, tables, lists, etc. In general, we follow two rules,
 
-1. If we have content that jumps over one (or more) page-breaks, we append the `<continue_N>` token to the item. The same token is then used in the beginning of the item that continues the content.
+1. If content spans across one (or more) page breaks, add `<thread id="N"/>` to the item and reuse the same `id` in the continuing item.
 2. For the follow up content of the page, we follow a reading order and close all open tokens before the `<page_break/>` token is introduced.
 
 An easy example is below,
 
 ```xml
 <doctag>
-  <text><thread_1/>This paragraph spans across</text>
+  <text><thread id="1"/>This paragraph spans across</text>
   <caption>Some caption</caption>
   <page_break/>
-  <text><thread_1/>multiple pages.</text>
+  <text><thread id="1"/>multiple pages.</text>
 </doctag>
 ```
 
@@ -771,23 +786,23 @@ A more complicated example is shown below in which we break the content of a lis
 
 ```xml
 <doctag>
-  <ordered_list>
-    <thread_1/>
+  <list ordered=true>
+    <thread id="1"/>
     <list_item>First item</list_item>
-    <list_item><thread_2/>Second </list_item>
+    <list_item><thread id="2"/>Second </list_item>
     ...
-  </ordered_list>
+  </list>
   <page_footer>...</page_footer>
   <page_break/>
-  <ordered_list>
-    <thread_1/>
-    <list_item><thread_2/>item</list_item>
-  </ordered_list>
+  <list ordered=true>
+    <thread id="1"/>
+    <list_item><thread id="2"/>item</list_item>
+  </list>
   ...
 </doctag>
 ```
 
-Above, `thread_1` captures the fact that the list itself is split, while `thread_2` captures the fact that a particular
+Above, `<thread id="1"/>` captures that the list itself is split, while `<thread id="2"/>` captures that a particular
 list item is split.
 
 For tables that are broken across pages, we need to introduce two differnt tokens, namely the `<continue_col id=.../>` and `<continue_row id="..."/>`. Same principle applies, if the OTSL starts/ends with any of these tokens, we know the the tables needs to be merged.
@@ -826,9 +841,12 @@ A conforming DocTags serializer SHALL:
 
 #### Geometric Validation
 
-- Coordinates must be within [0, resolution] bounds
-- Bounding boxes must satisfy x0 ≤ x1 and y0 ≤ y1
-- Geometric elements should appear in reading order when possible
+- Origin: The coordinate origin is the bottom-left corner of the page.
+- Normalization: Each `location` value is an integer within [0, resolution]; per-token `resolution` overrides `metadata.default_resolution`, else use 512×512.
+- Point: Exactly 2 consecutive `location` tokens are required (x, then y).
+- Bounding box: Exactly 4 consecutive `location` tokens are required in order x0, y0, x1, y1, with x0 ≤ x1 and y0 ≤ y1.
+- Rotated rectangle: Exactly 8 consecutive `location` tokens are required in order x0, y0, x1, y1, x2, y2, x3, y3; the segment (x0, y0)→(x1, y1) lies along the bottom edge in reading order.
+- Geometric elements should appear in reading order when possible.
 
 #### Content Validation
 
@@ -876,21 +894,21 @@ DocTags Tokens
 ├── Semantic Tokens
 │   ├── Text Type: title, section_header, text, caption, footnote, page_header, page_footer
 │   ├── Structural Type: table, picture, form, formula, code, document_index
-│   └── List Type: list_item, checkbox_selected, checkbox_unselected
+│   └── List Type: list_item, checkbox
 ├── Grouping Tokens
 │   ├── section, group, inline
-│   └── ordered_list, unordered_list
+│   └── list
 ├── Geometric Tokens
-│   ├── <coord x="N" y="N"/>
-│   └── <bbox x0="N" y0="N" x1="N" y1="N"/>
+│   └── <location value={integer}/>
 ├── Structural Tokens
 │   ├── OTSL: otsl, fcel, ecel, lcel, ucel, xcel, nl, ched, rhed
 │   └── Form: key, implicit_key, value
 ├── Binary Data Tokens
 │   └── base64, uri
 ├── Content Tokens
-│   ├── content, marker, class
-│   └── <thread_N/>
+│   └── content, marker, class
+├── Continuation Tokens
+│   └── thread, continue_row, continue_col
 ├── Formatting Tokens
 │   └── bold, italic, strikethrough, superscript, subscript, rtl
 └── Special Elements
@@ -918,14 +936,14 @@ Examples:
 ```xml
 <!-- Block image with a URI -->
 <picture>
-  <loc value="100"/><loc value="200"/><loc value="300"/><loc value="400"/>
+  <location value="100"/><location value="200"/><location value="300"/><location value="400"/>
   <uri>assets/figures/fig1.png</uri>
   <caption>Figure 1: System diagram</caption>
 </picture>
 
 <!-- Block image with embedded base64 -->
 <picture>
-  <loc value="50"/><loc value="60"/><loc value="450"/><loc value="360"/>
+  <location value="50"/><location value="60"/><location value="450"/><location value="360"/>
   <base64>iVBORw0KGgoAAAANSUhEUgAA...truncated...5ErkJggg==</base64>
 </picture>
 
