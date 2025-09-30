@@ -8,6 +8,7 @@ This document was prepared by
 - Maroun touma,
 - Panos Vagenas,
 - Maksym Lysak,
+- Nikolaos Livathinos
 - Santosh Borse,
 - Yousaf Shah,
 - Michele Dolfi
@@ -134,7 +135,7 @@ DocTags defines the following categories of elements:
 - **special**: Elements that establish document scope and pagination, such as `doctag`, `metadata`, and `page_break`.
 - **provenance**: Elements that can provide visual or time grounding. The visual grounding is necessary for documents with pagination, the temporal grounding is necessary for audio based documents (music and movies).
 	- **spatial**: Elements that capture spatial position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
-	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/>` for a timestamp and a double timestamp for time intervals.
+	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/><centisecond value={integer}/>` for a timestamp and a double timestamp for time intervals.
 - **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
 - **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
 - **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
@@ -306,28 +307,30 @@ Usage examples:
 
 #### The `timestamp` Element
 
-The `timestamp` element represents temporal provenance using three self-closing tokens:
-`<hour value="integer"/>`, `<minute value="integer"/>`, and `<second value="integer"/>`.
+The `timestamp` element represents temporal provenance using four self-closing tokens:
+`<hour value="integer"/>`, `<minute value="integer"/>`, `<second value="integer"/>` and `<centisecond value="integer"/>`, where the first 3 tokens are compulsory and the last one is optional.
 
-- Point in time: Use exactly 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
-- Time interval: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
+- Point in time with second-level precision: Use 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
+- Point in time with sub-second precision: Use 4 consecutive tokens to encode a single timestamp in strict order: hour, minute, second, centisecond.
+- Time interval with second-level precision: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
+- Time interval with sub-second precision: Use exactly 8 consecutive tokens to encode a range: first the start timestamp (hour, minute, second, centisecond), then the end timestamp (hour, minute, second, centisecond).
+
 
 Examples:
 
 - Single timestamp at 0:01:23: `<hour value="0"/><minute value="1"/><second value="23"/>`
-- Single timestamp at 12:34:56: `<hour value="12"/><minute value="34"/><second value="56"/>`
+- Single timestamp with sub-second precision at 12:34:56.12: `<hour value="12"/><minute value="34"/><second value="56"/><centisecond value="12"/>`
 - Interval from 00:00:10 to 00:01:05:
   `<hour value="0"/><minute value="0"/><second value="10"/><hour value="0"/><minute value="1"/><second value="5"/>`
-- Interval across hours, 01:20:00–02:05:30:
-  `<hour value="1"/><minute value="20"/><second value="0"/><hour value="2"/><minute value="5"/><second value="30"/>`
+- Interval with sub-second precision from 01:20:00.0 to 02:05:30.67:
+  `<hour value="1"/><minute value="20"/><second value="0"/><centisecond value="0"/><hour value="2"/><minute value="5"/><second value="30.123"/><centisecond value="67"/>`
 
 Encoding rules:
 
-- Ordering: The token order is strictly `hour`, then `minute`, then `second`; for intervals, emit start triplet first, then end triplet.
-- Ranges: `hour.value` is a non-negative integer (no upper bound); `minute.value` and `second.value` are integers in `[0, 59]`.
+- Ordering: The token order is strictly `hour`, then `minute`, then `second`, then `centisecond`; for intervals, emit start triplet first, then end triplet. In case of sub-second timestamps use a quadruplet in the order `hour`, then `minute`, then `second`, then `centisecond`; for internals with sub-second precison use 2 quadruplets, first the start quadruplet and then the end quadruplet.
+- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `centisecond.value` is an integer in `[0, 99]`.
 - Normalization: Out-of-range carry is not allowed. Producers MUST pre-normalize (e.g., 0h 61m 5s must be encoded as 1h 1m 5s).
 - Monotonicity (intervals): The end timestamp MUST represent a time that is greater than or equal to the start timestamp when converted to total seconds. Equal start and end encodes a zero-length anchor.
-- Granularity: Precision is to whole seconds in this version. Sub-second precision is not defined.
 - Placement: Timestamp tokens MAY only be used on elements intended to be interpreted as block-level (see Semantic Elements). When present, they MUST precede the element’s textual content and any inline formatting tokens.
 - Coexistence with location: When both spatial `location` tokens and `timestamp` tokens are present, both sets MUST appear before content. The relative order between spatial and temporal tokens has no semantic impact; serializers SHOULD use a consistent order.
 - Interpretation: Timestamps are relative to the media’s timeline (e.g., an audio/video track or timed transcript) and are not wall-clock times; time zones and dates do not apply.
@@ -346,11 +349,12 @@ Usage examples:
 </text>
 
 <text>
-  <hour value="0"/><minute value="5"/><second value="0"/>
-  <hour value="0"/><minute value="6"/><second value="30"/>
+  <hour value="0"/><minute value="5"/><second value="0"/><centisecond value="72"/>
+  <hour value="0"/><minute value="6"/><second value="30"/><centisecond value="15"/>
   Applause segment
 </text>
 ```
+
 
 ### Semantic Elements
 
@@ -1417,15 +1421,16 @@ A conforming DocTags serializer SHALL:
 
 #### Temporal Validation
 
-- Components: Timestamps are encoded with `hour`, `minute`, and `second` tokens in strict order.
-- Ranges: `hour.value` is a non-negative integer; `minute.value` and `second.value` are integers in [0, 59].
-- Point: Exactly 3 consecutive tokens are required (hour, then minute, then second).
-- Interval: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
+- Components: Timestamps with second-level precision are encoded with `hour`, `minute`, and `second` tokens in strict order. Timestamps with sub-second precision are encoded with `hour`, `minute`, `second` and `centisecond` tokens in strict order.
+- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `centisecond.value` is an integer in `[0, 99]`.
+- Point with second-level precision: Exactly 3 consecutive tokens are required (hour, then minute, then second).
+- Point with sub-second precision: Exactly 4 consecutive tokens are required (hour, then minute, then second, then centisecond).
+- Interval with second-level precision: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
+- Interval with sub-second precision: Exactly 8 consecutive tokens are required: start quadruplet followed by end quadruplet.
 - Normalization: Out-of-range carry is not allowed; producers MUST pre-normalize values (e.g., 61 minutes becomes 1 hour and 1 minute).
 - Monotonicity (intervals): End time MUST be greater than or equal to start time when converted to total seconds.
 - Placement: Timestamp tokens MAY only appear on block-level elements and MUST precede textual content and inline formatting when present.
 - Coexistence: When both spatial and temporal tokens are present, both appear before content; relative order has no semantic effect.
-- Granularity: Precision is to whole seconds; sub-second precision is not defined in this version.
 - Interpretation: Values are relative to a media timeline (not wall-clock), so dates/time zones do not apply.
 
 #### Content Validation
@@ -1461,7 +1466,8 @@ The `<class>` token supports extensible vocabularies:
 4. W3C XML 1.0 Specification (Fifth Edition)
 5. W3C HTML5 Specification
 6. ISO 32000-2:2020 (PDF 2.0)
-7. Semantic Versioning 2.0.0 (semver.org)
+7. ISO 8601
+8. Semantic Versioning 2.0.0 (semver.org)
 
 ## Appendix A: Complete Token Reference
 
@@ -1474,58 +1480,59 @@ The `<class>` token supports extensible vocabularies:
 | 3 |  | `time_break` | Yes | No | Temporal segment delimiter. |
 | 4 |  | `metadata` | No | No | Document metadata container. |
 | 5 | Geometric Tokens | `location` | Yes | Yes | Spatial coordinate; attributes: `value`, optional `resolution`. |
-| 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` (non-negative integer). |
+| 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` in [0, 99]. |
 | 7 |  | `minute` | Yes | Yes | Minutes component of a timestamp; attribute: `value` in [0, 59]. |
 | 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` in [0, 59]. |
-| 9 | Semantic Tokens | `title` | No | No | Document or section title. |
-| 10 |  | `section_header` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
-| 11 |  | `text` | No | No | Generic text content. |
-| 12 |  | `caption` | No | No | Caption for floating/grouped elements. |
-| 13 |  | `footnote` | No | No | Footnote content. |
-| 14 |  | `page_header` | No | No | Page header content. |
-| 15 |  | `page_footer` | No | No | Page footer content. |
-| 16 |  | `watermark` | No | No | Watermark indicator or content. |
-| 17 |  | `picture` | No | No | Image/graphic; may contain `base64` or `uri`. |
-| 18 |  | `form` | No | No | Form structure container. |
-| 19 |  | `formula` | No | No | Mathematical expression block. |
-| 20 |  | `code` | No | No | Code block; may include classification via `class` token. |
-| 21 |  | `list_item` | No | No | List item content. |
-| 22 |  | `checkbox` | No | Yes | Checkbox item; attribute: `selected`. |
-| 23 | Grouping Tokens | `section` | No | Yes | Document section; attribute: `level` (N ≥ 1). |
-| 24 |  | `list` | No | Yes | List container; attribute: `ordered` (true/false). |
-| 25 |  | `group` | No | Yes | Generic group; attribute: `type` (e.g., table, form, code). |
-| 26 | Formatting Tokens | `bold` | No | No | Bold text. |
-| 27 |  | `italic` | No | No | Italic text. |
-| 28 |  | `strikethrough` | No | No | Strike-through text. |
-| 29 |  | `superscript` | No | No | Superscript text. |
-| 30 |  | `subscript` | No | No | Subscript text. |
-| 31 |  | `rtl` | No | No | Right-to-left text direction. |
-| 32 |  | `inline_formula` | No | No | Inline formula. |
-| 33 |  | `inline_code` | No | No | Inline code. |
-| 34 |  | `inline_picture` | No | No | Inline image/graphic. |
-| 35 |  | `br` | Yes | No | Line break. |
-| 36 | Structural Tokens (OTSL) | `otsl` | No | No | Table structure container. |
-| 37 |  | `fcel` | Yes | No | New cell with content. |
-| 38 |  | `ecel` | Yes | No | New cell without content. |
-| 39 |  | `ched` | Yes | No | Column header cell. |
-| 40 |  | `rhed` | Yes | No | Row header cell. |
-| 41 |  | `corn` | Yes | No | Corner header cell. |
-| 42 |  | `srow` | Yes | No | Section row separator cell. |
-| 43 |  | `lcel` | Yes | No | Merge with left neighbor (horizontal span). |
-| 44 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
-| 45 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
-| 46 |  | `nl` | Yes | No | New line (row separator). |
-| 47 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker; attribute: `id`. |
-| 48 |  | `continue_row` | Yes | Yes | Row continuation; attribute: `id`. |
-| 49 |  | `continue_col` | Yes | Yes | Column continuation; attribute: `id`. |
-| 50 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
-| 51 |  | `uri` | No | No | External resource reference. |
-| 52 | Content Tokens | `marker` | No | No | List/form marker content. |
-| 53 |  | `class` | No | Yes | Class token value can can be used to classify chart types for pictures that display charts (e.g. `pie_chart`, `bar_chart`, `line_chart`, ...), or as a language marker for code (e.g. `python`, `c`, `c++`, `java_script`, ...). We reserve it to have open set of values, depending on use case; attribute: `value`. |
-| 54 |  | `content` | No | No | Generic content wrapper. |
-| 55 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
-| 56 |  | `implicit_key` | No | No | Implicit key in forms. |
-| 57 |  | `value` | No | No | Form item value (child of `form_item`). |
+| 9 |  | `centisecond` | Yes | Yes | Centiseconds component of a timestamp; attribute: `value` in [0, 99]. |
+| 10 | Semantic Tokens | `title` | No | No | Document or section title. |
+| 11 |  | `section_header` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
+| 12 |  | `text` | No | No | Generic text content. |
+| 13 |  | `caption` | No | No | Caption for floating/grouped elements. |
+| 14 |  | `footnote` | No | No | Footnote content. |
+| 15 |  | `page_header` | No | No | Page header content. |
+| 16 |  | `page_footer` | No | No | Page footer content. |
+| 17 |  | `watermark` | No | No | Watermark indicator or content. |
+| 18 |  | `picture` | No | No | Image/graphic; may contain `base64` or `uri`. |
+| 19 |  | `form` | No | No | Form structure container. |
+| 20 |  | `formula` | No | No | Mathematical expression block. |
+| 21 |  | `code` | No | No | Code block; may include classification via `class` token. |
+| 22 |  | `list_item` | No | No | List item content. |
+| 23 |  | `checkbox` | No | Yes | Checkbox item; attribute: `selected`. |
+| 24 | Grouping Tokens | `section` | No | Yes | Document section; attribute: `level` (N ≥ 1). |
+| 25 |  | `list` | No | Yes | List container; attribute: `ordered` (true/false). |
+| 26 |  | `group` | No | Yes | Generic group; attribute: `type` (e.g., table, form, code). |
+| 27 | Formatting Tokens | `bold` | No | No | Bold text. |
+| 28 |  | `italic` | No | No | Italic text. |
+| 29 |  | `strikethrough` | No | No | Strike-through text. |
+| 30 |  | `superscript` | No | No | Superscript text. |
+| 31 |  | `subscript` | No | No | Subscript text. |
+| 32 |  | `rtl` | No | No | Right-to-left text direction. |
+| 33 |  | `inline_formula` | No | No | Inline formula. |
+| 34 |  | `inline_code` | No | No | Inline code. |
+| 35 |  | `inline_picture` | No | No | Inline image/graphic. |
+| 36 |  | `br` | Yes | No | Line break. |
+| 37 | Structural Tokens (OTSL) | `otsl` | No | No | Table structure container. |
+| 38 |  | `fcel` | Yes | No | New cell with content. |
+| 39 |  | `ecel` | Yes | No | New cell without content. |
+| 40 |  | `ched` | Yes | No | Column header cell. |
+| 41 |  | `rhed` | Yes | No | Row header cell. |
+| 42 |  | `corn` | Yes | No | Corner header cell. |
+| 43 |  | `srow` | Yes | No | Section row separator cell. |
+| 44 |  | `lcel` | Yes | No | Merge with left neighbor (horizontal span). |
+| 45 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
+| 46 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
+| 47 |  | `nl` | Yes | No | New line (row separator). |
+| 48 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker; attribute: `id`. |
+| 49 |  | `continue_row` | Yes | Yes | Row continuation; attribute: `id`. |
+| 50 |  | `continue_col` | Yes | Yes | Column continuation; attribute: `id`. |
+| 51 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
+| 52 |  | `uri` | No | No | External resource reference. |
+| 53 | Content Tokens | `marker` | No | No | List/form marker content. |
+| 54 |  | `class` | No | No | Classification token (e.g., language, chart type). |
+| 55 |  | `content` | No | No | Generic content wrapper. |
+| 56 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
+| 57 |  | `implicit_key` | No | No | Implicit key in forms. |
+| 58 |  | `value` | No | No | Form item value (child of `form_item`). |
 
 ### Metadata Sub-elements
 
