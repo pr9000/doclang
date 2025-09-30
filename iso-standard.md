@@ -131,6 +131,7 @@ The document can optionally begin with a `<metadata>` element, which can contain
 - `date`
 - `language`, whereby multiple instances are allowed
 - `default_resolution`
+- `page_size`, the actual page size. An element without the `page_no` attribute defines the default size for all pages, when `page_no` is specified it is counted from 1.
 - `language`, Identifies the document language (e.g., English, German, French, Spanish, Japanese). The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
 - `document_quality`,Content quality assessment score using standard algorithms such as DCLM, gneissweb, etc. where 0<=Scores<=1
 - `document_readability`,Indicates how easy a a document can be undertood by a general audiance. Classifier defines known classifier or method used to produce score where 0<=Scores<=1
@@ -163,6 +164,8 @@ Here is an example:
     <custom_attribute key="abuse" name="HAP"/>0.1</custom_attribute>
     <custom_attribute key="profanity" name="HAP"/>0.1</custom_attribute>
     <default_resolution width="512" height="512"/>
+    <page_size width="612" height="792"/>
+    <page_size page_no="4" width="792" height="612"/>
     <processing_tool>docling</processing_tool>
   </metadata>
   <!-- document content -->
@@ -220,6 +223,7 @@ Coordinate system and encoding rules:
 - Bounding box: Use exactly 4 consecutive `location` tokens to encode a bounding box in strict order: x0, y0, x1, y1.
 - Rotated rectangle: Use exactly 8 consecutive `location` tokens to encode a (potentially rotated) rectangle in strict order: x0, y0, x1, y1, x2, y2, x3, y3; x0, y0 and x1, y1 lie along the bottom edge in reading order.
 - Normalization: Each `location`’s `value` is an integer in `[0, resolution]`; if a `location` specifies a `resolution` attribute it is used for that token, otherwise the `metadata.default_resolution` applies. When neither is available, use `512×512` as the implicit default.
+- Connection to page size: The boxes are proportional to the page where they belong, they will not capture the actual size or aspect ratio. Those can be reconstructed with the `page_size` metadata.
 
 The `location` element may only be used in elements which are meant to be interpreted as block-level, as specified further below.
 
@@ -1091,9 +1095,10 @@ The `<class>` token supports extensible vocabularies:
 | 5 | `date` | No | No | Document date in ISO 8601 format (e.g., YYYY-MM-DD). |
 | 6 | `language` | No | Yes | Language code (ISO 639-3); attributes: `classifier`, `score`. |
 | 7 | `default_resolution` | Yes | Yes | Default coordinate resolution; attributes: `width`, `height`. |
-| 8 | `document_quality` | No | Yes | Quality score; attribute: `classifier`; content is a number [0,1]. |
-| 9 | `document_readability` | No | Yes | Readability score; attribute: `classifier`; content is a number [0,1]. |
-| 10 | `general_topic` | No | Yes | Topic label; attributes: `topic_taxonomy`, `classifier`, `score`. |
-| 11 | `document_hash` | No | Yes | Document hash value; attribute: `hash_function` (e.g., SHA-256). |
-| 12 | `custom_attribute` | No | Yes | Custom key/value; attributes: `key`, `name`; content is value. |
-| 13 | `processing_tool` | No | No | Name of the processing tool (e.g., docling). |
+| 8 | `page_size` | Yes | Yes | Original page size; attributes: `width`, `height`. The optional `page_no` attribute start counting at 1. |
+| 9 | `document_quality` | No | Yes | Quality score; attribute: `classifier`; content is a number [0,1]. |
+| 10 | `document_readability` | No | Yes | Readability score; attribute: `classifier`; content is a number [0,1]. |
+| 11 | `general_topic` | No | Yes | Topic label; attributes: `topic_taxonomy`, `classifier`, `score`. |
+| 12 | `document_hash` | No | Yes | Document hash value; attribute: `hash_function` (e.g., SHA-256). |
+| 13 | `custom_attribute` | No | Yes | Custom key/value; attributes: `key`, `name`; content is value. |
+| 14 | `processing_tool` | No | No | Name of the processing tool (e.g., docling). |
