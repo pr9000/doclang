@@ -116,7 +116,9 @@ For elements with a strictly limited set of possible property values, attributes
 The content of the elements is encoded according to the following rules:
 
 - unicode textual content is encoded as utf-8.
-- Special entities which overlap with the XML elements must be escaped, e.g. `<` becomes `&lt;`. The complete list of entities to escape is defined in Appendix B.
+- special characters reserved by XML, such as `<` (complete list defined in Appendix B), can be represented:
+  - either by escaping with the respective XML entities, e.g. `<` becomes `&lt;`,
+  - or using the CDATA section syntax, e.g. raw text `<foo>` can be represented as `<![CDATA[<foo>]]>`
 
 ## DocTags Structure
 
