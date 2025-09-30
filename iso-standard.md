@@ -6,10 +6,12 @@ This document was prepared by
 
 - Peter Staar,
 - Maroun touma,
-- Panos Vagenas
-- Santosh Borse
-- Yousaf Shah
+- Panos Vagenas,
+- Maksym Lysak,
+- Santosh Borse,
+- Yousaf Shah,
 - Christoph Auer
+- Michele Dolfi
 - (FILL IN!).
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
@@ -51,6 +53,19 @@ As a consequence of point 2, this standard ensures that there is a limited numbe
 
 There is an exception for meta-data markup. Meta-data is not intended to be used or produced by LLMs, so it is in general possible to include an expanded set of protected markup tokens. Nevertheless, we do want to normalize as much as possible this representation. 
 
+Such requirements preclude us from using existing markup languages such as Markdown (incomplete scope), HTML (not concise enough), LaTeX (ambiguity of representation) etc.
+
+<figure style="text-align: left">
+    <img src="resources/html_v_otsl.png"
+         alt="HTML vs OTSL" style="width:700px">
+    <figcaption>Example in pure table structure representation, omitting content of cells, when comparing HTML to Doctags (OTSL tags). HTML sequence is both longer and uses more tokens than Doctags/OTSL</figcaption>
+</figure>
+
+<figure style="text-align: left">
+    <img src="resources/doctags_example.png"
+         alt="HTML vs OTSL" style="width:1000px">
+    <figcaption>Examples of real-world document fragments and their Doctags representation</figcaption>
+</figure>
 
 ## Terminology
 
@@ -80,6 +95,13 @@ Docling:
 - **(DoclingDocument) inline group**: A grouping of DoclingDocument items that are meant to be interpreted as a single
   unit of text, i.e. without line breaks or vertical space between them.
 -->
+
+## Content encoding
+
+The content of the elements is encoded according to the following rules:
+
+- unicode textual content is encoded as utf-8.
+- Special entities which overlap with the XML elements must be escaped, e.g. `<` becomes `&lt;`. The complete list of entities to escape is defined in Appendix B.
 
 ## DocTags Structure
 
@@ -131,7 +153,8 @@ The document can optionally begin with a `<metadata>` element, which can contain
   - each `author` element can optionally begin with one or more `affiliation` elements
 - `date`
 - `language`, whereby multiple instances are allowed
-- `default_resolution `
+- `default_resolution`
+- `page_size`, the actual page size. An element without the `page_no` attribute defines the default size for all pages, when `page_no` is specified it is counted from 1.
 - `language`, Identifies the document language (e.g., English, German, French, Spanish, Japanese). The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
 - `document_quality`,Content quality assessment score using standard algorithms such as DCLM, gneissdefault_resolutionweb, etc. where 0<=Scores<=1
 - `document_readability`,Indicates how easy a a document can be undertood by a general audiance. Classifier defines known classifier or method used to produce score where 0<=Scores<=1
@@ -164,6 +187,8 @@ Here is an example:
     <custom_attribute key="abuse" name="HAP"/>0.1</custom_attribute>
     <custom_attribute key="profanity" name="HAP"/>0.1</custom_attribute>
     <default_resolution width="512" height="512"/>
+    <page_size width="612" height="792"/>
+    <page_size page_no="4" width="792" height="612"/>
     <processing_tool>docling</processing_tool>
   </metadata>
   <!-- document content -->
@@ -221,6 +246,7 @@ Coordinate system and encoding rules:
 - Bounding box: Use exactly 4 consecutive `location` tokens to encode a bounding box in strict order: x0, y0, x1, y1.
 - Rotated rectangle: Use exactly 8 consecutive `location` tokens to encode a (potentially rotated) rectangle in strict order: x0, y0, x1, y1, x2, y2, x3, y3; x0, y0 and x1, y1 lie along the bottom edge in reading order.
 - Normalization: Each `location`’s `value` is an integer in `[0, resolution]`; if a `location` specifies a `resolution` attribute it is used for that token, otherwise the `metadata.default_resolution` applies. When neither is available, use `512×512` as the implicit default.
+- Connection to page size: The boxes are proportional to the page where they belong, they will not capture the actual size or aspect ratio. Those can be reconstructed with the `page_size` metadata.
 
 The `location` element may only be used in elements which are meant to be interpreted as block-level, as specified further below.
 
@@ -550,49 +576,452 @@ In case of page-layout information, the coordinates are provided only at the sem
 
 ### Code snippets
 
+Code content can appear inline via `inline_code` or as block code via `code`. To classify the programming language of a block, include a `<class>...</class>` child inside `code`. When using groups, place coordinates only on semantic elements (e.g., `caption`, `code`), not on the `group` itself.
+
+Basic inline code
+
+```xml
+<text>
+  Install with <inline_code>pip install doctags</inline_code> and run.
+  For environment checks, use <inline_code>python --version</inline_code>.
+  Inline code preserves spacing and punctuation.
+  <br/>
+  Example path: <inline_code>/usr/local/bin</inline_code>
+  <br/>
+  Variables like <inline_code>API_KEY</inline_code> should not be committed.
+  <br/>
+  Use <inline_code>Ctrl+C</inline_code> to stop the server.
+  <br/>
+  Command substitution: <inline_code>$(echo hello)</inline_code>
+  <br/>
+  JSON snippet: <inline_code>{"ok":true}</inline_code>
+  <br/>
+  Escaping: <inline_code>&lt;tag&gt;value&lt;/tag&gt;</inline_code>
+  <br/>
+  Code fragments can mix with <bold>formatting</bold> seamlessly.
+  <br/>
+  Use backticks sparingly; DocTags uses explicit tokens instead.
+  <br/>
+  End of examples.
+  
+</text>
+```
+
+Basic block without language
+
+```xml
+<code>
+  echo "Hello, world!"
+  echo "Logs go to stdout by default"
+</code>
+```
+
+Block with language classification via `<class>`
+
+```xml
+<code>
+  <class>python</class>
+  def add(a, b):
+      return a + b
+
+  if __name__ == "__main__":
+      print(add(2, 3))
+</code>
+```
+
+Grouped code with caption and coordinates
+
+```xml
+<group type="code">
+  <caption>
+    <location value="10"/><location value="20"/><location value="400"/><location value="60"/>
+    Listing 1: Minimal HTTP server
+  </caption>
+  <code>
+    <location value="10"/><location value="80"/><location value="400"/><location value="300"/>
+    <class>javascript</class>
+    // Minimal Node.js server
+    import http from 'node:http';
+    const server = http.createServer((req, res) => {
+      res.end('OK');
+    });
+    server.listen(3000);
+  </code>
+  <footnote>Source: examples/code/server.js</footnote>
+</group>
+```
+
+Block with alternative language classification
+
+```xml
+<code>
+  <class>C++</class>
+  #include <iostream>
+  int main(){ std::cout << "hi"; }
+</code>
+```
+
+Long code blocks can be split across pages using continuation tokens; keep `<class>` in the first fragment.
+
+```xml
+<code>
+  <class>bash</class>
+  # Part 1
+  seq 1 5 | while read n; do echo $n; done
+  <thread id="code-42"/>
+</code>
+<page_break/>
+<code>
+  # Part 2 (continued)
+  <thread id="code-42"/>
+  echo "done"
+</code>
+```
 
 
 ### Math and Equations
 
+All math is authored as LaTeX inside `inline_formula` (inline) or `formula` (block). Do not use `<class>` for math; language classification is not applicable here. The optional `<marker>` child inside `formula` carries the printed equation number or label (e.g., “(1)”, “Eq. 3”). If present, include it as plain text within `<marker>`.
 
+Inline math examples
+
+```xml
+<text>
+  The famous relation <inline_formula>E = mc^2</inline_formula> connects mass and energy.
+  For small x, <inline_formula>\sin x \approx x - x^3/3!</inline_formula> holds.
+  The binomial: <inline_formula>(a+b)^n = \sum_{k=0}^n \binom{n}{k} a^{n-k} b^k</inline_formula>.
+</text>
+```
+
+Basic block formula (no numbering)
+
+```xml
+<formula>
+  \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
+</formula>
+```
+
+Block formula with optional marker (numbering/label)
+
+```xml
+<formula>
+  <marker>(1)</marker>
+  a^2 + b^2 = c^2
+</formula>
+```
+
+Grouped formula with caption and coordinates
+
+```xml
+<group type="formula">
+  <caption>
+    <location value="10"/><location value="20"/><location value="400"/><location value="60"/>
+    Equation for the normal distribution
+  </caption>
+  <formula>
+    <location value="10"/><location value="80"/><location value="400"/><location value="150"/>
+    <marker>(2)</marker>
+    f(x) = \frac{1}{\sigma\sqrt{2\pi}}\,\exp\!\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)
+  </formula>
+  <footnote>Parameters: mean \mu and standard deviation \sigma.</footnote>
+  <!-- Note: Coordinates apply to semantic elements like caption/formula, not the group. -->
+  
+</group>
+```
+
+Multi-line LaTeX (align) in a single formula
+
+```xml
+<formula>
+  <marker>Eq. 3</marker>
+  \begin{align}
+    \nabla\cdot\mathbf{E} &= \frac{\rho}{\varepsilon_0} \\
+    \nabla\cdot\mathbf{B} &= 0
+  \end{align}
+</formula>
+```
+
+Cross-page block formula with continuation
+
+```xml
+<formula>
+  <marker>(4)</marker>
+  \begin{equation}
+    \mathbf{F}(t) = \int_0^t e^{A(t-\tau)}\,\mathbf{b}(\tau)\,d\tau
+  \end{equation}
+  <thread id="eq-100"/>
+</formula>
+<page_break/>
+<formula>
+  <thread id="eq-100"/>
+  % Optional tail content if the printed equation spans pages
+</formula>
+```
+
+Notes
+- All math content is LaTeX; omit `$...$` or `\[...\]` delimiters since the tag conveys math context.
+- `<marker>` is optional. Include it only when the page shows an equation number/label.
+- Place coordinates on `formula` and `caption` as needed; never on the surrounding `group`.
 
 ### Tables
 
-To do: 
+DocTags separates the table’s structure from its surrounding semantics:
+
+- `group type="table"`: Semantic container that may include `caption`, multiple `footnote` elements, and exactly one `otsl` child for the structure. Do not put coordinates on the `group`.
+- `otsl`: The structural table token sequence. Put the table region’s coordinates on `otsl` for each page fragment. Cells are created by structural tokens (e.g., `<fcel/>`, `<ched/>`) and their content follows immediately after each cell token.
+
+Basic example
 
 ```xml
 <group type="table">
-  <caption><location value=x0/>...<location value=y1/>
+  <caption>
+    <location value="40"/><location value="80"/><location value="540"/><location value="110"/>
     Table 1: Experimental Results
   </caption>
-  <otsl><location value=x0/>...<location value=y1/>
+  <otsl>
+    <location value="40"/><location value="130"/><location value="540"/><location value="320"/>
     <ched/>Method<ched/>Accuracy<nl/>
     <fcel/>Baseline<fcel/>0.85<nl/>
     <fcel/>Proposed<fcel/>0.92<nl/>
   </otsl>
+  <footnote>Accuracy reported on validation set.</footnote>
+  
 </group>
 ```
 
+Peculiarities and continuation
+
+1) Broken over rows (vertical split across pages)
+
+Use `<continue_row id="..."/>` at the end of the first fragment and the start of the next fragment’s `otsl`.
+
+```xml
+<group type="table">
+  <caption>Table 2: Long Results</caption>
+  <otsl>
+    <location value="40"/><location value="120"/><location value="540"/><location value="760"/>
+    <ched/>ID<ched/>Name<ched/>Score<nl/>
+    <fcel/>1<fcel/>Alice<fcel/>91<nl/>
+    <fcel/>2<fcel/>Bob<fcel/>88<nl/>
+    <continue_row id="T-rows"/>
+  </otsl>
+</group>
+<page_break/>
+<group type="table">
+  <otsl>
+    <location value="40"/><location value="80"/><location value="540"/><location value="300"/>
+    <continue_row id="T-rows"/>
+    <fcel/>3<fcel/>Cara<fcel/>95<nl/>
+    <fcel/>4<fcel/>Dan<fcel/>89<nl/>
+  </otsl>
+</group>
+```
+
+2) Broken over columns (horizontal split across facing pages)
+
+Use `<continue_col id="..."/>` to indicate that columns continue on an adjacent page. Place it at the right edge of the left fragment and the left edge of the right fragment.
+
+```xml
+<!-- Left page -->
+<group type="table">
+  <otsl>
+    <location value="40"/><location value="120"/><location value="300"/><location value="760"/>
+    <ched/>Metric<ched/>Model A<nl/>
+    <fcel/>Accuracy<fcel/>0.92<nl/>
+    <fcel/>F1<fcel/>0.90<nl/>
+    <continue_col id="T-cols"/>
+  </otsl>
+</group>
+
+<!-- Right page -->
+<group type="table">
+  <otsl>
+    <location value="320"/><location value="120"/><location value="820"/><location value="760"/>
+    <continue_col id="T-cols"/>
+    <ched/>Model B<nl/>
+    <fcel/>0.93<nl/>
+    <fcel/>0.91<nl/>
+  </otsl>
+</group>
+```
+
+3) Rich cells (cells can contain arbitrary document content)
+
+Immediately after a cell-creating token (e.g., `<fcel/>`, `<ched/>`), place the cell’s content, which may include `text`, `list`, even nested `group` elements like another `table` or `picture`.
+
+```xml
+<group type="table">
+  <caption>Table 3: Rich Cells</caption>
+  <otsl>
+    <location value="40"/><location value="200"/><location value="560"/><location value="620"/>
+    <ched/>Description<ched/>Details<nl/>
+    <fcel/>
+      <text>Pipeline steps</text>
+    <fcel/>
+      <list ordered=false>
+        <list_item><marker>•</marker>Ingest</list_item>
+        <list_item><marker>•</marker>Process</list_item>
+        <list_item><marker>•</marker>Export</list_item>
+      </list>
+    <nl/>
+    <fcel/>
+      <text>Nested table</text>
+    <fcel/>
+      <group type="table">
+        <caption>Inner table</caption>
+        <otsl>
+          <ched/>Key<ched/>Value<nl/>
+          <fcel/>A<fcel/>1<nl/>
+          <fcel/>B<fcel/>2<nl/>
+        </otsl>
+      </group>
+    <nl/>
+    <fcel/>
+      <text>Image</text>
+    <fcel/>
+      <picture>
+        <uri>assets/img/sample.png</uri>
+        <caption>Example image inside a cell</caption>
+      </picture>
+    <nl/>
+  </otsl>
+</group>
+```
+
+Notes
+- Coordinates go on `otsl`, `caption`, and other semantic children; never on the `group`.
+- Row- and column-wise splits use `continue_row` and `continue_col` respectively; merge fragments by matching `id`s.
+- OTSL follows the rectangular rule; ensure each row has the same number of structural tokens up to `<nl/>`.
+- Rich cells can include any valid DocTags content; keep content immediately after the corresponding cell token.
+
 ### Lists
+
+Lists are containers of homogeneous items. Allowed direct children are only `list_item` and `checkbox`. Both can include an optional `<marker>` to hold the printed bullet/number/checkbox symbol. When needed, the `<marker>` may also carry its own `<location>` coordinates to capture where the glyph appears on the page.
+
+Unordered list with optional markers
 
 ```xml
 <list ordered=false>
-  <list_item><location value=x0/>...<location value=y1/>
+  <list_item>
     <marker>•</marker>
     First item with <bold>bold</bold> text
   </list_item>
-  <list_item><location value=x0/>...<location value=y1/>
-    <marker>•</marker>
+  <list_item>
+    <!-- Marker with its own coordinates -->
+    <marker>
+      <location value="50"/><location value="110"/><location value="60"/><location value="120"/>
+      •
+    </marker>
     Second item
   </list_item>
-  <checkbox selected=true><location value=x0/>...<location value=y1/>
-      Completed task
+</list>
+```
+
+Ordered list; markers are optional and can hold the printed numbering
+
+```xml
+<list ordered=true>
+  <list_item>
+    <marker>1.</marker>
+    Install dependencies
+  </list_item>
+  <list_item>
+    <marker>2.</marker>
+    Run tests
+  </list_item>
+  <list_item>
+    <!-- No marker provided; numbering can be inferred from order -->
+    Ship release
+  </list_item>
+</list>
+```
+
+Checkbox items with selection state; markers optional
+
+```xml
+<list ordered=false>
+  <checkbox selected=true>
+    <marker>[x]</marker>
+    Completed task
   </checkbox>
-  <checkbox selected=false><location value=x0/>...<location value=y1/>
-      Pending task
+  <checkbox selected=false>
+    <marker>[ ]</marker>
+    Pending task
   </checkbox>
 </list>
 ```
+
+Nested lists (mixing ordered and unordered)
+
+```xml
+<list ordered=true>
+  <list_item>
+    <marker>1.</marker>
+    Setup project
+    <list ordered=false>
+      <list_item>
+        <marker>•</marker>
+        Create virtual environment
+      </list_item>
+      <list_item>
+        <marker>•</marker>
+        Configure linter
+      </list_item>
+    </list>
+  </list_item>
+  <list_item>
+    <marker>2.</marker>
+    Implement features
+  </list_item>
+</list>
+```
+
+Page breaks and continuation
+
+Lists can span multiple pages. Use `<thread id="..."/>` to indicate continuation. You may thread the whole list and, if a particular `list_item` is broken, also thread the item itself.
+
+List split across pages
+
+```xml
+<list ordered=true>
+  <thread id="L1"/>
+  <list_item><marker>1.</marker>First item</list_item>
+  <list_item><marker>2.</marker>Second item</list_item>
+</list>
+<page_break/>
+<list ordered=true>
+  <thread id="L1"/>
+  <list_item><marker>3.</marker>Third item</list_item>
+</list>
+```
+
+Single list-item broken by a page break
+
+```xml
+<list ordered=false>
+  <thread id="L2"/>
+  <list_item>
+    <thread id="I7"/>
+    <marker>•</marker>
+    This item starts on page 1 and continues
+  </list_item>
+</list>
+<page_break/>
+<list ordered=false>
+  <thread id="L2"/>
+  <list_item>
+    <thread id="I7"/>
+    on page 2 until it ends.
+  </list_item>
+</list>
+```
+
+Notes
+- Only `list_item` and `checkbox` are valid as children of `list`.
+- `<marker>` is optional on both `list_item` and `checkbox`. Include it when the printed glyph/number is visible.
+- `<marker>` can include its own `location` coordinates to pinpoint bullet/number placement.
+- Lists can nest; place the nested `list` inside a `list_item` of the parent list.
+- When broken across pages, close items before the `page_break`, then re-open and continue with matching `thread` ids after the break.
 
 ### Forms
 
@@ -1075,7 +1504,7 @@ The `<class>` token supports extensible vocabularies:
 | 50 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
 | 51 |  | `uri` | No | No | External resource reference. |
 | 52 | Content Tokens | `marker` | No | No | List/form marker content. |
-| 53 |  | `class` | No | No | Classification token (e.g., language, chart type). |
+| 53 |  | `class` | No | Yes | Class token value can can be used to classify chart types for pictures that display charts (e.g. `pie_chart`, `bar_chart`, `line_chart`, ...), or as a language marker for code (e.g. `python`, `c`, `c++`, `java_script`, ...). We reserve it to have open set of values, depending on use case; attribute: `value`. |
 | 54 |  | `content` | No | No | Generic content wrapper. |
 | 55 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
 | 56 |  | `implicit_key` | No | No | Implicit key in forms. |
@@ -1092,9 +1521,15 @@ The `<class>` token supports extensible vocabularies:
 | 5 | `date` | No | No | Document date in ISO 8601 format (e.g., YYYY-MM-DD). |
 | 6 | `language` | No | Yes | Language code (ISO 639-3); attributes: `classifier`, `score`. |
 | 7 | `default_resolution` | Yes | Yes | Default coordinate resolution; attributes: `width`, `height`. |
-| 8 | `document_quality` | No | Yes | Quality score; attribute: `classifier`; content is a number [0,1]. |
-| 9 | `document_readability` | No | Yes | Readability score; attribute: `classifier`; content is a number [0,1]. |
-| 10 | `general_topic` | No | Yes | Topic label; attributes: `topic_taxonomy`, `classifier`, `score`. |
-| 11 | `document_hash` | No | Yes | Document hash value; attribute: `hash_function` (e.g., SHA-256). |
-| 12 | `custom_attribute` | No | Yes | Custom key/value; attributes: `key`, `name`; content is value. |
-| 13 | `processing_tool` | No | No | Name of the processing tool (e.g., docling). |
+| 8 | `page_size` | Yes | Yes | Original page size; attributes: `width`, `height`. The optional `page_no` attribute start counting at 1. |
+| 9 | `document_quality` | No | Yes | Quality score; attribute: `classifier`; content is a number [0,1]. |
+| 10 | `document_readability` | No | Yes | Readability score; attribute: `classifier`; content is a number [0,1]. |
+| 11 | `general_topic` | No | Yes | Topic label; attributes: `topic_taxonomy`, `classifier`, `score`. |
+| 12 | `document_hash` | No | Yes | Document hash value; attribute: `hash_function` (e.g., SHA-256). |
+| 13 | `custom_attribute` | No | Yes | Custom key/value; attributes: `key`, `name`; content is value. |
+| 14 | `processing_tool` | No | No | Name of the processing tool (e.g., docling). |
+
+## Appendix B: Escape entities
+
+TBA
+
