@@ -30,7 +30,7 @@ DocTags addresses these challenges by providing a minimalist, unambiguous markup
 
 This standard builds upon research in document understanding and is intended to represent the content of a document as accurately as possible while maintaining implementation simplicity.
 
-## Scope 
+## Scope
 
 This International Standard specifies:
 
@@ -46,7 +46,7 @@ This International Standard specifies:
 The motivation for this new markup language is twofold,
 
 1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text
-2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count). 
+2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count).
 
 As a consequence of point 2, we need to ensure that there is limited number or semantic tags and attributes. In general, we intend that the number of semantic tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
 
@@ -100,7 +100,9 @@ Docling:
 The content of the elements is encoded according to the following rules:
 
 - unicode textual content is encoded as utf-8.
-- Special entities which overlap with the XML elements must be escaped, e.g. `<` becomes `&lt;`. The complete list of entities to escape is defined in Appendix B.
+- special characters reserved by XML, such as `<` (complete list defined in Appendix B), can be represented:
+  - either by escaping with the respective XML entities, e.g. `<` becomes `&lt;`,
+  - or using the CDATA section syntax, e.g. raw text `<foo>` can be represented as `<![CDATA[<foo>]]>`
 
 ## DocTags Structure
 
@@ -157,10 +159,10 @@ The document can optionally begin with a `<metadata>` element, which can contain
 - `language`, Identifies the document language (e.g., English, German, French, Spanish, Japanese). The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
 - `document_quality`,Content quality assessment score using standard algorithms such as DCLM, gneissweb, etc. where 0<=Scores<=1
 - `document_readability`,Indicates how easy a a document can be undertood by a general audiance. Classifier defines known classifier or method used to produce score where 0<=Scores<=1
-- `general_topic`,Topic that the document is most likely to fall in such as Science and Technology, Legal, etc. The topics should preferrably come from some taxonomy. Classifier defines the classifier used for classifying into the given topic and score is the confidence score of classifier and 0<=Scores<=1. This can be one or more.  
+- `general_topic`,Topic that the document is most likely to fall in such as Science and Technology, Legal, etc. The topics should preferrably come from some taxonomy. Classifier defines the classifier used for classifying into the given topic and score is the confidence score of classifier and 0<=Scores<=1. This can be one or more.
 - `document_hash`, Hash of the document, whereas hash_function defines the algorithm used to compute the hash, e.g., SHA2. This can be one or more.
 - `custom_attribute`, Any custom attribute that can be added later with its properties in keys and corresponding values. This can be one or more.
-  
+
 Here is an example:
 
 ```xml
@@ -498,7 +500,7 @@ Examples:
 
 If you want to include vector graphics elements, the doctags allow you to include
 
-1. SVG: enclosed in `<svg> ... </svg>` 
+1. SVG: enclosed in `<svg> ... </svg>`
 
 ## Grammar and Structure Rules
 
@@ -602,7 +604,7 @@ Basic inline code
   Use backticks sparingly; DocTags uses explicit tokens instead.
   <br/>
   End of examples.
-  
+
 </text>
 ```
 
@@ -724,7 +726,7 @@ Grouped formula with caption and coordinates
   </formula>
   <footnote>Parameters: mean \mu and standard deviation \sigma.</footnote>
   <!-- Note: Coordinates apply to semantic elements like caption/formula, not the group. -->
-  
+
 </group>
 ```
 
@@ -784,7 +786,7 @@ Basic example
     <fcel/>Proposed<fcel/>0.92<nl/>
   </otsl>
   <footnote>Accuracy reported on validation set.</footnote>
-  
+
 </group>
 ```
 
@@ -1531,4 +1533,3 @@ The `<class>` token supports extensible vocabularies:
 ## Appendix B: Escape entities
 
 TBA
-
