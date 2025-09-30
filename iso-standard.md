@@ -9,6 +9,7 @@ This document was prepared by
 - Panos Vagenas
 - Santosh Borse
 - Yousaf Shah
+- Christoph Auer
 - (FILL IN!).
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
@@ -30,12 +31,12 @@ This standard builds upon research in document understanding and is intended to 
 
 ## Scope 
 
-This International Standard specifies:
+This standard specifies:
 
 - The syntax and semantics of the DocTags markup language
 - Rules for encoding document structure, content, and metadata
-- Mechanisms for representing geometric layout and pagination
-- Methods for preserving formatting and text direction
+- Primitives for representing geometric layout and pagination
+- Methods for expressing formatting and text direction
 - Specifications for complex document components (tables, charts, formulas, code, forms)
 - Requirements for conforming implementations
 
@@ -43,32 +44,32 @@ This International Standard specifies:
 
 The motivation for this new markup language is twofold,
 
-1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text
-2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count). 
+1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text with markup
+2. It is created with the express purpose to be compatible with LLM tokenizers, i.e. use a markup structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count). 
 
-As a consequence of point 2, we need to ensure that there is limited number or semantic tags and attributes. In general, we intend that the number of semantic tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
+As a consequence of point 2, this standard ensures that there is a limited number or tags and attributes. In general, we intend that the number of syntax tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
 
-There is an exception for the meta-data. The meta-data is not intended to be used by the LLM's, so it is in general possible to have a more expanded set of protected keys. Nevertheless, we do want to normalize as much as possible the representation. 
+There is an exception for meta-data markup. Meta-data is not intended to be used or produced by LLMs, so it is in general possible to include an expanded set of protected markup tokens. Nevertheless, we do want to normalize as much as possible this representation. 
 
 
 ## Terminology
 
 Abstract concepts:
 
-- **document component**: A cohesive and meaningful part of the document, e.g. a table or a bold piece of text.
+- **document component**: A cohesive and meaningful part of the document, e.g. a table, list item with a marker, a bold piece of text, etc.
 
-From XML:
+Adopted from XML:
 
 - **element**: An XML element.
 - **attribute**: An XML attribute.
-- **tag**: An XML tag: can be a start-tag, an end-tag, or an empty-element tag (AKA self-closing tag).
+- **tag**: An XML tag: can be a start-tag, an end-tag, or an empty-element tag (a.k.a. self-closing tag).
 
-From HTML:
+Adopted from HTML:
 
-- **flow content** AKA **block-level element**: An element that is meant to be interpreted or displayed as a block, i.e. starting on a new line and occupying the full width of its container; a typical HTML example is the `p` element (paragraph).
-- **phrasing content** AKA **inline element**: An element that can be used within flow content to shape its in-line structure; a typical HTML example is the `span` element.
+- **block-level element**: An element that is meant to be interpreted or displayed as a block, i.e. starting on a new line and occupying the full width of its container; a typical HTML example is the `p` element (paragraph).
+- **inline element**: An element that can be used within block element to shape its in-line structure; a typical HTML example is the `span` element.
 
-DocTags:
+Native to DocTags:
 
 - **(DocTags) token**: A low-level symbol capturing some aspect of a document or of a component thereof, expressed as a tag.
 
@@ -95,13 +96,13 @@ DocTags defines the following categories of elements:
 - **provenance**: Elements that can provide visual or time grounding. The visual grounding is necessary for documents with pagination, the temporal grounding is necessary for audio based documents (music and movies).
 	- **spatial**: Elements that capture spatial position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
 	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/>` for a timestamp and a double timestamp for time intervals.
-- **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
+- **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, list items, forms, tables, formulas, code, pictures), optionally followed by a 4-tuple of location tokens.
 - **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
 - **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
 - **structural**: Sequence tokens that define internal structure for complex constructs (primarily OTSL table layout: `otsl`, `fcel`, `ecel`, `lcel`, `ucel`, `xcel`, `nl`, `ched`, `rhed`, `corn`, `srow`; and form parts like `key`/`value`).
 - **content**: Lightweight content helpers used inside semantic blocks for explicit payload and annotations (e.g., `content`, `summary`, `class`, `marker`).
-- **binary data**: Elements that embed or reference non-text payloads for media—either inline as `base64` or via `uri`—allowed under `picture`, `inline_picture`, or at page level.
-- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `<thread id="N"/>`, `continue_row`, `continue_col`) to stitch fragmented content.
+- **binary data**: Elements that embed or reference non-text payloads for media—either inline as `base64` or via `uri`—e.g. allowed inside `picture`, `inline_picture`, or at page level.
+- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `<thread id="N"/>`, `continue_row`, `continue_col`) to merge content across different locations or pages.
 
 ### Special Elements
 
@@ -130,9 +131,9 @@ The document can optionally begin with a `<metadata>` element, which can contain
   - each `author` element can optionally begin with one or more `affiliation` elements
 - `date`
 - `language`, whereby multiple instances are allowed
-- `default_resolution`
+- `default_resolution `
 - `language`, Identifies the document language (e.g., English, German, French, Spanish, Japanese). The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
-- `document_quality`,Content quality assessment score using standard algorithms such as DCLM, gneissweb, etc. where 0<=Scores<=1
+- `document_quality`,Content quality assessment score using standard algorithms such as DCLM, gneissdefault_resolutionweb, etc. where 0<=Scores<=1
 - `document_readability`,Indicates how easy a a document can be undertood by a general audiance. Classifier defines known classifier or method used to produce score where 0<=Scores<=1
 - `general_topic`,Topic that the document is most likely to fall in such as Science and Technology, Legal, etc. The topics should preferrably come from some taxonomy. Classifier defines the classifier used for classifying into the given topic and score is the confidence score of classifier and 0<=Scores<=1. This can be one or more.  
 - `document_hash`, Hash of the document, whereas hash_function defines the algorithm used to compute the hash, e.g., SHA2. This can be one or more.
