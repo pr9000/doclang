@@ -9,6 +9,7 @@ This document was prepared by
 - Panos Vagenas
 - Santosh Borse
 - Yousaf Shah
+- Nikolaos Livathinos
 - (FILL IN!).
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
@@ -94,7 +95,7 @@ DocTags defines the following categories of elements:
 - **special**: Elements that establish document scope and pagination, such as `doctag`, `metadata`, and `page_break`.
 - **provenance**: Elements that can provide visual or time grounding. The visual grounding is necessary for documents with pagination, the temporal grounding is necessary for audio based documents (music and movies).
 	- **spatial**: Elements that capture spatial position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
-	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/>` for a timestamp and a double timestamp for time intervals.
+	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={decimal}/>` for a timestamp and a double timestamp for time intervals.
 - **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
 - **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
 - **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
@@ -263,27 +264,27 @@ Usage examples:
 #### The `timestamp` Element
 
 The `timestamp` element represents temporal provenance using three self-closing tokens:
-`<hour value="integer"/>`, `<minute value="integer"/>`, and `<second value="integer"/>`.
+`<hour value="integer"/>`, `<minute value="integer"/>`, and `<second value="decimal"/>`.
 
 - Point in time: Use exactly 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
+- The seconds are decimals with support of fractions according to ISO-8601.
 - Time interval: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
 
 Examples:
 
 - Single timestamp at 0:01:23: `<hour value="0"/><minute value="1"/><second value="23"/>`
-- Single timestamp at 12:34:56: `<hour value="12"/><minute value="34"/><second value="56"/>`
+- Single timestamp at 12:34:56.123: `<hour value="12"/><minute value="34"/><second value="56.123"/>`
 - Interval from 00:00:10 to 00:01:05:
   `<hour value="0"/><minute value="0"/><second value="10"/><hour value="0"/><minute value="1"/><second value="5"/>`
-- Interval across hours, 01:20:00–02:05:30:
-  `<hour value="1"/><minute value="20"/><second value="0"/><hour value="2"/><minute value="5"/><second value="30"/>`
+- Interval across hours, 01:20:00–02:05:30.123:
+  `<hour value="1"/><minute value="20"/><second value="0"/><hour value="2"/><minute value="5"/><second value="30.123"/>`
 
 Encoding rules:
 
 - Ordering: The token order is strictly `hour`, then `minute`, then `second`; for intervals, emit start triplet first, then end triplet.
-- Ranges: `hour.value` is a non-negative integer (no upper bound); `minute.value` and `second.value` are integers in `[0, 59]`.
+- Ranges: `hour.value` is a non-negative integer (no upper bound); `minute.value` is an integer in `[0, 59]`; `second.value` is a decimal where its integral part is in `[0, 59]` and its fractional part can have arbitrary number of digits.
 - Normalization: Out-of-range carry is not allowed. Producers MUST pre-normalize (e.g., 0h 61m 5s must be encoded as 1h 1m 5s).
 - Monotonicity (intervals): The end timestamp MUST represent a time that is greater than or equal to the start timestamp when converted to total seconds. Equal start and end encodes a zero-length anchor.
-- Granularity: Precision is to whole seconds in this version. Sub-second precision is not defined.
 - Placement: Timestamp tokens MAY only be used on elements intended to be interpreted as block-level (see Semantic Elements). When present, they MUST precede the element’s textual content and any inline formatting tokens.
 - Coexistence with location: When both spatial `location` tokens and `timestamp` tokens are present, both sets MUST appear before content. The relative order between spatial and temporal tokens has no semantic impact; serializers SHOULD use a consistent order.
 - Interpretation: Timestamps are relative to the media’s timeline (e.g., an audio/video track or timed transcript) and are not wall-clock times; time zones and dates do not apply.
@@ -292,7 +293,7 @@ Usage examples:
 
 ```xml
 <text>
-  <hour value="0"/><minute value="2"/><second value="15"/>
+  <hour value="0"/><minute value="2"/><second value="15.908"/>
   Speaker starts the introduction.
   <br/>
   Main points follow.
@@ -303,7 +304,7 @@ Usage examples:
 
 <text>
   <hour value="0"/><minute value="5"/><second value="0"/>
-  <hour value="0"/><minute value="6"/><second value="30"/>
+  <hour value="0"/><minute value="6"/><second value="30.471"/>
   Applause segment
 </text>
 ```
@@ -971,14 +972,13 @@ A conforming DocTags serializer SHALL:
 #### Temporal Validation
 
 - Components: Timestamps are encoded with `hour`, `minute`, and `second` tokens in strict order.
-- Ranges: `hour.value` is a non-negative integer; `minute.value` and `second.value` are integers in [0, 59].
+- Ranges: `hour.value` is a non-negative integer (no upper bound); `minute.value` is an integer in `[0, 59]`; `second.value` is a decimal where its integral part is in `[0, 59]` and its fractional part can have arbitrary number of digits.
 - Point: Exactly 3 consecutive tokens are required (hour, then minute, then second).
 - Interval: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
 - Normalization: Out-of-range carry is not allowed; producers MUST pre-normalize values (e.g., 61 minutes becomes 1 hour and 1 minute).
 - Monotonicity (intervals): End time MUST be greater than or equal to start time when converted to total seconds.
 - Placement: Timestamp tokens MAY only appear on block-level elements and MUST precede textual content and inline formatting when present.
 - Coexistence: When both spatial and temporal tokens are present, both appear before content; relative order has no semantic effect.
-- Granularity: Precision is to whole seconds; sub-second precision is not defined in this version.
 - Interpretation: Values are relative to a media timeline (not wall-clock), so dates/time zones do not apply.
 
 #### Content Validation
@@ -1014,7 +1014,8 @@ The `<class>` token supports extensible vocabularies:
 4. W3C XML 1.0 Specification (Fifth Edition)
 5. W3C HTML5 Specification
 6. ISO 32000-2:2020 (PDF 2.0)
-7. Semantic Versioning 2.0.0 (semver.org)
+7. ISO 8601
+8. Semantic Versioning 2.0.0 (semver.org)
 
 ## Appendix A: Complete Token Reference
 
@@ -1029,7 +1030,7 @@ The `<class>` token supports extensible vocabularies:
 | 5 | Geometric Tokens | `location` | Yes | Yes | Spatial coordinate; attributes: `value`, optional `resolution`. |
 | 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` (non-negative integer). |
 | 7 |  | `minute` | Yes | Yes | Minutes component of a timestamp; attribute: `value` in [0, 59]. |
-| 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` in [0, 59]. |
+| 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` has its integral part in [0, 59]. |
 | 9 | Semantic Tokens | `title` | No | No | Document or section title. |
 | 10 |  | `section_header` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
 | 11 |  | `text` | No | No | Generic text content. |
