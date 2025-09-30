@@ -7,9 +7,9 @@ This document was prepared by
 - Peter Staar,
 - Maroun touma,
 - Panos Vagenas
+- Nikolaos Livathinos
 - Santosh Borse
 - Yousaf Shah
-- Nikolaos Livathinos
 - (FILL IN!).
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
@@ -95,7 +95,7 @@ DocTags defines the following categories of elements:
 - **special**: Elements that establish document scope and pagination, such as `doctag`, `metadata`, and `page_break`.
 - **provenance**: Elements that can provide visual or time grounding. The visual grounding is necessary for documents with pagination, the temporal grounding is necessary for audio based documents (music and movies).
 	- **spatial**: Elements that capture spatial position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
-	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={decimal}/>` for a timestamp and a double timestamp for time intervals.
+	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/><centisecond value={integer}/>` for a timestamp and a double timestamp for time intervals.
 - **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
 - **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
 - **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
@@ -264,27 +264,27 @@ Usage examples:
 #### The `timestamp` Element
 
 The `timestamp` element represents temporal provenance using four self-closing tokens:
-`<hour value="integer"/>`, `<minute value="integer"/>`, `<second value="integer"/>` and `<subsecond value="integer"/>`, where the first 3 tokens are compulsory and the last one is optional.
+`<hour value="integer"/>`, `<minute value="integer"/>`, `<second value="integer"/>` and `<centisecond value="integer"/>`, where the first 3 tokens are compulsory and the last one is optional.
 
 - Point in time with second-level precision: Use 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
-- Point in time with subsecond precision: Use 4 consecutive tokens to encode a single timestamp in strict order: hour, minute, second, subsecond.
+- Point in time with sub-second precision: Use 4 consecutive tokens to encode a single timestamp in strict order: hour, minute, second, centisecond.
 - Time interval with second-level precision: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
-- Time interval with subsecond precision: Use exactly 8 consecutive tokens to encode a range: first the start timestamp (hour, minute, second, subsecond), then the end timestamp (hour, minute, second, subsecond).
+- Time interval with sub-second precision: Use exactly 8 consecutive tokens to encode a range: first the start timestamp (hour, minute, second, centisecond), then the end timestamp (hour, minute, second, centisecond).
 
 
 Examples:
 
 - Single timestamp at 0:01:23: `<hour value="0"/><minute value="1"/><second value="23"/>`
-- Single timestamp with subsecond precision at 12:34:56.12: `<hour value="12"/><minute value="34"/><second value="56"/><subsecond value="12"/>`
+- Single timestamp with sub-second precision at 12:34:56.12: `<hour value="12"/><minute value="34"/><second value="56"/><centisecond value="12"/>`
 - Interval from 00:00:10 to 00:01:05:
   `<hour value="0"/><minute value="0"/><second value="10"/><hour value="0"/><minute value="1"/><second value="5"/>`
-- Interval with subsecond precision from 01:20:00.0 to 02:05:30.67:
-  `<hour value="1"/><minute value="20"/><second value="0"/><subsecond value="0"/><hour value="2"/><minute value="5"/><second value="30.123"/><subsecond value="67"/>`
+- Interval with sub-second precision from 01:20:00.0 to 02:05:30.67:
+  `<hour value="1"/><minute value="20"/><second value="0"/><centisecond value="0"/><hour value="2"/><minute value="5"/><second value="30.123"/><centisecond value="67"/>`
 
 Encoding rules:
 
-- Ordering: The token order is strictly `hour`, then `minute`, then `second`, then `subsecond`; for intervals, emit start triplet first, then end triplet. In case of subsecond timestamps use a quadruplet in the order `hour`, then `minute`, then `second`, then `subsecond`; for internals with subsecond precison use 2 quadruplets, first the start quadruplet and then the end quadruplet.
-- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `subsecond.value` is an integer in `[0, 99]`.
+- Ordering: The token order is strictly `hour`, then `minute`, then `second`, then `centisecond`; for intervals, emit start triplet first, then end triplet. In case of sub-second timestamps use a quadruplet in the order `hour`, then `minute`, then `second`, then `centisecond`; for internals with sub-second precison use 2 quadruplets, first the start quadruplet and then the end quadruplet.
+- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `centisecond.value` is an integer in `[0, 99]`.
 - Normalization: Out-of-range carry is not allowed. Producers MUST pre-normalize (e.g., 0h 61m 5s must be encoded as 1h 1m 5s).
 - Monotonicity (intervals): The end timestamp MUST represent a time that is greater than or equal to the start timestamp when converted to total seconds. Equal start and end encodes a zero-length anchor.
 - Placement: Timestamp tokens MAY only be used on elements intended to be interpreted as block-level (see Semantic Elements). When present, they MUST precede the element’s textual content and any inline formatting tokens.
@@ -305,11 +305,12 @@ Usage examples:
 </text>
 
 <text>
-  <hour value="0"/><minute value="5"/><second value="0"/><subsecond value="72"/>
-  <hour value="0"/><minute value="6"/><second value="30"/><subsecond value="15"/>
+  <hour value="0"/><minute value="5"/><second value="0"/><centisecond value="72"/>
+  <hour value="0"/><minute value="6"/><second value="30"/><centisecond value="15"/>
   Applause segment
 </text>
 ```
+
 
 ### Semantic Elements
 
@@ -973,12 +974,12 @@ A conforming DocTags serializer SHALL:
 
 #### Temporal Validation
 
-- Components: Timestamps with second-level precision are encoded with `hour`, `minute`, and `second` tokens in strict order. Timestamps with subsecond precision are encoded with `hour`, `minute`, `second` and `subsecond` tokens in strict order.
-- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `subsecond.value` is an integer in `[0, 99]`.
+- Components: Timestamps with second-level precision are encoded with `hour`, `minute`, and `second` tokens in strict order. Timestamps with sub-second precision are encoded with `hour`, `minute`, `second` and `centisecond` tokens in strict order.
+- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `centisecond.value` is an integer in `[0, 99]`.
 - Point with second-level precision: Exactly 3 consecutive tokens are required (hour, then minute, then second).
-- Point with subsecond precision: Exactly 4 consecutive tokens are required (hour, then minute, then second, then subsecond).
+- Point with sub-second precision: Exactly 4 consecutive tokens are required (hour, then minute, then second, then centisecond).
 - Interval with second-level precision: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
-- Interval with subsecond precision: Exactly 8 consecutive tokens are required: start quadruplet followed by end quadruplet.
+- Interval with sub-second precision: Exactly 8 consecutive tokens are required: start quadruplet followed by end quadruplet.
 - Normalization: Out-of-range carry is not allowed; producers MUST pre-normalize values (e.g., 61 minutes becomes 1 hour and 1 minute).
 - Monotonicity (intervals): End time MUST be greater than or equal to start time when converted to total seconds.
 - Placement: Timestamp tokens MAY only appear on block-level elements and MUST precede textual content and inline formatting when present.
@@ -1035,7 +1036,7 @@ The `<class>` token supports extensible vocabularies:
 | 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` in [0, 99]. |
 | 7 |  | `minute` | Yes | Yes | Minutes component of a timestamp; attribute: `value` in [0, 59]. |
 | 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` in [0, 59]. |
-| 9 |  | `subsecond` | Yes | Yes | Subseconds component of a timestamp; attribute: `value` in [0, 99]. |
+| 9 |  | `centisecond` | Yes | Yes | Centiseconds component of a timestamp; attribute: `value` in [0, 99]. |
 | 10 | Semantic Tokens | `title` | No | No | Document or section title. |
 | 11 |  | `section_header` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
 | 12 |  | `text` | No | No | Generic text content. |
