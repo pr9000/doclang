@@ -6,9 +6,10 @@ This document was prepared by
 
 - Peter Staar,
 - Maroun touma,
-- Panos Vagenas
-- Santosh Borse
-- Yousaf Shah
+- Panos Vagenas,
+- Maksym Lysak,
+- Santosh Borse,
+- Yousaf Shah,
 - Michele Dolfi
 - (FILL IN!).
 
@@ -49,8 +50,21 @@ The motivation for this new markup language is twofold,
 
 As a consequence of point 2, we need to ensure that there is limited number or semantic tags and attributes. In general, we intend that the number of semantic tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
 
-There is an exception for the meta-data. The meta-data is not intended to be used by the LLM's, so it is in general possible to have a more expanded set of protected keys. Nevertheless, we do want to normalize as much as possible the representation. 
+There is an exception for the meta-data. The meta-data is not intended to be used by the LLM's, so it is in general possible to have a more expanded set of protected keys. Nevertheless, we do want to normalize as much as possible the representation.
 
+Such requirements preclude us from using existing markup languages such as Markdown (incomplete scope), HTML (not concise enough), LaTeX (ambiguity of representation) etc.
+
+<figure style="text-align: left">
+    <img src="resources/html_v_otsl.png"
+         alt="HTML vs OTSL" style="width:700px">
+    <figcaption>Example in pure table structure representation, omitting content of cells, when comparing HTML to Doctags (OTSL tags). HTML sequence is both longer and uses more tokens than Doctags/OTSL</figcaption>
+</figure>
+
+<figure style="text-align: left">
+    <img src="resources/doctags_example.png"
+         alt="HTML vs OTSL" style="width:1000px">
+    <figcaption>Examples of real-world document fragments and their Doctags representation</figcaption>
+</figure>
 
 ## Terminology
 
@@ -1489,7 +1503,7 @@ The `<class>` token supports extensible vocabularies:
 | 50 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
 | 51 |  | `uri` | No | No | External resource reference. |
 | 52 | Content Tokens | `marker` | No | No | List/form marker content. |
-| 53 |  | `class` | No | No | Classification token (e.g., language, chart type). |
+| 53 |  | `class` | No | Yes | Class token value can can be used to classify chart types for pictures that display charts (e.g. `pie_chart`, `bar_chart`, `line_chart`, ...), or as a language marker for code (e.g. `python`, `c`, `c++`, `java_script`, ...). We reserve it to have open set of values, depending on use case; attribute: `value`. |
 | 54 |  | `content` | No | No | Generic content wrapper. |
 | 55 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
 | 56 |  | `implicit_key` | No | No | Implicit key in forms. |
