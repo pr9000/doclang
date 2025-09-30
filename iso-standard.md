@@ -263,26 +263,28 @@ Usage examples:
 
 #### The `timestamp` Element
 
-The `timestamp` element represents temporal provenance using three self-closing tokens:
-`<hour value="integer"/>`, `<minute value="integer"/>`, and `<second value="decimal"/>`.
+The `timestamp` element represents temporal provenance using four self-closing tokens:
+`<hour value="integer"/>`, `<minute value="integer"/>`, `<second value="integer"/>` and `<subsecond value="integer"/>`, where the first 3 tokens are compulsory and the last one is optional.
 
-- Point in time: Use exactly 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
-- The seconds are decimals with support of fractions according to ISO-8601.
-- Time interval: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
+- Point in time with second-level precision: Use 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
+- Point in time with subsecond precision: Use 4 consecutive tokens to encode a single timestamp in strict order: hour, minute, second, subsecond.
+- Time interval with second-level precision: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
+- Time interval with subsecond precision: Use exactly 8 consecutive tokens to encode a range: first the start timestamp (hour, minute, second, subsecond), then the end timestamp (hour, minute, second, subsecond).
+
 
 Examples:
 
 - Single timestamp at 0:01:23: `<hour value="0"/><minute value="1"/><second value="23"/>`
-- Single timestamp at 12:34:56.123: `<hour value="12"/><minute value="34"/><second value="56.123"/>`
+- Single timestamp with subsecond precision at 12:34:56.12: `<hour value="12"/><minute value="34"/><second value="56"/><subsecond value="12"/>`
 - Interval from 00:00:10 to 00:01:05:
   `<hour value="0"/><minute value="0"/><second value="10"/><hour value="0"/><minute value="1"/><second value="5"/>`
-- Interval across hours, 01:20:00–02:05:30.123:
-  `<hour value="1"/><minute value="20"/><second value="0"/><hour value="2"/><minute value="5"/><second value="30.123"/>`
+- Interval with subsecond precision from 01:20:00.0 to 02:05:30.67:
+  `<hour value="1"/><minute value="20"/><second value="0"/><subsecond value="0"/><hour value="2"/><minute value="5"/><second value="30.123"/><subsecond value="67"/>`
 
 Encoding rules:
 
-- Ordering: The token order is strictly `hour`, then `minute`, then `second`; for intervals, emit start triplet first, then end triplet.
-- Ranges: `hour.value` is a non-negative integer (no upper bound); `minute.value` is an integer in `[0, 59]`; `second.value` is a decimal where its integral part is in `[0, 59]` and its fractional part can have arbitrary number of digits.
+- Ordering: The token order is strictly `hour`, then `minute`, then `second`, then `subsecond`; for intervals, emit start triplet first, then end triplet. In case of subsecond timestamps use a quadruplet in the order `hour`, then `minute`, then `second`, then `subsecond`; for internals with subsecond precison use 2 quadruplets, first the start quadruplet and then the end quadruplet.
+- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `subsecond.value` is an integer in `[0, 99]`.
 - Normalization: Out-of-range carry is not allowed. Producers MUST pre-normalize (e.g., 0h 61m 5s must be encoded as 1h 1m 5s).
 - Monotonicity (intervals): The end timestamp MUST represent a time that is greater than or equal to the start timestamp when converted to total seconds. Equal start and end encodes a zero-length anchor.
 - Placement: Timestamp tokens MAY only be used on elements intended to be interpreted as block-level (see Semantic Elements). When present, they MUST precede the element’s textual content and any inline formatting tokens.
@@ -293,7 +295,7 @@ Usage examples:
 
 ```xml
 <text>
-  <hour value="0"/><minute value="2"/><second value="15.908"/>
+  <hour value="0"/><minute value="2"/><second value="15"/>
   Speaker starts the introduction.
   <br/>
   Main points follow.
@@ -303,8 +305,8 @@ Usage examples:
 </text>
 
 <text>
-  <hour value="0"/><minute value="5"/><second value="0"/>
-  <hour value="0"/><minute value="6"/><second value="30.471"/>
+  <hour value="0"/><minute value="5"/><second value="0"/><subsecond value="72"/>
+  <hour value="0"/><minute value="6"/><second value="30"/><subsecond value="15"/>
   Applause segment
 </text>
 ```
@@ -971,10 +973,12 @@ A conforming DocTags serializer SHALL:
 
 #### Temporal Validation
 
-- Components: Timestamps are encoded with `hour`, `minute`, and `second` tokens in strict order.
-- Ranges: `hour.value` is a non-negative integer (no upper bound); `minute.value` is an integer in `[0, 59]`; `second.value` is a decimal where its integral part is in `[0, 59]` and its fractional part can have arbitrary number of digits.
-- Point: Exactly 3 consecutive tokens are required (hour, then minute, then second).
-- Interval: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
+- Components: Timestamps with second-level precision are encoded with `hour`, `minute`, and `second` tokens in strict order. Timestamps with subsecond precision are encoded with `hour`, `minute`, `second` and `subsecond` tokens in strict order.
+- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `subsecond.value` is an integer in `[0, 99]`.
+- Point with second-level precision: Exactly 3 consecutive tokens are required (hour, then minute, then second).
+- Point with subsecond precision: Exactly 4 consecutive tokens are required (hour, then minute, then second, then subsecond).
+- Interval with second-level precision: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
+- Interval with subsecond precision: Exactly 8 consecutive tokens are required: start quadruplet followed by end quadruplet.
 - Normalization: Out-of-range carry is not allowed; producers MUST pre-normalize values (e.g., 61 minutes becomes 1 hour and 1 minute).
 - Monotonicity (intervals): End time MUST be greater than or equal to start time when converted to total seconds.
 - Placement: Timestamp tokens MAY only appear on block-level elements and MUST precede textual content and inline formatting when present.
@@ -1028,58 +1032,59 @@ The `<class>` token supports extensible vocabularies:
 | 3 |  | `time_break` | Yes | No | Temporal segment delimiter. |
 | 4 |  | `metadata` | No | No | Document metadata container. |
 | 5 | Geometric Tokens | `location` | Yes | Yes | Spatial coordinate; attributes: `value`, optional `resolution`. |
-| 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` (non-negative integer). |
+| 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` in [0, 99]. |
 | 7 |  | `minute` | Yes | Yes | Minutes component of a timestamp; attribute: `value` in [0, 59]. |
-| 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` has its integral part in [0, 59]. |
-| 9 | Semantic Tokens | `title` | No | No | Document or section title. |
-| 10 |  | `section_header` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
-| 11 |  | `text` | No | No | Generic text content. |
-| 12 |  | `caption` | No | No | Caption for floating/grouped elements. |
-| 13 |  | `footnote` | No | No | Footnote content. |
-| 14 |  | `page_header` | No | No | Page header content. |
-| 15 |  | `page_footer` | No | No | Page footer content. |
-| 16 |  | `watermark` | No | No | Watermark indicator or content. |
-| 17 |  | `picture` | No | No | Image/graphic; may contain `base64` or `uri`. |
-| 18 |  | `form` | No | No | Form structure container. |
-| 19 |  | `formula` | No | No | Mathematical expression block. |
-| 20 |  | `code` | No | No | Code block; may include classification via `class` token. |
-| 21 |  | `list_item` | No | No | List item content. |
-| 22 |  | `checkbox` | No | Yes | Checkbox item; attribute: `selected`. |
-| 23 | Grouping Tokens | `section` | No | Yes | Document section; attribute: `level` (N ≥ 1). |
-| 24 |  | `list` | No | Yes | List container; attribute: `ordered` (true/false). |
-| 25 |  | `group` | No | Yes | Generic group; attribute: `type` (e.g., table, form, code). |
-| 26 | Formatting Tokens | `bold` | No | No | Bold text. |
-| 27 |  | `italic` | No | No | Italic text. |
-| 28 |  | `strikethrough` | No | No | Strike-through text. |
-| 29 |  | `superscript` | No | No | Superscript text. |
-| 30 |  | `subscript` | No | No | Subscript text. |
-| 31 |  | `rtl` | No | No | Right-to-left text direction. |
-| 32 |  | `inline_formula` | No | No | Inline formula. |
-| 33 |  | `inline_code` | No | No | Inline code. |
-| 34 |  | `inline_picture` | No | No | Inline image/graphic. |
-| 35 |  | `br` | Yes | No | Line break. |
-| 36 | Structural Tokens (OTSL) | `otsl` | No | No | Table structure container. |
-| 37 |  | `fcel` | Yes | No | New cell with content. |
-| 38 |  | `ecel` | Yes | No | New cell without content. |
-| 39 |  | `ched` | Yes | No | Column header cell. |
-| 40 |  | `rhed` | Yes | No | Row header cell. |
-| 41 |  | `corn` | Yes | No | Corner header cell. |
-| 42 |  | `srow` | Yes | No | Section row separator cell. |
-| 43 |  | `lcel` | Yes | No | Merge with left neighbor (horizontal span). |
-| 44 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
-| 45 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
-| 46 |  | `nl` | Yes | No | New line (row separator). |
-| 47 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker; attribute: `id`. |
-| 48 |  | `continue_row` | Yes | Yes | Row continuation; attribute: `id`. |
-| 49 |  | `continue_col` | Yes | Yes | Column continuation; attribute: `id`. |
-| 50 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
-| 51 |  | `uri` | No | No | External resource reference. |
-| 52 | Content Tokens | `marker` | No | No | List/form marker content. |
-| 53 |  | `class` | No | No | Classification token (e.g., language, chart type). |
-| 54 |  | `content` | No | No | Generic content wrapper. |
-| 55 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
-| 56 |  | `implicit_key` | No | No | Implicit key in forms. |
-| 57 |  | `value` | No | No | Form item value (child of `form_item`). |
+| 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` in [0, 59]. |
+| 9 |  | `subsecond` | Yes | Yes | Subseconds component of a timestamp; attribute: `value` in [0, 99]. |
+| 10 | Semantic Tokens | `title` | No | No | Document or section title. |
+| 11 |  | `section_header` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
+| 12 |  | `text` | No | No | Generic text content. |
+| 13 |  | `caption` | No | No | Caption for floating/grouped elements. |
+| 14 |  | `footnote` | No | No | Footnote content. |
+| 15 |  | `page_header` | No | No | Page header content. |
+| 16 |  | `page_footer` | No | No | Page footer content. |
+| 17 |  | `watermark` | No | No | Watermark indicator or content. |
+| 18 |  | `picture` | No | No | Image/graphic; may contain `base64` or `uri`. |
+| 19 |  | `form` | No | No | Form structure container. |
+| 20 |  | `formula` | No | No | Mathematical expression block. |
+| 21 |  | `code` | No | No | Code block; may include classification via `class` token. |
+| 22 |  | `list_item` | No | No | List item content. |
+| 23 |  | `checkbox` | No | Yes | Checkbox item; attribute: `selected`. |
+| 24 | Grouping Tokens | `section` | No | Yes | Document section; attribute: `level` (N ≥ 1). |
+| 25 |  | `list` | No | Yes | List container; attribute: `ordered` (true/false). |
+| 26 |  | `group` | No | Yes | Generic group; attribute: `type` (e.g., table, form, code). |
+| 27 | Formatting Tokens | `bold` | No | No | Bold text. |
+| 28 |  | `italic` | No | No | Italic text. |
+| 29 |  | `strikethrough` | No | No | Strike-through text. |
+| 30 |  | `superscript` | No | No | Superscript text. |
+| 31 |  | `subscript` | No | No | Subscript text. |
+| 32 |  | `rtl` | No | No | Right-to-left text direction. |
+| 33 |  | `inline_formula` | No | No | Inline formula. |
+| 34 |  | `inline_code` | No | No | Inline code. |
+| 35 |  | `inline_picture` | No | No | Inline image/graphic. |
+| 36 |  | `br` | Yes | No | Line break. |
+| 37 | Structural Tokens (OTSL) | `otsl` | No | No | Table structure container. |
+| 38 |  | `fcel` | Yes | No | New cell with content. |
+| 39 |  | `ecel` | Yes | No | New cell without content. |
+| 40 |  | `ched` | Yes | No | Column header cell. |
+| 41 |  | `rhed` | Yes | No | Row header cell. |
+| 42 |  | `corn` | Yes | No | Corner header cell. |
+| 43 |  | `srow` | Yes | No | Section row separator cell. |
+| 44 |  | `lcel` | Yes | No | Merge with left neighbor (horizontal span). |
+| 45 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
+| 46 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
+| 47 |  | `nl` | Yes | No | New line (row separator). |
+| 48 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker; attribute: `id`. |
+| 49 |  | `continue_row` | Yes | Yes | Row continuation; attribute: `id`. |
+| 50 |  | `continue_col` | Yes | Yes | Column continuation; attribute: `id`. |
+| 51 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
+| 52 |  | `uri` | No | No | External resource reference. |
+| 53 | Content Tokens | `marker` | No | No | List/form marker content. |
+| 54 |  | `class` | No | No | Classification token (e.g., language, chart type). |
+| 55 |  | `content` | No | No | Generic content wrapper. |
+| 56 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
+| 57 |  | `implicit_key` | No | No | Implicit key in forms. |
+| 58 |  | `value` | No | No | Form item value (child of `form_item`). |
 
 ### Metadata Sub-elements
 
