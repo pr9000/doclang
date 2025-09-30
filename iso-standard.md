@@ -9,6 +9,7 @@ This document was prepared by
 - Panos Vagenas
 - Santosh Borse
 - Yousaf Shah
+- Michele Dolfi
 - (FILL IN!).
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
@@ -79,6 +80,13 @@ Docling:
 - **(DoclingDocument) inline group**: A grouping of DoclingDocument items that are meant to be interpreted as a single
   unit of text, i.e. without line breaks or vertical space between them.
 -->
+
+## Content encoding
+
+The content of the elements is encoded according to the following rules:
+
+- unicode textual content is encoded as utf-8.
+- Special entities which overlap with the XML elements must be escaped, e.g. `<` becomes `&lt;`. The complete list of entities to escape is defined in Appendix B.
 
 ## DocTags Structure
 
@@ -1102,3 +1110,8 @@ The `<class>` token supports extensible vocabularies:
 | 12 | `document_hash` | No | Yes | Document hash value; attribute: `hash_function` (e.g., SHA-256). |
 | 13 | `custom_attribute` | No | Yes | Custom key/value; attributes: `key`, `name`; content is value. |
 | 14 | `processing_tool` | No | No | Name of the processing tool (e.g., docling). |
+
+## Appendix B: Escape entities
+
+TBA
+
