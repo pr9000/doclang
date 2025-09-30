@@ -30,7 +30,7 @@ DocTags addresses these challenges by providing a minimalist, unambiguous markup
 
 This standard builds upon research in document understanding and is intended to represent the content of a document as accurately as possible while maintaining implementation simplicity.
 
-## Scope 
+## Scope
 
 This International Standard specifies:
 
@@ -46,7 +46,7 @@ This International Standard specifies:
 The motivation for this new markup language is twofold,
 
 1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text
-2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count). 
+2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count).
 
 As a consequence of point 2, we need to ensure that there is limited number or semantic tags and attributes. In general, we intend that the number of semantic tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
 
@@ -94,6 +94,22 @@ Docling:
 - **(DoclingDocument) inline group**: A grouping of DoclingDocument items that are meant to be interpreted as a single
   unit of text, i.e. without line breaks or vertical space between them.
 -->
+
+## Property Semantics
+
+In XML, the attribute syntax allows explicitly separating an element's properties from its content.
+Let's consider the following example: `<elem size="250" color="#ffeedd">foo</elem>`.
+This denotes an `elem` element, including its properties (`size` and `color`) and its content (`foo`).
+
+For an element with multiple possible property values, the attribute syntax can lead to an increased complexity of the respective possible tokenized representations.
+For instance, the following could all be valid variants of an `elem` start tag: `<elem size="300" color="#aabbcc">`, `<elem size="42">`, `<elem color="#112233">`, `<elem>`.
+
+Aiming at LM-friendliness, in such cases, the ISO DocTags format favors an alternative representation of property semantics, namely captured as respective elements leading the content.
+The example above could be represented as `<elem><size>250</size><color>#ffeedd</color>foo</elem>`. Depending on the specific properties, self-closing elements are used too.
+
+This representation can reduce the number of tokens, making it easier for language models to learn and predict.
+
+For elements with a strictly limited set of possible property values, attributes are still used.
 
 ## Content encoding
 
@@ -157,10 +173,10 @@ The document can optionally begin with a `<metadata>` element, which can contain
 - `language`, Identifies the document language (e.g., English, German, French, Spanish, Japanese). The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
 - `document_quality`,Content quality assessment score using standard algorithms such as DCLM, gneissweb, etc. where 0<=Scores<=1
 - `document_readability`,Indicates how easy a a document can be undertood by a general audiance. Classifier defines known classifier or method used to produce score where 0<=Scores<=1
-- `general_topic`,Topic that the document is most likely to fall in such as Science and Technology, Legal, etc. The topics should preferrably come from some taxonomy. Classifier defines the classifier used for classifying into the given topic and score is the confidence score of classifier and 0<=Scores<=1. This can be one or more.  
+- `general_topic`,Topic that the document is most likely to fall in such as Science and Technology, Legal, etc. The topics should preferrably come from some taxonomy. Classifier defines the classifier used for classifying into the given topic and score is the confidence score of classifier and 0<=Scores<=1. This can be one or more.
 - `document_hash`, Hash of the document, whereas hash_function defines the algorithm used to compute the hash, e.g., SHA2. This can be one or more.
 - `custom_attribute`, Any custom attribute that can be added later with its properties in keys and corresponding values. This can be one or more.
-  
+
 Here is an example:
 
 ```xml
@@ -498,7 +514,7 @@ Examples:
 
 If you want to include vector graphics elements, the doctags allow you to include
 
-1. SVG: enclosed in `<svg> ... </svg>` 
+1. SVG: enclosed in `<svg> ... </svg>`
 
 ## Grammar and Structure Rules
 
@@ -602,7 +618,7 @@ Basic inline code
   Use backticks sparingly; DocTags uses explicit tokens instead.
   <br/>
   End of examples.
-  
+
 </text>
 ```
 
@@ -724,7 +740,7 @@ Grouped formula with caption and coordinates
   </formula>
   <footnote>Parameters: mean \mu and standard deviation \sigma.</footnote>
   <!-- Note: Coordinates apply to semantic elements like caption/formula, not the group. -->
-  
+
 </group>
 ```
 
@@ -784,7 +800,7 @@ Basic example
     <fcel/>Proposed<fcel/>0.92<nl/>
   </otsl>
   <footnote>Accuracy reported on validation set.</footnote>
-  
+
 </group>
 ```
 
@@ -1531,4 +1547,3 @@ The `<class>` token supports extensible vocabularies:
 ## Appendix B: Escape entities
 
 TBA
-
