@@ -1504,7 +1504,7 @@ The `<class>` token supports extensible vocabularies:
 | 14 |  | `page_header` | No | No | Page header content. |
 | 15 |  | `page_footer` | No | No | Page footer content. |
 | 16 |  | `watermark` | No | No | Watermark indicator or content. |
-| 17 |  | `picture` | No | No | Image/graphic; may contain `base64` or `uri`. |
+| 17 |  | `picture` | No | No | Image/graphic; may contain `base64`, `uri`, `class` - for image classification, `otsl` - to describe numerical values of charts, `group` - can contain document sub-tree for example in case of infographics |
 | 18 |  | `form` | No | No | Form structure container. |
 | 19 |  | `formula` | No | No | Mathematical expression block. |
 | 20 |  | `code` | No | No | Code block; may include classification via `class` token. |
