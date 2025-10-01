@@ -284,3 +284,126 @@
 
 </form>
 ```
+
+## Example 6
+
+![form-03](./form_09.png)
+
+```xml
+<section_header_1>QUADRO C - Redditi di lavoro dipendente e assimilati</section_header_1>
+<section_header_2>SEZIONE I - REDDITI DI LAVORO DIPENDENTE E ASSIMILATI</section_header_2>
+<text>Casi particolari</text>
+<text>Codice Stato estero</text>
+
+<form>
+    <form_header_1>C1</form_header_1>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+
+    <form_header_1>C2</form_header_1>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+
+    <form_header_1>C3</form_header_1>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+   
+
+    <form_header_1>C4</form_header_1>
+    <form_header_2>SOMME PER PREMI DI RISULTATO E WELFARE AZIENDALE</form_header_2>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPOLOGIA LIMITE</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>SOMME A TASSAZIONE ORDINARIA</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>SOMME A IMPOSTA SOSTITUTIVA</key>
+        <value>,00</value>
+    </form_item>
+    ...
+
+</form>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
