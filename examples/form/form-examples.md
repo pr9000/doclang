@@ -467,11 +467,11 @@ Tabular part of the form:
 
 <otsl>
 <srow>Beiträge zur Altersvorsorge<srow>52</lcel></srow><nl>
-<fcel>                           <ched>Steue...Ehemann / Person A</ched>Ehefrau / Person B</fcel> <nl>
-<fcel>Arbeitnehmeranteil laut ...<fcel>***FORM1***,-             </fcel>***FORM2***,-     </fcel>@<nl>
-<fcel>Beiträge zur landwirtsc ...<fcel>***FORM3***,-             </fcel>***FORM4***,-     </fcel> <nl>
-<fcel>Beiträge zu gesetzliche ...<fcel>***FORM5***,-             </fcel>***FORM6***,-     </fcel> <nl>
-<fcel>Erstattete Beiträge und ...<fcel>***FORM7***,-             </fcel>***FORM8***,-     </fcel>@<nl>
+<fcel/>                           <ched/>Steue...Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
+<fcel/>Arbeitnehmeranteil laut ...<fcel/>***FORM1***,-             <fcel/>***FORM2***,-     <fcel/>@<nl>
+<fcel/>Beiträge zur landwirtsc ...<fcel/>***FORM3***,-             <fcel/>***FORM4***,-     <fcel/> <nl>
+<fcel/>Beiträge zu gesetzliche ...<fcel/>***FORM5***,-             <fcel/>***FORM6***,-     <fcel/> <nl>
+<fcel/>Erstattete Beiträge und ...<fcel/>***FORM7***,-             <fcel/>***FORM8***,-     <fcel/>@<nl>
 ...
 </otsl>
 ...
@@ -487,7 +487,42 @@ FORMS:
 ***FORM8***: <form_item><key>409</key><value></value></form_item>
 ```
 
+## Example 9
 
+![form-15](./form_15_large_key.png)
+
+```xml
+...
+<heading>Part III</heading>
+<text>Figure Your Credit</text>
+
+<text>10</text>
+
+<otsl>
+<ched/>If you checked (in Part l):<ched/>Enter<nl>
+<fcel/>Box 1, 2, 4, or 7<fcel/>$5,000<nl>
+<fcel/>Box 3, 5, or 6<fcel/>$7,500<nl>
+<fcel/>Box 8 or 9<fcel/>$3,750<nl>
+</otsl>
+
+<form_item><key>10</key><value></value></form_item>
+
+<text>11 If you checked (in Part I):</text>
+<list>
+    <list_item>Box 6, add $5,000 to the taxable disability income of the spouse who was under age 65. Enter the total.</list_item>
+    <list_item>Box 2, 4, or 9, enter your taxable disability income.</list_item>
+    <list_item>BBox 5, add your taxable disability income to your spouse's taxable disability income. Enter the total.</list_item>
+</list>
+
+<form_item><key>11</key><value>.</value></form_item>
+
+<picture><class>pictogram</class></picture>
+<text>For more details on what to include on line 11, see Figure Your Credit in the instructions.</text>
+
+<text>12 If you completed line 11, enter the smaller of line 10 or line 11. All others, enter the amount from line 10</text>
+<form_item><key>12</key><value>74,992</value></form_item>
+...
+```
 
 
 
