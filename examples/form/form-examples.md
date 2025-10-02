@@ -179,7 +179,7 @@
 
 ## Example 4
 
-![form-03](./form_07.png)
+![form-07](./form_07.png)
 
 ```xml
 <heading level="1">SEZIONE II A - REDDITI SOGGETTI A IMPOSTA SOSTITUTIVA</heading>
@@ -249,7 +249,7 @@
 
 ## Example 5
 
-![form-03](./form_08.png)
+![form-08](./form_08.png)
 
 ```xml
 <heading level="1">QUADRO W - Investimenti e attività estere di natura finanziaria o patrimoniale</heading>
@@ -275,7 +275,8 @@
     </form_item>
     <form_item>
         <marker>2</marker>
-        <value></value>    </form_item>
+        <value></value>
+    </form_item>
     <form_item>
         <marker>3</marker>
         <value></value>
@@ -287,8 +288,8 @@
 
 ## Example 6
 
-![form-03](./form_09.png)
-
+![form-09](./form_09.png)
+Lower section of a form with fillable fields, markers, hints.
 ```xml
 <heading level="1">QUADRO C - Redditi di lavoro dipendente e assimilati</heading>
 
@@ -390,8 +391,73 @@
 </form>
 ```
 
+## Example 7
 
-
+![form-19](./form_19_water_damage.png)
+Middle section of a form with A and B choices:
+```xml
+...
+<form>
+    <form_heading>COCHER LES CASES CONCERNEES</form_heading>
+    <form_item>
+        <key>La cause du sinistre se situe-t-elle chez vous ?</key>
+        <checkbox selected="false"><marker>A</marker>oui</checkbox>
+        <checkbox selected="false"><marker>A</marker>non</checkbox>
+        <checkbox selected="false"><marker>B</marker>oui</checkbox>
+        <checkbox selected="false"><marker>B</marker>non</checkbox>
+    </form_item>
+    <form_item>
+        <key>Êtes-vous assuré en dégâts des eaux ?</key>
+        <checkbox selected="false"><marker>A</marker>oui</checkbox>
+        <checkbox selected="false"><marker>A</marker>non</checkbox>
+        <checkbox selected="false"><marker>B</marker>oui</checkbox>
+        <checkbox selected="false"><marker>B</marker>non</checkbox>
+    </form_item>
+    <form_item>
+        <key>Si vous êtes occupant et que vous allez déménager avez-vous donné ou reçu congé ?</key>
+        <checkbox selected="false"><marker>A</marker>avant le sinistre</checkbox>
+        <checkbox selected="false"><marker>A</marker>après le sinistre</checkbox>
+        <checkbox selected="false"><marker>B</marker>avant le sinistre</checkbox>
+        <checkbox selected="false"><marker>B</marker>après le sinistre</checkbox>
+    </form_item>
+    <form_heading>NATURE DES DOMMAGES peinture et/ou papier peint</form_heading>
+    <form_item>
+        <key>revêtements (sol, mur, plafond)</key>
+        <checkbox selected="false"><marker>A</marker>collés</checkbox>
+        <checkbox selected="false"><marker>A</marker>agrafés ou cloués</checkbox>
+        <checkbox selected="false"><marker>B</marker>collés</checkbox>
+        <checkbox selected="false"><marker>B</marker>agrafés ou cloués</checkbox>
+    </form_item>
+    <form_item>
+        <key>Ces aménagements ont-ils été exécutés à vos frais ?</key>
+        <checkbox selected="false"><marker>A</marker>oui</checkbox>
+        <checkbox selected="false"><marker>A</marker>non</checkbox>
+        <checkbox selected="false"><marker>B</marker>oui</checkbox>
+        <checkbox selected="false"><marker>B</marker>non</checkbox>
+    </form_item>
+    <form_item>
+        <key>Autres dommages immobiliers (carrelage, parquet, plâtrerie...)</key>
+        <checkbox selected="false"><marker>A</marker></checkbox>
+        <checkbox selected="false"><marker>B</marker></checkbox>
+    </form_item>
+    <form_item>
+        <key>Objets mobiliers</key>
+        <checkbox selected="false"><marker>A</marker></checkbox>
+        <checkbox selected="false"><marker>B</marker></checkbox>
+    </form_item>
+    <form_item>
+        <key>Matériels ou marchandises</key>
+        <checkbox selected="false"><marker>A</marker></checkbox>
+        <checkbox selected="false"><marker>B</marker></checkbox>
+    </form_item>
+    <form_item>
+        <key>Autres dommages</key>
+        <value><marker>A</marker><hint>(à préciser)</hint></value>
+        <value><marker>B</marker><hint>(à préciser)</hint></value>
+    </form_item>
+</form>
+...
+```
 
 
 
