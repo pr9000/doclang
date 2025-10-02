@@ -459,6 +459,37 @@ Middle section of a form with A and B choices:
 ...
 ```
 
+## Example 8
+
+![form-17](./form_17_tabular_form_with_many_elements.png)
+Tabular part of the form:
+```xml
+
+<otsl>
+<srow>Beiträge zur Altersvorsorge<srow>52</lcel></srow><nl>
+<fcel>                           <ched>Steue...Ehemann / Person A</ched>Ehefrau / Person B</fcel> <nl>
+<fcel>Arbeitnehmeranteil laut ...<fcel>***FORM1***,-             </fcel>***FORM2***,-     </fcel>@<nl>
+<fcel>Beiträge zur landwirtsc ...<fcel>***FORM3***,-             </fcel>***FORM4***,-     </fcel> <nl>
+<fcel>Beiträge zu gesetzliche ...<fcel>***FORM5***,-             </fcel>***FORM6***,-     </fcel> <nl>
+<fcel>Erstattete Beiträge und ...<fcel>***FORM7***,-             </fcel>***FORM8***,-     </fcel>@<nl>
+...
+</otsl>
+...
+
+FORMS:
+***FORM1***: <form_item><key>300</key><value></value><hint>EUR</hint></form_item>
+***FORM2***: <form_item><key>400</key><value></value><hint>EUR</hint></form_item>
+***FORM4***: <form_item><key>401</key><value></value></form_item>
+***FORM5***: <form_item><key>302</key><value></value></form_item>
+***FORM3***: <form_item><key>301</key><value></value></form_item>
+***FORM6***: <form_item><key>402</key><value></value></form_item>
+***FORM7***: <form_item><key>309</key><value></value></form_item>
+***FORM8***: <form_item><key>409</key><value></value></form_item>
+```
+
+
+
+
 
 
 
