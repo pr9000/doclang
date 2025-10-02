@@ -372,7 +372,7 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `watermark` | Page contains watermark | <!-- watermark can be text or image - do we want to capture that? also do we want to know if watermark is in background or overlay?-->
 | `list_item` | List item |
 | `form_item` | Form item (with 1 key and 1 or more values as children) |
-| `form_header` | Form header |
+| `form_heading` | Form header |
 | `form_text` | Form text |
 | `key` | key of the form item: can only be a child of `form_item` |
 | `value` | value of the form item: can only be a child of `form_item`  |
@@ -450,11 +450,41 @@ The OTSL representation follows these syntax rules:
 - First column rule: Only `<ucel/>` cells and `<fcel/>`(with variants) are allowed in the first column.
 - Rectangular rule: The table representation of structural OTSL tokens is always rectangular - all rows must have an equal number of OTSL tokens, terminated with `<nl/>` token.
 
+Example:
+```xml
+<otsl>
+  <ecel/>          <lcel/>                <ched/>Observer 1<lcel/>         <lcel/>
+  <ucel/>          <xcel/>                <ched/>benign    <ched/>malignant<ched/>Total observer 2
+  <rhed/>Observer 2<rhed/>Benign          <fcel/>13        <fcel/>2        <fcel/>15
+  <ucel/>          <rhed/>malignant       <fcel/>0         <fcel/>62       <fcel/>62
+  <ucel/>          <rhed/>Total observer 1<fcel/>13        <fcel/>64       <fcel/>77
+</otsl>
+```
+
+### Pictures of Charts
+
+`<picture>` can include `<class>` with picture classification value. In cases of numerical charts, it is also possible to include `<otsl>` that contain numerical data of a chart. This is applicable for charts with data series that can be represented in a tabular fashion: `bar_chart`, `line_chart`, `pie_chart`, `area_chart`, `scatter_plot`, `bubble_chart`, etc:
+
+```xml
+<picture>
+  <location value="50"/><location value="50"/>
+  <location value="150"/><location value="150"/>
+  <uri>assets/bar_chart.png</uri>
+  <class>bar_chart</class>
+  <otsl>
+    <ched/>sales<ched/>2022<ched/>2023<ched/>2024<ched/>2025<nl/>
+    <rhed/>ABCDE<fcel/>100M<fcel/>120M<fcel/>110M<fcel/>105M</nl>
+    <rhed/>FGHIJ<fcel/>125M<fcel/>150M<fcel/>175M<fcel/>200M</nl>
+    <rhed/>KLMNO<fcel/>300M<fcel/>270M<fcel/>250M<fcel/>210M</nl>
+  </otsl>
+</picture>
+```
+
 ### Content Tokens
 
 | Token | Description |
 |-------|-------------|
-| `<marker>`| Marker (eg for in section-header, list-item, etc) |
+| `<marker>`| Marker (eg for in section-header, list-item, form-item, etc) |
 | `<facets>`| Container meant for application-specific properties for derived information, such as summary, classification label, etc. |
 
 The present standard does not prescribe the specific `facets` content, but a possible instantiation could be:
@@ -1056,10 +1086,11 @@ Fundamentally, forms are complex list with special list-items. This is why we in
 | Token | Description |
 |-------|-------------|
 | `<form_item>` | Form item (with 1 key and 1 or more values as children) |
-| `<form_header>` | Form header: this is specifically for headers in the form. |
+| `<form_heading>` | Form header: this is specifically for headers in the form. Has an optional attribute `level` |
 | `<form_text>` | Form text: this is specifically for text-blocks in the form |
 | `<key>` | key of the form item: can only be a child of `form_item` |
 | `<value>` | value of the form item: can only be a child of `form_item`  |
+| `<hint>` | a hint for a fillable value field, can describe a format, or an example, or an extra description, a hint |
 | `<form>` | Form structure |
 
 Notice that if we have captions or footnotes for the form, we will always start with the group of type form. Next, we can start with the form.
@@ -1074,7 +1105,7 @@ Notice that if we have captions or footnotes for the form, we will always start 
 
 If no caption/footnotes are present, one can skip the group of type form. In order to represent the hierarchy, we use the concept of nested forms. The children of a form item are supposed to be on the same level and the form-headers will be in reading-order, i.e. the form-items following the form-header will belong to that form header (similarly to items following the section-headers).
 
-One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a child, but potentially one or more children of the type of `<value>` and `<checkbox>`
+One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a child, but potentially one or more children of the type of `<value>` and `<checkbox>` as well as `<hint>`. `<key>` or `<value>` not necessarily just textual and can contain a picture, multiline text, etc.
 
 #### Form Examples
 
@@ -1093,6 +1124,11 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <key>Petrograph. Typ:</key>
         <value>Quartiarer Sand + Kies</value>
     </form_item>
+    <form_item>
+        <key>Firma Direkor:</key>
+        <value></value>
+        <hint>Signature / Unterschrift</hint>
+    </form_item>
 </form>
 </textarea></td><td>
 <img src="examples/form/form_00.png" alt="form-00" width="100%">
@@ -1100,14 +1136,14 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
 <details><summary><strong>Example 2</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
 <form>
-    <form_header>
+    <form_heading>
         <marker>14.</marker>
         Transport Information
-    </form_header>
+    </form_heading>
     <form>
-        <form_header>
+        <form_heading>
             Land transport ... (Germany)
-        </form_header>
+        </form_heading>
         <form_item>
             <key>GGVS/GGVE class:</key>
             <value>8</value>
@@ -1123,9 +1159,9 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <value>not examined</value>
     </form_item>
     <form>
-        <form_header>
+        <form_heading>
             Sea transport IMDG
-        </form_header>
+        </form_heading>
         ...
     </form>
     ...
@@ -1204,7 +1240,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
 <details><summary><strong>Example 4</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
 <form>
-    <form_header>Information about you</form_header>
+    <form_heading>Information about you</form_heading>
     <form_item>
         <key>
             \*Family Name (Last Name)
@@ -1239,7 +1275,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <key>Alien Registration Number (A-Number) (if any)</key>
         <value></value>
     </form_item>
-    <form_header>Information About Your Address</form_header>
+    <form_heading>Information About Your Address</form_heading>
     <form_text>\*Present Physical Address ()No Po Boxes</form_text>
     <form_item>
         <key>\*Street ... Name</key>
@@ -1294,9 +1330,9 @@ Example 7 has a classical duality between tables and explicit key-values,
         <key>Impact</key>
         <value>Catastrophic</value>
     </form_item>
-    <form_header>
+    <form_heading>
       Affected Systems
-    </form_header>
+    </form_heading>
     <otsl>
     <ched/>IP Address<ched/>Port<ched/>Service<ched/>Version<nl/>
     <fcell/>10.0.0.101<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
@@ -1307,6 +1343,8 @@ Example 7 has a classical duality between tables and explicit key-values,
 </textarea></td><td>
 <img src="examples/form/form_06.png" alt="form-00" width="100%">
 </td></tr></table></details>
+
+More detailed and complex examples can be seen here: [Form Examples](/examples/form/form-examples.md)
 
 ### Cross-page structure
 
@@ -1496,7 +1534,7 @@ The `<class>` token supports extensible vocabularies:
 | 14 |  | `page_header` | No | No | Page header content. |
 | 15 |  | `page_footer` | No | No | Page footer content. |
 | 16 |  | `watermark` | No | No | Watermark indicator or content. |
-| 17 |  | `picture` | No | No | Image/graphic; may contain `base64` or `uri`. |
+| 17 |  | `picture` | No | No | Image/graphic; may contain `base64`, `uri`, `class` - for image classification, `otsl` - to describe numerical values of charts, `group` - can contain document sub-tree for example in case of infographics |
 | 18 |  | `form` | No | No | Form structure container. |
 | 19 |  | `formula` | No | No | Mathematical expression block. |
 | 20 |  | `code` | No | No | Code block; may include classification via `class` token. |

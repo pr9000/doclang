@@ -28,11 +28,11 @@
 
 ```xml
 <form>
-    <form_header>
+    <form_heading>
     <marker>14.</marker>Transport Information
-    </form_header>
+    </form_heading>
     <form>
-        <form_header>Land transport ... (Germany)</form_header>
+        <form_heading>Land transport ... (Germany)</form_heading>
         <form_item>
             <key>GGVS/GGVE class:</key>
             <value>8</value>
@@ -48,7 +48,7 @@
         <value>not examined</value>
     </form_item>
     <form>
-        <form_header>Sea transport IMDG</form_header>
+        <form_heading>Sea transport IMDG</form_heading>
         ...
     </form>
     ...
@@ -125,7 +125,7 @@
 
 ```xml
 <form>
-    <form_header>Information about you</form_header>
+    <form_heading>Information about you</form_heading>
     <form_item>
         <key>*Family Name (Last Name)</key>
         <value>staar</value>
@@ -158,7 +158,7 @@
         <key>Alien Registration Number (A-Number) (if any)</key>
         <value></value>
     </form_item>
-    <form_header>Information About Your Address</form_header>
+    <form_heading>Information About Your Address</form_heading>
     <text>*Present Physical Address ()No Po Boxes</text>
     <form_item>
         <key>*Street ... Name</key>
@@ -182,10 +182,10 @@
 ![form-03](./form_07.png)
 
 ```xml
-<section_header_1>SEZIONE II A - REDDITI SOGGETTI A IMPOSTA SOSTITUTIVA</section_header_1>
+<heading level="1">SEZIONE II A - REDDITI SOGGETTI A IMPOSTA SOSTITUTIVA</heading>
 <form>
-    <form_header_1>M31</form_header_1>
-    <form_header_2>REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_header_2>
+    <form_heading level="1">M31</form_heading>
+    <form_heading level="2">REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_heading>
     <form_item>
     	 <marker>1</marker>
         <key>Tipo</key>
@@ -222,8 +222,8 @@
         <value></value>
     </form_item>
 
-    <form_header_1>M32</form_header_1>
-    <form_header_2>PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</form_header_2>
+    <form_heading level="1">M32</form_heading>
+    <form_heading level="2">PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</form_heading>
     <form_item>
         <marker>1</marker>
         <key>Ammontare reddito</key>
@@ -235,8 +235,8 @@
         <value></value>
     </form_item>
 
-    <form_header_1>M33</form_header_1>
-    <form_header_2>PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</form_header_2>
+    <form_heading level="1">M33</form_heading>
+    <form_heading level="2">PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</form_heading>
     <form_item>
         <marker>1</marker>
         <key>Ammontare reddito</key>
@@ -252,10 +252,10 @@
 ![form-03](./form_08.png)
 
 ```xml
-<section_header_1>QUADRO W - Investimenti e attività estere di natura finanziaria o patrimoniale</section_header_1>
-<section_header_2>SEZIONE I - DATI RELATIVI AGLI INVESTIMENTI E ALLE ATTIVITA'</section_header_2>
+<heading level="1">QUADRO W - Investimenti e attività estere di natura finanziaria o patrimoniale</heading>
+<heading level="2">SEZIONE I - DATI RELATIVI AGLI INVESTIMENTI E ALLE ATTIVITA'</heading>
 <form>
-    <form_header_1>W1</form_header_1>
+    <form_heading level="1">W1</form_heading>
     <form_item>
         <marker>1</marker>
         <key>CODICE TITOLO POSSESSO</key>
@@ -268,7 +268,7 @@
     </form_item>
     ...
 
-    <form_header_1>W2</form_header_1>
+    <form_heading level="1">W2</form_heading>
     <form_item>
         <marker>1</marker>
         <value></value>
@@ -284,3 +284,131 @@
 
 </form>
 ```
+
+## Example 6
+
+![form-03](./form_09.png)
+
+```xml
+<heading level="1">QUADRO C - Redditi di lavoro dipendente e assimilati</heading>
+
+<form>
+    <form_heading level="1">SEZIONE I - REDDITI DI LAVORO DIPENDENTE E ASSIMILATI</form_heading>
+    <form_item>
+        <key>Casi particolari</key>
+        <checkbox selected="false"></checkbox>
+        <key>Codice Stato estero</key>
+        <value></value>
+    </form_item>
+
+    <form_heading level="2">C1</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+
+    <form_heading level="2">C2</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+
+    <form_heading level="2">C3</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+   
+
+    <form_heading level="2">C4</form_heading>
+    <form_heading level="3">SOMME PER PREMI DI RISULTATO E WELFARE AZIENDALE</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPOLOGIA LIMITE</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>SOMME A TASSAZIONE ORDINARIA</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>SOMME A IMPOSTA SOSTITUTIVA</key>
+        <value>,00</value>
+    </form_item>
+    ...
+
+</form>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
