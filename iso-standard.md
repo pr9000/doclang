@@ -450,11 +450,41 @@ The OTSL representation follows these syntax rules:
 - First column rule: Only `<ucel/>` cells and `<fcel/>`(with variants) are allowed in the first column.
 - Rectangular rule: The table representation of structural OTSL tokens is always rectangular - all rows must have an equal number of OTSL tokens, terminated with `<nl/>` token.
 
+Example:
+```xml
+<otsl>
+  <ecel/>          <lcel/>                <ched/>Observer 1<lcel/>         <lcel/>
+  <ucel/>          <xcel/>                <ched/>benign    <ched/>malignant<ched/>Total observer 2
+  <rhed/>Observer 2<rhed/>Benign          <fcel/>13        <fcel/>2        <fcel/>15
+  <ucel/>          <rhed/>malignant       <fcel/>0         <fcel/>62       <fcel/>62
+  <ucel/>          <rhed/>Total observer 1<fcel/>13        <fcel/>64       <fcel/>77
+</otsl>
+```
+
+### Pictures of Charts
+
+`<picture>` can include `<class>` with picture classification value. In cases of numerical charts, it is also possible to include `<otsl>` that contain numerical data of a chart. This is applicable for charts with data series that can be represented in a tabular fashion: `bar_chart`, `line_chart`, `pie_chart`, `area_chart`, `scatter_plot`, `bubble_chart`, etc:
+
+```xml
+<picture>
+  <location value="50"/><location value="50"/>
+  <location value="150"/><location value="150"/>
+  <uri>assets/bar_chart.png</uri>
+  <class>bar_chart</class>
+  <otsl>
+    <ched/>sales<ched/>2022<ched/>2023<ched/>2024<ched/>2025<nl/>
+    <rhed/>ABCDE<fcel/>100M<fcel/>120M<fcel/>110M<fcel/>105M</nl>
+    <rhed/>FGHIJ<fcel/>125M<fcel/>150M<fcel/>175M<fcel/>200M</nl>
+    <rhed/>KLMNO<fcel/>300M<fcel/>270M<fcel/>250M<fcel/>210M</nl>
+  </otsl>
+</picture>
+```
+
 ### Content Tokens
 
 | Token | Description |
 |-------|-------------|
-| `<marker>`| Marker (eg for in section-header, list-item, etc) |
+| `<marker>`| Marker (eg for in section-header, list-item, form-item, etc) |
 | `<facets>`| Container meant for application-specific properties for derived information, such as summary, classification label, etc. |
 
 The present standard does not prescribe the specific `facets` content, but a possible instantiation could be:
