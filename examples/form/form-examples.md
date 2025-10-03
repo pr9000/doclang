@@ -464,12 +464,12 @@ Tabular part of the form:
 ```xml
 
 <otsl>
-<srow>Beiträge zur Altersvorsorge<srow>52</lcel></srow><nl>
-<fcel/>                           <ched/>Steue...Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
-<fcel/>Arbeitnehmeranteil laut ...<fcel/>***FORM1***,-             <fcel/>***FORM2***,-     <fcel/>@<nl>
-<fcel/>Beiträge zur landwirtsc ...<fcel/>***FORM3***,-             <fcel/>***FORM4***,-     <fcel/> <nl>
-<fcel/>Beiträge zu gesetzliche ...<fcel/>***FORM5***,-             <fcel/>***FORM6***,-     <fcel/> <nl>
-<fcel/>Erstattete Beiträge und ...<fcel/>***FORM7***,-             <fcel/>***FORM8***,-     <fcel/>@<nl>
+<srow>Beiträge zur Altersvorsorge<srow>52</lcel></srow><nl/>
+<fcel/>                           <ched/>Steue...Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl/>
+<fcel/>Arbeitnehmeranteil laut ...<fcel/>***FORM1***,-             <fcel/>***FORM2***,-     <fcel/>@<nl/>
+<fcel/>Beiträge zur landwirtsc ...<fcel/>***FORM3***,-             <fcel/>***FORM4***,-     <fcel/> <nl/>
+<fcel/>Beiträge zu gesetzliche ...<fcel/>***FORM5***,-             <fcel/>***FORM6***,-     <fcel/> <nl/>
+<fcel/>Erstattete Beiträge und ...<fcel/>***FORM7***,-             <fcel/>***FORM8***,-     <fcel/>@<nl/>
 ...
 </otsl>
 ...
@@ -497,10 +497,10 @@ FORMS:
 <text>10</text>
 
 <otsl>
-<ched/>If you checked (in Part l):<ched/>Enter<nl>
-<fcel/>Box 1, 2, 4, or 7<fcel/>$5,000<nl>
-<fcel/>Box 3, 5, or 6<fcel/>$7,500<nl>
-<fcel/>Box 8 or 9<fcel/>$3,750<nl>
+<ched/>If you checked (in Part l):<ched/>Enter<nl/>
+<fcel/>Box 1, 2, 4, or 7<fcel/>$5,000<nl/>
+<fcel/>Box 3, 5, or 6<fcel/>$7,500<nl/>
+<fcel/>Box 8 or 9<fcel/>$3,750<nl/>
 </otsl>
 
 <form_item><key>10</key><value></value></form_item>
