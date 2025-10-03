@@ -1,6 +1,6 @@
 # Form Examples
 
-## Example 0
+## Simple key-values
 
 ![form-00](./form_00.png)
 
@@ -22,7 +22,7 @@
 </form>
 ```
 
-## Example 1
+## Nesting forms and using form headings
 
 ![form-01](./form_01.png)
 
@@ -57,7 +57,7 @@
 </form>
 ```
 
-## Example 2
+## Fillable form
 
 ![form-02](./form_02.png)
 
@@ -144,7 +144,7 @@
         <checkbox selected="false">Student</checkbox>
         <checkbox selected="false">Permanent Resident</checkbox>
         <checkbox selected="false">Other (Specify)</checkbox>
-        <text></text>
+        <value></value>
     <form_item>
     <form_item>
         <key>Country of Citizenship</key>
@@ -177,7 +177,7 @@
 </form>
 ```
 
-## Example 4
+## High density form
 
 ![form-07](./form_07.png)
 
@@ -247,7 +247,7 @@
 </form>
 ```
 
-## Example 5
+## Values without Keys
 
 ![form-08](./form_08.png)
 
@@ -286,10 +286,9 @@
 </form>
 ```
 
-## Example 6
+## See lower section of a form with fillable fields, markers, hints.
 
 ![form-09](./form_09.png)
-Lower section of a form with fillable fields, markers, hints.
 ```xml
 <heading level="1">QUADRO C - Redditi di lavoro dipendente e assimilati</heading>
 
@@ -391,10 +390,9 @@ Lower section of a form with fillable fields, markers, hints.
 </form>
 ```
 
-## Example 7
+## Middle section of a form with A and B choices
 
 ![form-19](./form_19_water_damage.png)
-Middle section of a form with A and B choices:
 ```xml
 ...
 <form>
@@ -459,7 +457,7 @@ Middle section of a form with A and B choices:
 ...
 ```
 
-## Example 8
+## Tabular form with strong 2D value relationship
 
 ![form-17](./form_17_tabular_form_with_many_elements.png)
 Tabular part of the form:
@@ -487,7 +485,7 @@ FORMS:
 ***FORM8***: <form_item><key>409</key><value></value></form_item>
 ```
 
-## Example 9
+## Mix table and form elements
 
 ![form-15](./form_15_large_key.png)
 
