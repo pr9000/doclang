@@ -1624,17 +1624,6 @@ FORMS referred above:
 </div>
 </td></tr></table></details>
 
-
-
-
-
-
-
-
-
-
-
-
 <details><summary><strong>Mix table and form elements</strong></summary><table><tr><td>
 <textarea readonly rows="26" cols="90" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
 ...
@@ -1665,19 +1654,6 @@ FORMS referred above:
 <img src="examples/form/form_15_large_key.png" alt="form-00" width="600px;" style="object-fit: cover; object-position: top left;">
 </div>
 </td></tr></table></details>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 Detailed examples can be seen here: [Form Examples](/examples/form/form-examples.md)
 
