@@ -473,9 +473,9 @@ Example:
   <class>bar_chart</class>
   <otsl>
     <ched/>sales<ched/>2022<ched/>2023<ched/>2024<ched/>2025<nl/>
-    <rhed/>ABCDE<fcel/>100M<fcel/>120M<fcel/>110M<fcel/>105M</nl>
-    <rhed/>FGHIJ<fcel/>125M<fcel/>150M<fcel/>175M<fcel/>200M</nl>
-    <rhed/>KLMNO<fcel/>300M<fcel/>270M<fcel/>250M<fcel/>210M</nl>
+    <rhed/>ABCDE<fcel/>100M<fcel/>120M<fcel/>110M<fcel/>105M<nl/>
+    <rhed/>FGHIJ<fcel/>125M<fcel/>150M<fcel/>175M<fcel/>200M<nl/>
+    <rhed/>KLMNO<fcel/>300M<fcel/>270M<fcel/>250M<fcel/>210M<nl/>
   </otsl>
 </picture>
 ```
@@ -1109,7 +1109,9 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
 #### Form Examples
 
-<details><summary><strong>Example 1</strong></summary><table><tr><td><textarea readonly rows="16" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<details><summary><strong>Simple key-values</strong></summary>
+<img src="examples/form/form_00.png" alt="form-00"><br>
+<textarea readonly rows="16" cols="100" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
 <form>
     <form_item>
         <key>Firma:</key>
@@ -1124,17 +1126,13 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <key>Petrograph. Typ:</key>
         <value>Quartiarer Sand + Kies</value>
     </form_item>
-    <form_item>
-        <key>Firma Direkor:</key>
-        <value></value>
-        <hint>Signature / Unterschrift</hint>
-    </form_item>
 </form>
 </textarea></td><td>
-<img src="examples/form/form_00.png" alt="form-00" width="100%">
-</td></tr></table></details>
+</details>
 
-<details><summary><strong>Example 2</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<details><summary><strong>Nesting forms and using form headings</strong></summary>
+<img src="examples/form/form_01.png" alt="form-01"><br>
+<textarea readonly rows="16" cols="100" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
 <form>
     <form_heading>
         <marker>14.</marker>
@@ -1172,11 +1170,13 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         THESE TRANSPORT ... PACK!
     </form_text>
 </form>
-</textarea></td><td>
-<img src="examples/form/form_01.png" alt="form-00" width="100%">
-</td></tr></table></details>
+</textarea>
+</details>
 
-<details><summary><strong>Example 3</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<details><summary><strong>Fillable form</strong></summary>
+<table>
+<tr><td>
+<textarea readonly rows="40" cols="80" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
 <form>
     <form_item>
         <key>Description</key>
@@ -1228,17 +1228,20 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
             <key>Guarantee</key>
             <value></value>
         </form_item>
-        <form_text>
+        <text>
             Delivery Supplies ... Finance Department
-        </form_text>
+        </text>
     </form>
     ...
 </form>
-</textarea></td><td>
-<img src="examples/form/form_02.png" alt="form-00" width="100%">
-</td></tr></table></details>
+</textarea>
+</td><td>
+<img src="examples/form/form_02.png" alt="form-00"><br>
+</td></tr></table>
+</details>
 
-<details><summary><strong>Example 4</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<details><summary><strong>Use of form headings</strong></summary><table><tr><td>
+<textarea readonly rows="40" cols="80" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
 <form>
     <form_heading>Information about you</form_heading>
     <form_item>
@@ -1261,7 +1264,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <checkbox selected="false">Student</checkbox>
         <checkbox selected="false">Permanent Resident</checkbox>
         <checkbox selected="false">Other (Specify)</checkbox>
-        <form_text></form_text>
+        <value></value>
     <form_item>
     <form_item>
         <key>Country of Citizenship</key>
@@ -1296,23 +1299,75 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 <img src="examples/form/form_03.png" alt="form-00" width="100%">
 </td></tr></table></details>
 
-<details><summary><strong>Example 5</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<details><summary><strong>High density form</strong></summary>
+<img src="examples/form/form_07.png" alt="form-00" width="1000px">
+<textarea readonly rows="30" cols="120" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
+<heading level="1">SEZIONE II A - REDDITI SOGGETTI A IMPOSTA SOSTITUTIVA</heading>
 <form>
+    <form_heading level="1">M31</form_heading>
+    <form_heading level="2">REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_heading>
+    <form_item>
+    	 <marker>1</marker>
+        <key>Tipo</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>Codice Stato estero</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>Ammontare reddito</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>Aliquota %</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>5</marker>
+        <key>Credito IVCA</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>6</marker>
+        <key>Proventi particolari</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>7</marker>
+        <key>Opzione tassazione ordinaria</key>
+        <value></value>
+    </form_item>
+    <form_heading level="1">M32</form_heading>
+    <form_heading level="2">PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>Ammontare reddito</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>Aliquota %</key>
+        <value></value>
+    </form_item>
+    <form_heading level="1">M33</form_heading>
+    <form_heading level="2">PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>Ammontare reddito</key>
+        <value></value>
+    </form_item>
+    ...    
 </form>
-</textarea></td><td>
-<img src="examples/form/form_04.png" alt="form-00" width="100%">
-</td></tr></table></details>
+</textarea>
+</details>
 
-<details><summary><strong>Example 6</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
-<form>
-</form>
-</textarea></td><td>
-<img src="examples/form/form_05.png" alt="form-00" width="100%">
-</td></tr></table></details>
-
-Example 7 has a classical duality between tables and explicit key-values,
-
-<details><summary><strong>Example 7</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
+<details><summary><strong>Classical duality between tables and explicit key-values</strong></summary>
+<img src="examples/form/form_06.png" alt="form-00" width="600px"><br>
+<textarea readonly rows="28" cols="80" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
 <form>
     <form_item>
         <key>Adjusted CVSS v3.1 Score</key>
@@ -1340,11 +1395,267 @@ Example 7 has a classical duality between tables and explicit key-values,
     <fcell/>10.0.0.103<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
     </otsl>
 </form>
+</textarea>
+</details>
+
+<details><summary><strong>Values without Keys</strong></summary><table><tr><td>
+<textarea readonly rows="45" cols="60" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
+<heading level="1">QUADRO W - Investimenti e attività estere di natura finanziaria o patrimoniale</heading>
+<heading level="2">SEZIONE I - DATI RELATIVI AGLI INVESTIMENTI E ALLE ATTIVITA'</heading>
+<form>
+    <form_heading level="1">W1</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>CODICE TITOLO POSSESSO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>TIPO CONTRIBUENTE - IVAFE</key>
+        <value></value>
+    </form_item>
+    ...
+    <form_heading level="1">W2</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <value></value>
+    </form_item>
+    ...
+</form>
 </textarea></td><td>
-<img src="examples/form/form_06.png" alt="form-00" width="100%">
+<img src="examples/form/form_08.png" alt="form-00" width="800px">
 </td></tr></table></details>
 
-More detailed and complex examples can be seen here: [Form Examples](/examples/form/form-examples.md)
+<details><summary><strong>See lower section of a form with fillable fields, markers, hints.</strong></summary><table><tr><td>
+<textarea readonly rows="45" cols="70" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
+<heading level="1">QUADRO C - Redditi di lavoro dipendente e assimilati</heading>
+<form>
+    <form_heading level="1">SEZIONE I - REDDITI DI LAVORO DIPENDENTE E ASSIMILATI</form_heading>
+    <form_item>
+        <key>Casi particolari</key>
+        <checkbox selected="false"></checkbox>
+        <key>Codice Stato estero</key>
+        <value></value>
+    </form_item>
+    <form_heading level="2">C1</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_heading level="2">C2</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_heading level="2">C3</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPO</key>
+        <value></value>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>INDETERMINATO/DETERMINATO</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>REDDITO (punti 1,2,3 CU 2025)</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>4</marker>
+        <key>ALTRI DATI</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_heading level="2">C4</form_heading>
+    <form_heading level="3">SOMME PER PREMI DI RISULTATO E WELFARE AZIENDALE</form_heading>
+    <form_item>
+        <marker>1</marker>
+        <key>TIPOLOGIA LIMITE</key>
+        <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
+        <marker>2</marker>
+        <key>SOMME A TASSAZIONE ORDINARIA</key>
+        <value>,00</value>
+    </form_item>
+    <form_item>
+        <marker>3</marker>
+        <key>SOMME A IMPOSTA SOSTITUTIVA</key>
+        <value>,00</value>
+    </form_item>
+    ...
+</form>
+</textarea></td><td>
+<img src="examples/form/form_09.png" alt="form-00" width="800px">
+</td></tr></table></details>
+
+
+<details><summary><strong>Middle section of a form with A and B choices</strong></summary>
+<img src="examples/form/form_19_water_damage.png" alt="form-00" width="800px"><br>
+<textarea readonly rows="25" cols="100" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
+<form>
+    <form_heading>COCHER LES CASES CONCERNEES</form_heading>
+    <form_item>
+        <key>La cause du sinistre se situe-t-elle chez vous ?</key>
+        <checkbox selected="false"><marker>A</marker>oui</checkbox>
+        <checkbox selected="false"><marker>A</marker>non</checkbox>
+        <checkbox selected="false"><marker>B</marker>oui</checkbox>
+        <checkbox selected="false"><marker>B</marker>non</checkbox>
+    </form_item>
+    <form_item>
+        <key>Êtes-vous assuré en dégâts des eaux ?</key>
+        <checkbox selected="false"><marker>A</marker>oui</checkbox>
+        <checkbox selected="false"><marker>A</marker>non</checkbox>
+        <checkbox selected="false"><marker>B</marker>oui</checkbox>
+        <checkbox selected="false"><marker>B</marker>non</checkbox>
+    </form_item>
+    <form_item>
+        <key>Si vous êtes occupant et que vous allez déménager avez-vous donné ou reçu congé ?</key>
+        <checkbox selected="false"><marker>A</marker>avant le sinistre</checkbox>
+        <checkbox selected="false"><marker>A</marker>après le sinistre</checkbox>
+        <checkbox selected="false"><marker>B</marker>avant le sinistre</checkbox>
+        <checkbox selected="false"><marker>B</marker>après le sinistre</checkbox>
+    </form_item>
+    <form_heading>NATURE DES DOMMAGES peinture et/ou papier peint</form_heading>
+    <form_item>
+        <key>revêtements (sol, mur, plafond)</key>
+        <checkbox selected="false"><marker>A</marker>collés</checkbox>
+        <checkbox selected="false"><marker>A</marker>agrafés ou cloués</checkbox>
+        <checkbox selected="false"><marker>B</marker>collés</checkbox>
+        <checkbox selected="false"><marker>B</marker>agrafés ou cloués</checkbox>
+    </form_item>
+    <form_item>
+        <key>Ces aménagements ont-ils été exécutés à vos frais ?</key>
+        <checkbox selected="false"><marker>A</marker>oui</checkbox>
+        <checkbox selected="false"><marker>A</marker>non</checkbox>
+        <checkbox selected="false"><marker>B</marker>oui</checkbox>
+        <checkbox selected="false"><marker>B</marker>non</checkbox>
+    </form_item>
+    <form_item>
+        <key>Autres dommages immobiliers (carrelage, parquet, plâtrerie...)</key>
+        <checkbox selected="false"><marker>A</marker></checkbox>
+        <checkbox selected="false"><marker>B</marker></checkbox>
+    </form_item>
+    <form_item>
+        <key>Objets mobiliers</key>
+        <checkbox selected="false"><marker>A</marker></checkbox>
+        <checkbox selected="false"><marker>B</marker></checkbox>
+    </form_item>
+    <form_item>
+        <key>Matériels ou marchandises</key>
+        <checkbox selected="false"><marker>A</marker></checkbox>
+        <checkbox selected="false"><marker>B</marker></checkbox>
+    </form_item>
+    <form_item>
+        <key>Autres dommages</key>
+        <value><marker>A</marker><hint>(à préciser)</hint></value>
+        <value><marker>B</marker><hint>(à préciser)</hint></value>
+    </form_item>
+</form>
+</textarea>
+</details>
+
+<details><summary><strong>Tabular form with strong 2D value relationship</strong></summary><table><tr><td>
+<textarea readonly rows="25" cols="78" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
+<otsl>
+<srow>Beiträge zur Alter...<srow>52</lcel></srow><nl>
+<fcel/><ched/>...Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
+<fcel/>Arbeitnehmerantei...<fcel/>*FORM1*,-<fcel/>*FORM2*,-<fcel/>@<nl>
+<fcel/>Beiträge zur land...<fcel/>*FORM3*,-<fcel/>*FORM4*,-<fcel/> <nl>
+<fcel/>Beiträge zu geset...<fcel/>*FORM5*,-<fcel/>*FORM6*,-<fcel/> <nl>
+<fcel/>Erstattete Beiträ...<fcel/>*FORM7*,-<fcel/>*FORM8*,-<fcel/>@<nl>
+...
+</otsl>
+...
+FORMS referred above:
+*FORM1*: <form_item><key>300</key><value></value><hint>EUR</hint></form_item>
+*FORM2*: <form_item><key>400</key><value></value><hint>EUR</hint></form_item>
+*FORM4*: <form_item><key>401</key><value></value></form_item>
+*FORM5*: <form_item><key>302</key><value></value></form_item>
+*FORM3*: <form_item><key>301</key><value></value></form_item>
+*FORM6*: <form_item><key>402</key><value></value></form_item>
+*FORM7*: <form_item><key>309</key><value></value></form_item>
+*FORM8*: <form_item><key>409</key><value></value></form_item>
+</textarea></td><td>
+<div style="overflow:hidden; height:400px; width:600px; position: relative;">
+<img src="examples/form/form_17_tabular_form_with_many_elements.png" alt="form-00" width="600px;" style="object-fit: cover; object-position: top left;">
+</div>
+</td></tr></table></details>
+
+<details><summary><strong>Mix table and form elements</strong></summary><table><tr><td>
+<textarea readonly rows="26" cols="90" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
+...
+<heading>Part III</heading>
+<text>Figure Your Credit</text>
+<text>10</text>
+<otsl>
+<ched/>If you checked (in Part l):<ched/>Enter<nl>
+<fcel/>Box 1, 2, 4, or 7<fcel/>$5,000<nl>
+<fcel/>Box 3, 5, or 6<fcel/>$7,500<nl>
+<fcel/>Box 8 or 9<fcel/>$3,750<nl>
+</otsl>
+<form_item><key>10</key><value></value></form_item>
+<text>11 If you checked (in Part I):</text>
+<list>
+    <list_item>Box 6, add $5,000 to the taxable disability income of the spouse...</list_item>
+    <list_item>Box 2, 4, or 9, enter your taxable disability income.</list_item>
+    <list_item>BBox 5, add your taxable disability income to your spouse's taxa...</list_item>
+</list>
+<form_item><key>11</key><value>.</value></form_item>
+<picture><class>pictogram</class></picture>
+<text>For more details on what to include on line 11, see Figure Your Credit...</text>
+<text>12 If you completed line 11, enter the smaller of line 10 or line 11...</text>
+<form_item><key>12</key><value>74,992</value></form_item>
+...
+</textarea></td><td>
+<div style="overflow:hidden; height:400px; width:600px; position: relative;">
+<img src="examples/form/form_15_large_key.png" alt="form-00" width="600px;" style="object-fit: cover; object-position: top left;">
+</div>
+</td></tr></table></details>
+
+Detailed examples can be seen here: [Form Examples](/examples/form/form-examples.md)
 
 ### Cross-page structure
 
