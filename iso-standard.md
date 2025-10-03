@@ -453,11 +453,11 @@ The OTSL representation follows these syntax rules:
 Example:
 ```xml
 <otsl>
-  <ecel/>          <lcel/>                <ched/>Observer 1<lcel/>         <lcel/>
-  <ucel/>          <xcel/>                <ched/>benign    <ched/>malignant<ched/>Total observer 2
-  <rhed/>Observer 2<rhed/>Benign          <fcel/>13        <fcel/>2        <fcel/>15
-  <ucel/>          <rhed/>malignant       <fcel/>0         <fcel/>62       <fcel/>62
-  <ucel/>          <rhed/>Total observer 1<fcel/>13        <fcel/>64       <fcel/>77
+  <ecel/>          <lcel/>                <ched/>Observer 1<lcel/>         <lcel/><nl/>
+  <ucel/>          <xcel/>                <ched/>benign    <ched/>malignant<ched/>Total observer 2<nl/>
+  <rhed/>Observer 2<rhed/>Benign          <fcel/>13        <fcel/>2        <fcel/>15<nl/>
+  <ucel/>          <rhed/>malignant       <fcel/>0         <fcel/>62       <fcel/>62<nl/>
+  <ucel/>          <rhed/>Total observer 1<fcel/>13        <fcel/>64       <fcel/>77<nl/>
 </otsl>
 ```
 
