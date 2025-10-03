@@ -453,11 +453,11 @@ The OTSL representation follows these syntax rules:
 Example:
 ```xml
 <otsl>
-  <ecel/>          <lcel/>                <ched/>Observer 1<lcel/>         <lcel/></nl>
-  <ucel/>          <xcel/>                <ched/>benign    <ched/>malignant<ched/>Total observer 2</nl>
-  <rhed/>Observer 2<rhed/>Benign          <fcel/>13        <fcel/>2        <fcel/>15</nl>
-  <ucel/>          <rhed/>malignant       <fcel/>0         <fcel/>62       <fcel/>62</nl>
-  <ucel/>          <rhed/>Total observer 1<fcel/>13        <fcel/>64       <fcel/>77</nl>
+  <ecel/>          <lcel/>                <ched/>Observer 1<lcel/>         <lcel/><nl/>
+  <ucel/>          <xcel/>                <ched/>benign    <ched/>malignant<ched/>Total observer 2<nl/>
+  <rhed/>Observer 2<rhed/>Benign          <fcel/>13        <fcel/>2        <fcel/>15<nl/>
+  <ucel/>          <rhed/>malignant       <fcel/>0         <fcel/>62       <fcel/>62<nl/>
+  <ucel/>          <rhed/>Total observer 1<fcel/>13        <fcel/>64       <fcel/>77<nl/>
 </otsl>
 ```
 
@@ -472,10 +472,10 @@ Example:
   <uri>assets/bar_chart.png</uri>
   <class>bar_chart</class>
   <otsl>
-    <ched/>sales<ched/>2022<ched/>2023<ched/>2024<ched/>2025</nl>
-    <rhed/>ABCDE<fcel/>100M<fcel/>120M<fcel/>110M<fcel/>105M</nl>
-    <rhed/>FGHIJ<fcel/>125M<fcel/>150M<fcel/>175M<fcel/>200M</nl>
-    <rhed/>KLMNO<fcel/>300M<fcel/>270M<fcel/>250M<fcel/>210M</nl>
+    <ched/>sales<ched/>2022<ched/>2023<ched/>2024<ched/>2025<nl/>
+    <rhed/>ABCDE<fcel/>100M<fcel/>120M<fcel/>110M<fcel/>105M<nl/>
+    <rhed/>FGHIJ<fcel/>125M<fcel/>150M<fcel/>175M<fcel/>200M<nl/>
+    <rhed/>KLMNO<fcel/>300M<fcel/>270M<fcel/>250M<fcel/>210M<nl/>
   </otsl>
 </picture>
 ```
