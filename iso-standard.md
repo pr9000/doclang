@@ -1312,7 +1312,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
   <!-- blank line after <summary> is important -->
 
-  <table><tr><td>
+  ![Form Example](examples/form/form_03.png)
 
   ```xml
   <form>
@@ -1369,12 +1369,6 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
   </form>
   ```
-
-  </td><td style="vertical-align: top;">
-
-  ![Form Example](examples/form/form_03.png)
-
-  </td></tr></table>
 </details>
 
 <details>
@@ -1490,7 +1484,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
   <!-- blank line after <summary> is important -->
 
-  <table><tr><td>
+  ![Form Example](examples/form/form_08.png)
 
   ```xml
   <heading level="1">QUADRO W - Investimenti e...</heading>
@@ -1525,24 +1519,21 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   </form>
   ```
 
-  </td><td style="vertical-align: top;">
-
-  ![Form Example](examples/form/form_08.png)
-
-  </td></tr></table>
 </details>
 
 <details>
-  <summary>See lower section of a form with fillable fields, markers, hints...</summary>
+  <summary>Another complex form deconstructed into form items</summary>
 
   <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_09.png)
 
   <table><tr><td>
 
   ```xml
   <heading level="1">QUADRO C - Redditi di lavoro...</heading>
   <form>
-      <form_heading level="1">SEZIONE I - REDDITI...</form_heading>
+      <form_heading level="1">SEZIONE I - RE...</form_heading>
       <form_item>
           <key>Casi particolari</key>
           <checkbox selected="false"></checkbox>
@@ -1586,6 +1577,13 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
           <key>REDDITO (punti 1,2,3 CU 2025)</key>
           <value>,00</value>
       </form_item>
+      ...
+  ```
+
+  </td><td style="vertical-align: top;">
+
+  ```xml
+      ...
       <form_item>
           <marker>4</marker>
           <key>ALTRI DATI</key>
@@ -1613,7 +1611,8 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
           <checkbox selected="false"></checkbox>
       </form_item>
       <form_heading level="2">C4</form_heading>
-      <form_heading level="3">SOMME PER PREMI DI...</form_heading>
+      <form_heading level="3">SOMME PER PREMI...
+      </form_heading>
       <form_item>
           <marker>1</marker>
           <key>TIPOLOGIA LIMITE</key>
@@ -1632,10 +1631,6 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       ...
   </form>
   ```
-
-  </td><td style="vertical-align: top;">
-
-  ![Form Example](examples/form/form_09.png)
 
   </td></tr></table>
 </details>
@@ -1715,20 +1710,20 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
   <!-- blank line after <summary> is important -->
 
-  <table><tr><td>
+  ![Form Example](examples/form/form_17_tabular_form_with_many_elements.png)
 
   ```xml
   <otsl>
-  <srow>Beiträge zur Alter...<srow>52</lcel></srow><nl>
-  <fcel/><ched/>...Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
-  <fcel/>Arbeitnehmerantei...<fcel/>*FORM1*,-<fcel/>*FORM2*,-<fcel/>@<nl>
-  <fcel/>Beiträge zur land...<fcel/>*FORM3*,-<fcel/>*FORM4*,-<fcel/> <nl>
-  <fcel/>Beiträge zu geset...<fcel/>*FORM5*,-<fcel/>*FORM6*,-<fcel/> <nl>
-  <fcel/>Erstattete Beiträ...<fcel/>*FORM7*,-<fcel/>*FORM8*,-<fcel/>@<nl>
+  <srow>Beiträge zur Altersvorsorge<srow>52</lcel></srow><nl>
+  <fcel/><ched/>Steuerpflichtige Person / Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
+  <fcel/>Arbeitnehmeranteil laut Nr. 23 a / b der Lohnsteuerbescheinigung<fcel/>*FORM1*,-<fcel/>*FORM2*,-<fcel/>@<nl>
+  <fcel/>Beiträge zur landwirtschaftlichen Alterskasse; zu berufsständ...<fcel/>*FORM3*,-<fcel/>*FORM4*,-<fcel/> <nl>
+  <fcel/>Beiträge zu gesetzlichen Rentenversicherungen...<fcel/>*FORM5*,-<fcel/>*FORM6*,-<fcel/> <nl>
+  <fcel/>Erstattete Beiträge und / oder steuerfreie Zuschüsse zu den...<fcel/>*FORM7*,-<fcel/>*FORM8*,-<fcel/>@<nl>
   ...
   </otsl>
   ...
-  FORMS referred above:
+  *FORMS referred above:
   *FORM1*: <form_item><key>300</key><value></value><hint>EUR</hint></form_item>
   *FORM2*: <form_item><key>400</key><value></value><hint>EUR</hint></form_item>
   *FORM4*: <form_item><key>401</key><value></value></form_item>
@@ -1738,13 +1733,6 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   *FORM7*: <form_item><key>309</key><value></value></form_item>
   *FORM8*: <form_item><key>409</key><value></value></form_item>
   ```
-
-  </td><td style="vertical-align: top;">
-
-  <!-- ![Form Example](examples/form/form_17_tabular_form_with_many_elements.png)  -->
-  <img src="examples/form/form_17_tabular_form_with_many_elements.png" alt="form-00" width="600px;" style="object-fit: cover; object-position: top left;">
-
-  </td></tr></table>
 </details>
 
 <details>
@@ -1752,8 +1740,8 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
   <!-- blank line after <summary> is important -->
 
-  <table><tr><td>
-
+  ![Form Example](examples/form/form_15_large_key.png)
+  
   ```xml
   ...
   <heading>Part III</heading>
@@ -1779,13 +1767,6 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   <form_item><key>12</key><value>74,992</value></form_item>
   ...
   ```
-
-  </td><td style="vertical-align: top;">
-
-  <!-- ![Form Example](examples/form/form_17_tabular_form_with_many_elements.png)  -->
-  <img src="examples/form/form_15_large_key.png" alt="form-00" width="600px;" style="object-fit: cover; object-position: top left;">
-
-  </td></tr></table>
 </details>
 
 
