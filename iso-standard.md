@@ -11,6 +11,7 @@ This document was prepared by
 - Nikolaos Livathinos
 - Santosh Borse,
 - Yousaf Shah,
+- Christoph Auer
 - Michele Dolfi
 - (FILL IN!).
 
@@ -33,12 +34,12 @@ This standard builds upon research in document understanding and is intended to 
 
 ## Scope
 
-This International Standard specifies:
+This standard specifies:
 
 - The syntax and semantics of the DocTags markup language
 - Rules for encoding document structure, content, and metadata
-- Mechanisms for representing geometric layout and pagination
-- Methods for preserving formatting and text direction
+- Primitives for representing geometric layout and pagination
+- Methods for expressing formatting and text direction
 - Specifications for complex document components (tables, charts, formulas, code, forms)
 - Requirements for conforming implementations
 
@@ -46,12 +47,12 @@ This International Standard specifies:
 
 The motivation for this new markup language is twofold,
 
-1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text
-2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count).
+1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text with markup
+2. It is created with the express purpose to be compatible with LLM tokenizers, i.e. use a markup structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count). 
 
-As a consequence of point 2, we need to ensure that there is limited number or semantic tags and attributes. In general, we intend that the number of semantic tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
+As a consequence of point 2, this standard ensures that there is a limited number or tags and attributes. In general, we intend that the number of syntax tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
 
-There is an exception for the meta-data. The meta-data is not intended to be used by the LLM's, so it is in general possible to have a more expanded set of protected keys. Nevertheless, we do want to normalize as much as possible the representation.
+There is an exception for meta-data markup. Meta-data is not intended to be used or produced by LLMs, so it is in general possible to include an expanded set of protected markup tokens. Nevertheless, we do want to normalize as much as possible this representation. 
 
 Such requirements preclude us from using existing markup languages such as Markdown (incomplete scope), HTML (not concise enough), LaTeX (ambiguity of representation) etc.
 
@@ -71,20 +72,20 @@ Such requirements preclude us from using existing markup languages such as Markd
 
 Abstract concepts:
 
-- **document component**: A cohesive and meaningful part of the document, e.g. a table or a bold piece of text.
+- **document component**: A cohesive and meaningful part of the document, e.g. a table, list item with a marker, a bold piece of text, etc.
 
-From XML:
+Adopted from XML:
 
 - **element**: An XML element.
 - **attribute**: An XML attribute.
-- **tag**: An XML tag: can be a start-tag, an end-tag, or an empty-element tag (AKA self-closing tag).
+- **tag**: An XML tag: can be a start-tag, an end-tag, or an empty-element tag (a.k.a. self-closing tag).
 
-From HTML:
+Adopted from HTML:
 
-- **flow content** AKA **block-level element**: An element that is meant to be interpreted or displayed as a block, i.e. starting on a new line and occupying the full width of its container; a typical HTML example is the `p` element (paragraph).
-- **phrasing content** AKA **inline element**: An element that can be used within flow content to shape its in-line structure; a typical HTML example is the `span` element.
+- **block-level element**: An element that is meant to be interpreted or displayed as a block, i.e. starting on a new line and occupying the full width of its container; a typical HTML example is the `p` element (paragraph).
+- **inline element**: An element that can be used within block element to shape its in-line structure; a typical HTML example is the `span` element.
 
-DocTags:
+Native to DocTags:
 
 - **(DocTags) token**: A low-level symbol capturing some aspect of a document or of a component thereof, expressed as a tag.
 
