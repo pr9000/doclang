@@ -11,6 +11,7 @@ This document was prepared by
 - Nikolaos Livathinos
 - Santosh Borse,
 - Yousaf Shah,
+- Christoph Auer
 - Michele Dolfi
 - (FILL IN!).
 
@@ -33,12 +34,12 @@ This standard builds upon research in document understanding and is intended to 
 
 ## Scope
 
-This International Standard specifies:
+This standard specifies:
 
 - The syntax and semantics of the DocTags markup language
 - Rules for encoding document structure, content, and metadata
-- Mechanisms for representing geometric layout and pagination
-- Methods for preserving formatting and text direction
+- Primitives for representing geometric layout and pagination
+- Methods for expressing formatting and text direction
 - Specifications for complex document components (tables, charts, formulas, code, forms)
 - Requirements for conforming implementations
 
@@ -46,12 +47,12 @@ This International Standard specifies:
 
 The motivation for this new markup language is twofold,
 
-1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text
-2. It is created with the express purpose to be compatible from the start with LLM tokenizers, i.e. use a structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count).
+1. It is created from the ground up to be able to represent complex, multimodal content with visual grounding in plain text with markup
+2. It is created with the express purpose to be compatible with LLM tokenizers, i.e. use a markup structure that maps naturally (== a 1-to-1 mapping between DocTags tokens and LLM tokens) and efficiently (== minimal token count).
 
-As a consequence of point 2, we need to ensure that there is limited number or semantic tags and attributes. In general, we intend that the number of semantic tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
+As a consequence of point 2, this standard ensures that there is a limited number or tags and attributes. In general, we intend that the number of syntax tokens should not exceed 1000. The latter is not a strong bound, but rather a direction.
 
-There is an exception for the meta-data. The meta-data is not intended to be used by the LLM's, so it is in general possible to have a more expanded set of protected keys. Nevertheless, we do want to normalize as much as possible the representation.
+There is an exception for meta-data markup. Meta-data is not intended to be used or produced by LLMs, so it is in general possible to include an expanded set of protected markup tokens. Nevertheless, we do want to normalize as much as possible this representation.
 
 Such requirements preclude us from using existing markup languages such as Markdown (incomplete scope), HTML (not concise enough), LaTeX (ambiguity of representation) etc.
 
@@ -67,24 +68,31 @@ Such requirements preclude us from using existing markup languages such as Markd
     <figcaption>Examples of real-world document fragments and their Doctags representation</figcaption>
 </figure>
 
+A specific class of related formats is the one operating on the OCR level, including [PageXML](https://github.com/PRImA-Research-Lab/PAGE-XML), [ALTO XML](https://github.com/altoxml), and [hOCR](https://github.com/kba/hocr-spec).
+
+Beyond certain low-level similarities (e.g. presence of bounding box information), the DocTags format is significantly differentiated as it is designed to be AI-native:
+
+- The above-mentioned formats focus on OCR processing, e.g. for archives, browser display, or other types of OCR/HTR pipelines, while DocTags is designed for LLM/VLM generation, with token efficiency in mind.
+- Whereas these formats are primarily concerned with the geometric locations of the various spans of text, DocTags also places a strong focus on the semantic meaning and internal structure of the involved complex components, providing various native elements for headings, formulas, code, etc. and also rich table structure support (incl. table headings, spanned cells, etc.), this way capturing richer context for generative AI applications to leverage.
+
 ## Terminology
 
 Abstract concepts:
 
-- **document component**: A cohesive and meaningful part of the document, e.g. a table or a bold piece of text.
+- **document component**: A cohesive and meaningful part of the document, e.g. a table, list item with a marker, a bold piece of text, etc.
 
-From XML:
+Adopted from XML:
 
 - **element**: An XML element.
 - **attribute**: An XML attribute.
-- **tag**: An XML tag: can be a start-tag, an end-tag, or an empty-element tag (AKA self-closing tag).
+- **tag**: An XML tag: can be a start-tag, an end-tag, or an empty-element tag (a.k.a. self-closing tag).
 
-From HTML:
+Adopted from HTML:
 
-- **flow content** AKA **block-level element**: An element that is meant to be interpreted or displayed as a block, i.e. starting on a new line and occupying the full width of its container; a typical HTML example is the `p` element (paragraph).
-- **phrasing content** AKA **inline element**: An element that can be used within flow content to shape its in-line structure; a typical HTML example is the `span` element.
+- **block-level element**: An element that is meant to be interpreted or displayed as a block, i.e. starting on a new line and occupying the full width of its container; a typical HTML example is the `p` element (paragraph).
+- **inline element**: An element that can be used within block element to shape its in-line structure; a typical HTML example is the `span` element.
 
-DocTags:
+Native to DocTags:
 
 - **(DocTags) token**: A low-level symbol capturing some aspect of a document or of a component thereof, expressed as a tag.
 
@@ -105,7 +113,7 @@ This denotes an `elem` element, including its properties (`size` and `color`) an
 For an element with multiple possible property values, the attribute syntax can lead to an increased complexity of the respective possible tokenized representations.
 For instance, the following could all be valid variants of an `elem` start tag: `<elem size="300" color="#aabbcc">`, `<elem size="42">`, `<elem color="#112233">`, `<elem>`.
 
-Aiming at LM-friendliness, in such cases, the ISO DocTags format favors an alternative representation of property semantics, namely captured as respective elements leading the content.
+Aiming at LLM-friendliness, in such cases, the ISO DocTags format favors an alternative representation of property semantics, namely captured as respective elements leading the content.
 The example above could be represented as `<elem><size>250</size><color>#ffeedd</color>foo</elem>`. Depending on the specific properties, self-closing elements are used too.
 
 This representation can reduce the number of tokens, making it easier for language models to learn and predict.
@@ -604,9 +612,7 @@ Examples:
 
 ### Vector graphics Elements
 
-If you want to include vector graphics elements, the doctags allow you to include
-
-1. SVG: enclosed in `<svg> ... </svg>`
+If you want to include vector graphics elements, DocTags allow you to include SVG: enclosed in `<svg> ... </svg>`.
 
 ## Grammar and Structure Rules
 
@@ -689,7 +695,7 @@ Basic inline code
 
 ```xml
 <text>
-  Install with <inline_code>pip install doctags</inline_code> and run.
+  Install with <inline_code>pip install docling</inline_code> and run.
   For environment checks, use <inline_code>python --version</inline_code>.
   Inline code preserves spacing and punctuation.
   <br/>
@@ -1162,31 +1168,42 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
 #### Form Examples
 
-<details><summary><strong>Simple key-values</strong></summary>
-<img src="examples/form/form_00.png" alt="form-00"><br>
-<textarea readonly rows="16" cols="100" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<form>
-    <form_item>
-        <key>Firma:</key>
-        <value>Holcim ... GmbH</value>
-    </form_item>
-    <form_item>
-        <key>Datum:</key>
+<details>
+  <summary>Simple key-values</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_00.png)
+
+  ```xml
+  <form>
+      <form_item>
+          <key>Firma:</key>
+          <value>Holcim ... GmbH</value>
+      </form_item>
+      <form_item>
+          <key>Datum:</key>
         <value>23.08.2019</value>
-    </form_item>
-    ...
-    <form_item>
-        <key>Petrograph. Typ:</key>
-        <value>Quartiarer Sand + Kies</value>
-    </form_item>
-</form>
-</textarea></td><td>
+      </form_item>
+      ...
+      <form_item>
+          <key>Petrograph. Typ:</key>
+          <value>Quartiarer Sand + Kies</value>
+      </form_item>
+  </form>
+  ```
+
 </details>
 
-<details><summary><strong>Nesting forms and using form headings</strong></summary>
-<img src="examples/form/form_01.png" alt="form-01"><br>
-<textarea readonly rows="16" cols="100" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<form>
+<details>
+  <summary>Nesting forms and using form headings</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_01.png)
+
+  ```xml
+  <form>
     <form_heading>
         <marker>14.</marker>
         Transport Information
@@ -1222,80 +1239,94 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     <form_text>
         THESE TRANSPORT ... PACK!
     </form_text>
-</form>
-</textarea>
+  </form>
+  ```
+
 </details>
 
-<details><summary><strong>Fillable form</strong></summary>
-<table>
-<tr><td>
-<textarea readonly rows="40" cols="80" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<form>
-    <form_item>
-        <key>Description</key>
-        <value>A.A. Cat</value>
-    </form_item>
-    <form_item>
-        <key>Quant.</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Un</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Measure</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Price (in currency)</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Un</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Total</key>
-        <value></value>
-    </form_item>
-    <form_text></form_text>
-    <form>
-        <form_item>
-            <key>Delivery Cost</key>
-            <value></value>
-        </form_item>
-        <form_item>
-            <key>Maintenance</key>
-            <value></value>
-        </form_item>
-        ...
-    <form>
-    <form>
-        <form_item>
-            <key>Date and time of delivery:</key>
-            <value></value>
-        </form_item>
-        ...
-        <form_item>
-            <key>Guarantee</key>
-            <value></value>
-        </form_item>
-        <text>
-            Delivery Supplies ... Finance Department
-        </text>
-    </form>
-    ...
-</form>
-</textarea>
-</td><td>
-<img src="examples/form/form_02.png" alt="form-00"><br>
-</td></tr></table>
+<details>
+  <summary>Fillable form</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  <table><tr><td>
+
+  ```xml
+  <form>
+      <form_item>
+          <key>Description</key>
+          <value>A.A. Cat</value>
+      </form_item>
+      <form_item>
+          <key>Quant.</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Un</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Measure</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Price (in currency)</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Un</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Total</key>
+          <value></value>
+      </form_item>
+      <form_text></form_text>
+      <form>
+          <form_item>
+              <key>Delivery Cost</key>
+              <value></value>
+          </form_item>
+          <form_item>
+              <key>Maintenance</key>
+              <value></value>
+          </form_item>
+          ...
+      <form>
+      <form>
+          <form_item>
+              <key>Date and time of delivery:</key>
+              <value></value>
+          </form_item>
+          ...
+          <form_item>
+              <key>Guarantee</key>
+              <value></value>
+          </form_item>
+          <text>
+              Delivery Suppl...Finance Department
+          </text>
+      </form>
+      ...
+  </form>
+  ```
+
+  </td><td style="vertical-align: top;">
+
+  ![Form Example](examples/form/form_02.png)
+
+  </td></tr></table>
 </details>
 
-<details><summary><strong>Use of form headings</strong></summary><table><tr><td>
-<textarea readonly rows="40" cols="80" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<form>
+<details>
+  <summary>Use of form headings</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_03.png)
+
+  ```xml
+  <form>
     <form_heading>Information about you</form_heading>
     <form_item>
         <key>
@@ -1347,367 +1378,415 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     </form_item>
     ...
 
-</form>
-</textarea></td><td>
-<img src="examples/form/form_03.png" alt="form-00" width="100%">
-</td></tr></table></details>
+  </form>
+  ```
 
-<details><summary><strong>High density form</strong></summary>
-<img src="examples/form/form_07.png" alt="form-00" width="1000px">
-<textarea readonly rows="30" cols="120" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<heading level="1">SEZIONE II A - REDDITI SOGGETTI A IMPOSTA SOSTITUTIVA</heading>
-<form>
-    <form_heading level="1">M31</form_heading>
-    <form_heading level="2">REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_heading>
-    <form_item>
-      <marker>1</marker>
-        <key>Tipo</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>2</marker>
+</details>
+
+<details>
+  <summary>High density form</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_07.png)
+
+  ```xml
+  <form>
+      <form_heading level="1">M31</form_heading>
+      <form_heading level="2">REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_heading>
+      <form_item>
+        <marker>1</marker>
+          <key>Tipo</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>Codice Stato estero</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>Ammontare reddito</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>4</marker>
+          <key>Aliquota %</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>5</marker>
+          <key>Credito IVCA</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>6</marker>
+          <key>Proventi particolari</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>7</marker>
+          <key>Opzione tassazione ordinaria</key>
+          <value></value>
+      </form_item>
+      <form_heading level="1">M32</form_heading>
+      <form_heading level="2">PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>Ammontare reddito</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>Aliquota %</key>
+          <value></value>
+      </form_item>
+      <form_heading level="1">M33</form_heading>
+      <form_heading level="2">PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>Ammontare reddito</key>
+          <value>,00</value>
+      </form_item>
+      ...
+  </form>
+  ```
+
+</details>
+
+<details>
+  <summary>Classical duality between tables and explicit key-values</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_06.png)
+
+  ```xml
+  <form>
+      <form_item>
+          <key>Adjusted CVSS v3.1 Score</key>
+          <value>10.0</value>
+      </form_item>
+      <form_item>
+          <key>Vector</key>
+          <value>AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H</value>
+      </form_item>
+      <form_item>
+          <key>Likelihood</key>
+          <value>Very High</value>
+      </form_item>
+      <form_item>
+          <key>Impact</key>
+          <value>Catastrophic</value>
+      </form_item>
+      <form_heading>
+        Affected Systems
+      </form_heading>
+      <otsl>
+      <ched/>IP Address<ched/>Port<ched/>Service<ched/>Version<nl/>
+      <fcell/>10.0.0.101<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+      <fcell/>10.0.0.102<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+      <fcell/>10.0.0.103<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+      </otsl>
+  </form>
+  ```
+
+</details>
+
+<details>
+  <summary>Values without Keys</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_08.png)
+
+  ```xml
+  <heading level="1">QUADRO W - Investimenti e...</heading>
+  <heading level="2">SEZIONE I - DATI RELATIVI...</heading>
+  <form>
+      <form_heading level="1">W1</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>CODICE TITOLO POSSESSO</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>TIPO CONTRIBUENTE - IVAFE</key>
+          <value></value>
+      </form_item>
+      ...
+      <form_heading level="1">W2</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <value></value>
+      </form_item>
+      ...
+  </form>
+  ```
+
+</details>
+
+<details>
+  <summary>Another complex form deconstructed into form items</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_09.png)
+
+  <table><tr><td>
+
+  ```xml
+  <heading level="1">QUADRO C - Redditi di lavoro...</heading>
+  <form>
+      <form_heading level="1">SEZIONE I - RE...</form_heading>
+      <form_item>
+          <key>Casi particolari</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
         <key>Codice Stato estero</key>
         <value></value>
-    </form_item>
-    <form_item>
-        <marker>3</marker>
-        <key>Ammontare reddito</key>
-        <value>,00</value>
-    </form_item>
-    <form_item>
-        <marker>4</marker>
-        <key>Aliquota %</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>5</marker>
-        <key>Credito IVCA</key>
-        <value>,00</value>
-    </form_item>
-    <form_item>
-        <marker>6</marker>
-        <key>Proventi particolari</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>7</marker>
-        <key>Opzione tassazione ordinaria</key>
-        <value></value>
-    </form_item>
-    <form_heading level="1">M32</form_heading>
-    <form_heading level="2">PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</form_heading>
-    <form_item>
-        <marker>1</marker>
-        <key>Ammontare reddito</key>
-        <value>,00</value>
-    </form_item>
-    <form_item>
-        <marker>2</marker>
-        <key>Aliquota %</key>
-        <value></value>
-    </form_item>
-    <form_heading level="1">M33</form_heading>
-    <form_heading level="2">PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</form_heading>
-    <form_item>
-        <marker>1</marker>
-        <key>Ammontare reddito</key>
-        <value>,00</value>
-    </form_item>
-    ...
-</form>
-</textarea>
+      </form_item>
+      <form_heading level="2">C1</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>TIPO</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>INDETERMINATO/DETERMINATO</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>REDDITO (punti 1,2,3 CU 2025)</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>4</marker>
+          <key>ALTRI DATI</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_heading level="2">C2</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>TIPO</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>INDETERMINATO/DETERMINATO</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>REDDITO (punti 1,2,3 CU 2025)</key>
+          <value>,00</value>
+      </form_item>
+      ...
+  ```
+
+  </td><td style="vertical-align: top;">
+
+  ```xml
+      ...
+      <form_item>
+          <marker>4</marker>
+          <key>ALTRI DATI</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_heading level="2">C3</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>TIPO</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>INDETERMINATO/DETERMINATO</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>REDDITO (punti 1,2,3 CU 2025)</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>4</marker>
+          <key>ALTRI DATI</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_heading level="2">C4</form_heading>
+      <form_heading level="3">SOMME PER PREMI...
+      </form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>TIPOLOGIA LIMITE</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>SOMME A TASSAZIONE ORDINARIA</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>SOMME A IMPOSTA SOSTITUTIVA</key>
+          <value>,00</value>
+      </form_item>
+      ...
+  </form>
+  ```
+
+  </td></tr></table>
 </details>
 
-<details><summary><strong>Classical duality between tables and explicit key-values</strong></summary>
-<img src="examples/form/form_06.png" alt="form-00" width="600px"><br>
-<textarea readonly rows="28" cols="80" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<form>
-    <form_item>
-        <key>Adjusted CVSS v3.1 Score</key>
-        <value>10.0</value>
-    </form_item>
-    <form_item>
-        <key>Vector</key>
-        <value>AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H</value>
-    </form_item>
-    <form_item>
-        <key>Likelihood</key>
-        <value>Very High</value>
-    </form_item>
-    <form_item>
-        <key>Impact</key>
-        <value>Catastrophic</value>
-    </form_item>
-    <form_heading>
-      Affected Systems
-    </form_heading>
-    <otsl>
-    <ched/>IP Address<ched/>Port<ched/>Service<ched/>Version<nl/>
-    <fcell/>10.0.0.101<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
-    <fcell/>10.0.0.102<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
-    <fcell/>10.0.0.103<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
-    </otsl>
-</form>
-</textarea>
+<details>
+  <summary>Middle section of a form with A and B choices</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_19_water_damage.png)
+
+  ```xml
+  <form>
+      <form_heading>COCHER LES CASES CONCERNEES</form_heading>
+      <form_item>
+          <key>La cause du sinistre se situe-t-elle chez vous ?</key>
+          <checkbox selected="false"><marker>A</marker>oui</checkbox>
+          <checkbox selected="false"><marker>A</marker>non</checkbox>
+          <checkbox selected="false"><marker>B</marker>oui</checkbox>
+          <checkbox selected="false"><marker>B</marker>non</checkbox>
+      </form_item>
+      <form_item>
+          <key>Êtes-vous assuré en dégâts des eaux ?</key>
+          <checkbox selected="false"><marker>A</marker>oui</checkbox>
+          <checkbox selected="false"><marker>A</marker>non</checkbox>
+          <checkbox selected="false"><marker>B</marker>oui</checkbox>
+          <checkbox selected="false"><marker>B</marker>non</checkbox>
+      </form_item>
+      <form_item>
+          <key>Si vous êtes occupant et que vous allez déménager avez-vous donné ou reçu congé ?</key>
+          <checkbox selected="false"><marker>A</marker>avant le sinistre</checkbox>
+          <checkbox selected="false"><marker>A</marker>après le sinistre</checkbox>
+          <checkbox selected="false"><marker>B</marker>avant le sinistre</checkbox>
+          <checkbox selected="false"><marker>B</marker>après le sinistre</checkbox>
+      </form_item>
+      <form_heading>NATURE DES DOMMAGES peinture et/ou papier peint</form_heading>
+      <form_item>
+          <key>revêtements (sol, mur, plafond)</key>
+          <checkbox selected="false"><marker>A</marker>collés</checkbox>
+          <checkbox selected="false"><marker>A</marker>agrafés ou cloués</checkbox>
+          <checkbox selected="false"><marker>B</marker>collés</checkbox>
+          <checkbox selected="false"><marker>B</marker>agrafés ou cloués</checkbox>
+      </form_item>
+      <form_item>
+          <key>Ces aménagements ont-ils été exécutés à vos frais ?</key>
+          <checkbox selected="false"><marker>A</marker>oui</checkbox>
+          <checkbox selected="false"><marker>A</marker>non</checkbox>
+          <checkbox selected="false"><marker>B</marker>oui</checkbox>
+          <checkbox selected="false"><marker>B</marker>non</checkbox>
+      </form_item>
+      <form_item>
+          <key>Autres dommages immobiliers (carrelage, parquet, plâtrerie...)</key>
+          <checkbox selected="false"><marker>A</marker></checkbox>
+          <checkbox selected="false"><marker>B</marker></checkbox>
+      </form_item>
+      <form_item>
+          <key>Objets mobiliers</key>
+          <checkbox selected="false"><marker>A</marker></checkbox>
+          <checkbox selected="false"><marker>B</marker></checkbox>
+      </form_item>
+      <form_item>
+          <key>Matériels ou marchandises</key>
+          <checkbox selected="false"><marker>A</marker></checkbox>
+          <checkbox selected="false"><marker>B</marker></checkbox>
+      </form_item>
+      <form_item>
+          <key>Autres dommages</key>
+          <value><marker>A</marker><hint>(à préciser)</hint></value>
+          <value><marker>B</marker><hint>(à préciser)</hint></value>
+      </form_item>
+  </form>
+  ```
+
 </details>
 
-<details><summary><strong>Values without Keys</strong></summary><table><tr><td>
-<textarea readonly rows="45" cols="60" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<heading level="1">QUADRO W - Investimenti e attività estere di natura finanziaria o patrimoniale</heading>
-<heading level="2">SEZIONE I - DATI RELATIVI AGLI INVESTIMENTI E ALLE ATTIVITA'</heading>
-<form>
-    <form_heading level="1">W1</form_heading>
-    <form_item>
-        <marker>1</marker>
-        <key>CODICE TITOLO POSSESSO</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>2</marker>
-        <key>TIPO CONTRIBUENTE - IVAFE</key>
-        <value></value>
-    </form_item>
-    ...
-    <form_heading level="1">W2</form_heading>
-    <form_item>
-        <marker>1</marker>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>2</marker>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>3</marker>
-        <value></value>
-    </form_item>
-    ...
-</form>
-</textarea></td><td>
-<img src="examples/form/form_08.png" alt="form-00" width="800px">
-</td></tr></table></details>
+<details>
+  <summary>Tabular form with strong 2D value relationship</summary>
 
-<details><summary><strong>See lower section of a form with fillable fields, markers, hints.</strong></summary><table><tr><td>
-<textarea readonly rows="45" cols="70" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<heading level="1">QUADRO C - Redditi di lavoro dipendente e assimilati</heading>
-<form>
-    <form_heading level="1">SEZIONE I - REDDITI DI LAVORO DIPENDENTE E ASSIMILATI</form_heading>
-    <form_item>
-        <key>Casi particolari</key>
-        <checkbox selected="false"></checkbox>
-    </form_item>
-    <form_item>
-        <key>Codice Stato estero</key>
-        <value></value>
-    </form_item>
-    <form_heading level="2">C1</form_heading>
-    <form_item>
-        <marker>1</marker>
-        <key>TIPO</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>2</marker>
-        <key>INDETERMINATO/DETERMINATO</key>
-        <checkbox selected="false"></checkbox>
-    </form_item>
-    <form_item>
-        <marker>3</marker>
-        <key>REDDITO (punti 1,2,3 CU 2025)</key>
-        <value>,00</value>
-    </form_item>
-    <form_item>
-        <marker>4</marker>
-        <key>ALTRI DATI</key>
-        <checkbox selected="false"></checkbox>
-    </form_item>
-    <form_heading level="2">C2</form_heading>
-    <form_item>
-        <marker>1</marker>
-        <key>TIPO</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>2</marker>
-        <key>INDETERMINATO/DETERMINATO</key>
-        <checkbox selected="false"></checkbox>
-    </form_item>
-    <form_item>
-        <marker>3</marker>
-        <key>REDDITO (punti 1,2,3 CU 2025)</key>
-        <value>,00</value>
-    </form_item>
-    <form_item>
-        <marker>4</marker>
-        <key>ALTRI DATI</key>
-        <checkbox selected="false"></checkbox>
-    </form_item>
-    <form_heading level="2">C3</form_heading>
-    <form_item>
-        <marker>1</marker>
-        <key>TIPO</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <marker>2</marker>
-        <key>INDETERMINATO/DETERMINATO</key>
-        <checkbox selected="false"></checkbox>
-    </form_item>
-    <form_item>
-        <marker>3</marker>
-        <key>REDDITO (punti 1,2,3 CU 2025)</key>
-        <value>,00</value>
-    </form_item>
-    <form_item>
-        <marker>4</marker>
-        <key>ALTRI DATI</key>
-        <checkbox selected="false"></checkbox>
-    </form_item>
-    <form_heading level="2">C4</form_heading>
-    <form_heading level="3">SOMME PER PREMI DI RISULTATO E WELFARE AZIENDALE</form_heading>
-    <form_item>
-        <marker>1</marker>
-        <key>TIPOLOGIA LIMITE</key>
-        <checkbox selected="false"></checkbox>
-    </form_item>
-    <form_item>
-        <marker>2</marker>
-        <key>SOMME A TASSAZIONE ORDINARIA</key>
-        <value>,00</value>
-    </form_item>
-    <form_item>
-        <marker>3</marker>
-        <key>SOMME A IMPOSTA SOSTITUTIVA</key>
-        <value>,00</value>
-    </form_item>
-    ...
-</form>
-</textarea></td><td>
-<img src="examples/form/form_09.png" alt="form-00" width="800px">
-</td></tr></table></details>
+  <!-- blank line after <summary> is important -->
 
-<details><summary><strong>Middle section of a form with A and B choices</strong></summary>
-<img src="examples/form/form_19_water_damage.png" alt="form-00" width="800px"><br>
-<textarea readonly rows="25" cols="100" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<form>
-    <form_heading>COCHER LES CASES CONCERNEES</form_heading>
-    <form_item>
-        <key>La cause du sinistre se situe-t-elle chez vous ?</key>
-        <checkbox selected="false"><marker>A</marker>oui</checkbox>
-        <checkbox selected="false"><marker>A</marker>non</checkbox>
-        <checkbox selected="false"><marker>B</marker>oui</checkbox>
-        <checkbox selected="false"><marker>B</marker>non</checkbox>
-    </form_item>
-    <form_item>
-        <key>Êtes-vous assuré en dégâts des eaux ?</key>
-        <checkbox selected="false"><marker>A</marker>oui</checkbox>
-        <checkbox selected="false"><marker>A</marker>non</checkbox>
-        <checkbox selected="false"><marker>B</marker>oui</checkbox>
-        <checkbox selected="false"><marker>B</marker>non</checkbox>
-    </form_item>
-    <form_item>
-        <key>Si vous êtes occupant et que vous allez déménager avez-vous donné ou reçu congé ?</key>
-        <checkbox selected="false"><marker>A</marker>avant le sinistre</checkbox>
-        <checkbox selected="false"><marker>A</marker>après le sinistre</checkbox>
-        <checkbox selected="false"><marker>B</marker>avant le sinistre</checkbox>
-        <checkbox selected="false"><marker>B</marker>après le sinistre</checkbox>
-    </form_item>
-    <form_heading>NATURE DES DOMMAGES peinture et/ou papier peint</form_heading>
-    <form_item>
-        <key>revêtements (sol, mur, plafond)</key>
-        <checkbox selected="false"><marker>A</marker>collés</checkbox>
-        <checkbox selected="false"><marker>A</marker>agrafés ou cloués</checkbox>
-        <checkbox selected="false"><marker>B</marker>collés</checkbox>
-        <checkbox selected="false"><marker>B</marker>agrafés ou cloués</checkbox>
-    </form_item>
-    <form_item>
-        <key>Ces aménagements ont-ils été exécutés à vos frais ?</key>
-        <checkbox selected="false"><marker>A</marker>oui</checkbox>
-        <checkbox selected="false"><marker>A</marker>non</checkbox>
-        <checkbox selected="false"><marker>B</marker>oui</checkbox>
-        <checkbox selected="false"><marker>B</marker>non</checkbox>
-    </form_item>
-    <form_item>
-        <key>Autres dommages immobiliers (carrelage, parquet, plâtrerie...)</key>
-        <checkbox selected="false"><marker>A</marker></checkbox>
-        <checkbox selected="false"><marker>B</marker></checkbox>
-    </form_item>
-    <form_item>
-        <key>Objets mobiliers</key>
-        <checkbox selected="false"><marker>A</marker></checkbox>
-        <checkbox selected="false"><marker>B</marker></checkbox>
-    </form_item>
-    <form_item>
-        <key>Matériels ou marchandises</key>
-        <checkbox selected="false"><marker>A</marker></checkbox>
-        <checkbox selected="false"><marker>B</marker></checkbox>
-    </form_item>
-    <form_item>
-        <key>Autres dommages</key>
-        <value><marker>A</marker><hint>(à préciser)</hint></value>
-        <value><marker>B</marker><hint>(à préciser)</hint></value>
-    </form_item>
-</form>
-</textarea>
+  ![Form Example](examples/form/form_17_tabular_form_with_many_elements.png)
+
+  ```xml
+  <otsl>
+  <srow>Beiträge zur Altersvorsorge<srow>52</lcel></srow><nl>
+  <fcel/><ched/>Steuerpflichtige Person / Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
+  <fcel/>Arbeitnehmeranteil laut Nr. 23 a / b der Lohnsteuerbescheinigung<fcel/>*FORM1*,-<fcel/>*FORM2*,-<fcel/>@<nl>
+  <fcel/>Beiträge zur landwirtschaftlichen Alterskasse; zu berufsständ...<fcel/>*FORM3*,-<fcel/>*FORM4*,-<fcel/> <nl>
+  <fcel/>Beiträge zu gesetzlichen Rentenversicherungen...<fcel/>*FORM5*,-<fcel/>*FORM6*,-<fcel/> <nl>
+  <fcel/>Erstattete Beiträge und / oder steuerfreie Zuschüsse zu den...<fcel/>*FORM7*,-<fcel/>*FORM8*,-<fcel/>@<nl>
+  ...
+  </otsl>
+  ...
+  *FORMS referred above:
+  *FORM1*: <form_item><key>300</key><value></value><hint>EUR</hint></form_item>
+  *FORM2*: <form_item><key>400</key><value></value><hint>EUR</hint></form_item>
+  *FORM4*: <form_item><key>401</key><value></value></form_item>
+  *FORM5*: <form_item><key>302</key><value></value></form_item>
+  *FORM3*: <form_item><key>301</key><value></value></form_item>
+  *FORM6*: <form_item><key>402</key><value></value></form_item>
+  *FORM7*: <form_item><key>309</key><value></value></form_item>
+  *FORM8*: <form_item><key>409</key><value></value></form_item>
+  ```
+
 </details>
 
-<details><summary><strong>Tabular form with strong 2D value relationship</strong></summary><table><tr><td>
-<textarea readonly rows="25" cols="78" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-<otsl>
-<srow>Beiträge zur Alter...<srow>52</lcel></srow><nl>
-<fcel/><ched/>...Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
-<fcel/>Arbeitnehmerantei...<fcel/>*FORM1*,-<fcel/>*FORM2*,-<fcel/>@<nl>
-<fcel/>Beiträge zur land...<fcel/>*FORM3*,-<fcel/>*FORM4*,-<fcel/> <nl>
-<fcel/>Beiträge zu geset...<fcel/>*FORM5*,-<fcel/>*FORM6*,-<fcel/> <nl>
-<fcel/>Erstattete Beiträ...<fcel/>*FORM7*,-<fcel/>*FORM8*,-<fcel/>@<nl>
-...
-</otsl>
-...
-FORMS referred above:
-*FORM1*: <form_item><key>300</key><value></value><hint>EUR</hint></form_item>
-*FORM2*: <form_item><key>400</key><value></value><hint>EUR</hint></form_item>
-*FORM4*: <form_item><key>401</key><value></value></form_item>
-*FORM5*: <form_item><key>302</key><value></value></form_item>
-*FORM3*: <form_item><key>301</key><value></value></form_item>
-*FORM6*: <form_item><key>402</key><value></value></form_item>
-*FORM7*: <form_item><key>309</key><value></value></form_item>
-*FORM8*: <form_item><key>409</key><value></value></form_item>
-</textarea></td><td>
-<div style="overflow:hidden; height:400px; width:600px; position: relative;">
-<img src="examples/form/form_17_tabular_form_with_many_elements.png" alt="form-00" width="600px;" style="object-fit: cover; object-position: top left;">
-</div>
-</td></tr></table></details>
+<details>
+  <summary>Mix table and form elements</summary>
 
-<details><summary><strong>Mix table and form elements</strong></summary><table><tr><td>
-<textarea readonly rows="26" cols="90" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-...
-<heading>Part III</heading>
-<text>Figure Your Credit</text>
-<text>10</text>
-<otsl>
-<ched/>If you checked (in Part l):<ched/>Enter<nl>
-<fcel/>Box 1, 2, 4, or 7<fcel/>$5,000<nl>
-<fcel/>Box 3, 5, or 6<fcel/>$7,500<nl>
-<fcel/>Box 8 or 9<fcel/>$3,750<nl>
-</otsl>
-<form_item><key>10</key><value></value></form_item>
-<text>11 If you checked (in Part I):</text>
-<list>
-    <list_item>Box 6, add $5,000 to the taxable disability income of the spouse...</list_item>
-    <list_item>Box 2, 4, or 9, enter your taxable disability income.</list_item>
-    <list_item>BBox 5, add your taxable disability income to your spouse's taxa...</list_item>
-</list>
-<form_item><key>11</key><value>.</value></form_item>
-<picture><class>pictogram</class></picture>
-<text>For more details on what to include on line 11, see Figure Your Credit...</text>
-<text>12 If you completed line 11, enter the smaller of line 10 or line 11...</text>
-<form_item><key>12</key><value>74,992</value></form_item>
-...
-</textarea></td><td>
-<div style="overflow:hidden; height:400px; width:600px; position: relative;">
-<img src="examples/form/form_15_large_key.png" alt="form-00" width="600px;" style="object-fit: cover; object-position: top left;">
-</div>
-</td></tr></table></details>
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_15_large_key.png)
+
+  ```xml
+  ...
+  <heading>Part III</heading>
+  <text>Figure Your Credit</text>
+  <text>10</text>
+  <otsl>
+  <ched/>If you checked (in Part l):<ched/>Enter<nl>
+  <fcel/>Box 1, 2, 4, or 7<fcel/>$5,000<nl>
+  <fcel/>Box 3, 5, or 6<fcel/>$7,500<nl>
+  <fcel/>Box 8 or 9<fcel/>$3,750<nl>
+  </otsl>
+  <form_item><key>10</key><value></value></form_item>
+  <text>11 If you checked (in Part I):</text>
+  <list>
+      <list_item>Box 6, add $5,000 to the taxable...</list_item>
+      <list_item>Box 2, 4, or 9, enter your taxable...</list_item>
+      <list_item>BBox 5, add your taxable disabilit...</list_item>
+  </list>
+  <form_item><key>11</key><value>.</value></form_item>
+  <picture><class>pictogram</class></picture>
+  <text>For more details on what to include on line 11...</text>
+  <text>12 If you completed line 11, enter the smaller...</text>
+  <form_item><key>12</key><value>74,992</value></form_item>
+  ...
+  ```
+
+</details>
 
 <details><summary><strong>Key-value pair in the wild</strong></summary><table><tr><td>
 <textarea readonly rows="18" cols="90" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
