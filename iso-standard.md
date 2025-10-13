@@ -8,11 +8,12 @@ This document was prepared by
 - Maroun touma,
 - Panos Vagenas,
 - Maksym Lysak,
-- Nikolaos Livathinos
+- Nikolaos Livathinos,
 - Santosh Borse,
 - Yousaf Shah,
-- Christoph Auer
-- Michele Dolfi
+- Christoph Auer,
+- Michele Dolfi,
+- Said Gürbüz,
 - (FILL IN!).
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
