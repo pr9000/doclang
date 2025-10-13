@@ -1788,21 +1788,25 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
 </details>
 
-<details><summary><strong>Key-value pair in the wild</strong></summary><table><tr><td>
-<textarea readonly rows="18" cols="90" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
-...
-<form>
-  <form_item>
-    <key>Source</key>
-    <value>www.pansi.org.uk and ... projections).</value>
-  </form_item>
-</form>
-...
-</textarea></td><td>
-<div style="overflow:hidden; height:400px; width:600px; position: relative;">
-<img src="examples/form/form_20_key_value_pair_in_the_wild.png" alt="form-20" width="800px" style="object-fit: cover; object-position: top left;">
-</div>
-</td></tr></table></details>
+<details>
+  <summary>Key-value pair in the wild</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_20_key_value_pair_in_the_wild.png)
+
+  ```xml
+  ...
+  <form>
+    <form_item>
+      <key>Source</key>
+      <value>www.pansi.org.uk and ... projections).</value>
+    </form_item>
+  </form>
+  ...
+  ```
+
+</details>
 
 Detailed examples can be seen here: [Form Examples](/examples/form/form-examples.md)
 
