@@ -1293,7 +1293,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
               <value></value>
           </form_item>
           <text>
-              Delivery Supplies ... Finance Department
+              Delivery Suppl...Finance Department
           </text>
       </form>
       ...
@@ -1493,8 +1493,8 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   <table><tr><td>
 
   ```xml
-  <heading level="1">QUADRO W - Investimenti e attività estere di natura finanziaria o patrimoniale</heading>
-  <heading level="2">SEZIONE I - DATI RELATIVI AGLI INVESTIMENTI E ALLE ATTIVITA'</heading>
+  <heading level="1">QUADRO W - Investimenti e...</heading>
+  <heading level="2">SEZIONE I - DATI RELATIVI...</heading>
   <form>
       <form_heading level="1">W1</form_heading>
       <form_item>
@@ -1540,9 +1540,9 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   <table><tr><td>
 
   ```xml
-  <heading level="1">QUADRO C - Redditi di lavoro dipendente e assimilati</heading>
+  <heading level="1">QUADRO C - Redditi di lavoro...</heading>
   <form>
-      <form_heading level="1">SEZIONE I - REDDITI DI LAVORO DIPENDENTE E ASSIMILATI</form_heading>
+      <form_heading level="1">SEZIONE I - REDDITI...</form_heading>
       <form_item>
           <key>Casi particolari</key>
           <checkbox selected="false"></checkbox>
@@ -1613,7 +1613,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
           <checkbox selected="false"></checkbox>
       </form_item>
       <form_heading level="2">C4</form_heading>
-      <form_heading level="3">SOMME PER PREMI DI RISULTATO E WELFARE AZIENDALE</form_heading>
+      <form_heading level="3">SOMME PER PREMI DI...</form_heading>
       <form_item>
           <marker>1</marker>
           <key>TIPOLOGIA LIMITE</key>
@@ -1768,14 +1768,14 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   <form_item><key>10</key><value></value></form_item>
   <text>11 If you checked (in Part I):</text>
   <list>
-      <list_item>Box 6, add $5,000 to the taxable disability income of the spouse...</list_item>
-      <list_item>Box 2, 4, or 9, enter your taxable disability income.</list_item>
-      <list_item>BBox 5, add your taxable disability income to your spouse's taxa...</list_item>
+      <list_item>Box 6, add $5,000 to the taxable...</list_item>
+      <list_item>Box 2, 4, or 9, enter your taxable...</list_item>
+      <list_item>BBox 5, add your taxable disabilit...</list_item>
   </list>
   <form_item><key>11</key><value>.</value></form_item>
   <picture><class>pictogram</class></picture>
-  <text>For more details on what to include on line 11, see Figure Your Credit...</text>
-  <text>12 If you completed line 11, enter the smaller of line 10 or line 11...</text>
+  <text>For more details on what to include on line 11...</text>
+  <text>12 If you completed line 11, enter the smaller...</text>
   <form_item><key>12</key><value>74,992</value></form_item>
   ...
   ```
