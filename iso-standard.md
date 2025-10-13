@@ -134,8 +134,8 @@ DocTags defines the following categories of elements:
 
 - **special**: Elements that establish document scope and pagination, such as `doctag`, `page_break`, and `time_break`.
 - **provenance**: Elements that can provide visual or time grounding. The visual grounding is necessary for documents with pagination, the temporal grounding is necessary for audio based documents (music and movies).
-	- **geometric**: Elements that capture geometric position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
-	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/><centisecond value={integer}/>` for a timestamp and a double timestamp for time intervals.
+  - **geometric**: Elements that capture geometric position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
+  - **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/><centisecond value={integer}/>` for a timestamp and a double timestamp for time intervals.
 - **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
 - **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
 - **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
@@ -272,7 +272,6 @@ The `timestamp` element represents temporal provenance using four self-closing t
 - Time interval with second-level precision: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
 - Time interval with sub-second precision: Use exactly 8 consecutive tokens to encode a range: first the start timestamp (hour, minute, second, centisecond), then the end timestamp (hour, minute, second, centisecond).
 
-
 Examples:
 
 - Single timestamp at 0:01:23: `<hour value="0"/><minute value="1"/><second value="23"/>`
@@ -311,7 +310,6 @@ Usage examples:
   Applause segment
 </text>
 ```
-
 
 ### Semantic Elements
 
@@ -409,6 +407,7 @@ The OTSL representation follows these syntax rules:
 - Rectangular rule: The table representation of structural OTSL tokens is always rectangular - all rows must have an equal number of OTSL tokens, terminated with `<nl/>` token.
 
 Example:
+
 ```xml
 <otsl>
   <ecel/>          <lcel/>                <ched/>Observer 1<lcel/>         <lcel/><nl/>
@@ -463,6 +462,7 @@ The present standard does not prescribe the specific `facets` content, but a pos
 ### Metadata Elements
 
 Metadata elements are meant to capture information that is not directly part of the document *content*, but rather:
+
 - deriveable from the document
   - either directly, e.g. a summary of a certain component
   - or in combination with other context, e.g. from external knowledge sources
@@ -569,6 +569,7 @@ Binary data elements encode non-text payloads that semantic content can referenc
 - `uri`: Provides a reference to an external or local resource via a valid URI or filesystem path.
 
 Usage rules:
+
 - Allowed parents: `picture`, `inline_picture`, and page-level flow (i.e., between `page_break` markers) when associating a resource with the current page.
 - For `picture` and `inline_picture`, include at most one of `base64` or `uri` as a child.
 - Content of `base64` is a raw base64 string (no data URI prefix).
@@ -784,7 +785,6 @@ Long code blocks can be split across pages using continuation tokens; keep `<cla
 </code>
 ```
 
-
 ### Math and Equations
 
 All math is authored as LaTeX inside `inline_formula` (inline) or `formula` (block). Do not use `<class>` for math; language classification is not applicable here. The optional `<marker>` child inside `formula` carries the printed equation number or label (e.g., “(1)”, “Eq. 3”). If present, include it as plain text within `<marker>`.
@@ -865,6 +865,7 @@ Cross-page block formula with continuation
 ```
 
 Notes
+
 - All math content is LaTeX; omit `$...$` or `\[...\]` delimiters since the tag conveys math context.
 - `<marker>` is optional. Include it only when the page shows an equation number/label.
 - Place coordinates on `formula` and `caption` as needed; never on the surrounding `group`.
@@ -995,6 +996,7 @@ Immediately after a cell-creating token (e.g., `<fcel/>`, `<ched/>`), place the 
 ```
 
 Notes
+
 - Coordinates go on `otsl`, `caption`, and other semantic children; never on the `group`.
 - Row- and column-wise splits use `continue_row` and `continue_col` respectively; merge fragments by matching `id`s.
 - OTSL follows the rectangular rule; ensure each row has the same number of structural tokens up to `<nl/>`.
@@ -1123,6 +1125,7 @@ Single list-item broken by a page break
 ```
 
 Notes
+
 - Only `list_item` and `checkbox` are valid as children of `list`.
 - `<marker>` is optional on both `list_item` and `checkbox`. Include it when the printed glyph/number is visible.
 - `<marker>` can include its own `location` coordinates to pinpoint bullet/number placement.
@@ -1155,7 +1158,7 @@ Notice that if we have captions or footnotes for the form, we will always start 
 
 If no caption/footnotes are present, one can skip the group of type form. In order to represent the hierarchy, we use the concept of nested forms. The children of a form item are supposed to be on the same level and the form-headers will be in reading-order, i.e. the form-items following the form-header will belong to that form header (similarly to items following the section-headers).
 
-One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a child, but potentially one or more children of the type of `<value>` and `<checkbox>` as well as `<hint>`. `<key>` or `<value>` not necessarily just textual and can contain a picture, multiline text, etc.
+One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a child, but potentially one or more children of the type of `<value>`, `<checkbox>` and `<marker>` as well as `<hint>`. `<key>` or `<value>` not necessarily just textual and can contain a picture, multiline text, etc.
 
 #### Form Examples
 
@@ -1168,8 +1171,8 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <value>Holcim ... GmbH</value>
     </form_item>
     <form_item>
-        <key>Werk:</key>
-        <value>Scholkholz</value>
+        <key>Datum:</key>
+        <value>23.08.2019</value>
     </form_item>
     ...
     <form_item>
@@ -1326,7 +1329,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     </form_item>
     <form_item>
         <key>Alien Registration Number (A-Number) (if any)</key>
-        <value></value>
+        <value>A-</value>
     </form_item>
     <form_heading>Information About Your Address</form_heading>
     <form_text>\*Present Physical Address ()No Po Boxes</form_text>
@@ -1357,7 +1360,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     <form_heading level="1">M31</form_heading>
     <form_heading level="2">REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_heading>
     <form_item>
-    	 <marker>1</marker>
+      <marker>1</marker>
         <key>Tipo</key>
         <value></value>
     </form_item>
@@ -1369,7 +1372,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     <form_item>
         <marker>3</marker>
         <key>Ammontare reddito</key>
-        <value></value>
+        <value>,00</value>
     </form_item>
     <form_item>
         <marker>4</marker>
@@ -1379,7 +1382,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     <form_item>
         <marker>5</marker>
         <key>Credito IVCA</key>
-        <value></value>
+        <value>,00</value>
     </form_item>
     <form_item>
         <marker>6</marker>
@@ -1396,7 +1399,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     <form_item>
         <marker>1</marker>
         <key>Ammontare reddito</key>
-        <value></value>
+        <value>,00</value>
     </form_item>
     <form_item>
         <marker>2</marker>
@@ -1408,9 +1411,9 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     <form_item>
         <marker>1</marker>
         <key>Ammontare reddito</key>
-        <value></value>
+        <value>,00</value>
     </form_item>
-    ...    
+    ...
 </form>
 </textarea>
 </details>
@@ -1492,6 +1495,8 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     <form_item>
         <key>Casi particolari</key>
         <checkbox selected="false"></checkbox>
+    </form_item>
+    <form_item>
         <key>Codice Stato estero</key>
         <value></value>
     </form_item>
@@ -1580,7 +1585,6 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 </textarea></td><td>
 <img src="examples/form/form_09.png" alt="form-00" width="800px">
 </td></tr></table></details>
-
 
 <details><summary><strong>Middle section of a form with A and B choices</strong></summary>
 <img src="examples/form/form_19_water_damage.png" alt="form-00" width="800px"><br>
