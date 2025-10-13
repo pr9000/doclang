@@ -1159,6 +1159,35 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
 #### Form Examples
 
+<details>
+  <summary>XML example – click to expand</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Architecture diagram](examples/form/form_00.png)
+
+  ```xml
+  <config>
+    <form>
+        <form_item>
+            <key>Firma:</key>
+            <value>Holcim ... GmbH</value>
+        </form_item>
+        <form_item>
+            <key>Werk:</key>
+            <value>Scholkholz</value>
+        </form_item>
+        ...
+        <form_item>
+            <key>Petrograph. Typ:</key>
+            <value>Quartiarer Sand + Kies</value>
+        </form_item>
+    </form>
+  </config>
+  ```
+</details> 
+
+
 <details><summary><strong>Simple key-values</strong></summary>
 <img src="examples/form/form_00.png" alt="form-00"><br>
 <textarea readonly rows="16" cols="100" style="resize: none; border: none; font-family: monospace; font-size: 10pt">
