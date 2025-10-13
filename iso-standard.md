@@ -8,6 +8,7 @@ This document was prepared by
 - Maroun touma,
 - Panos Vagenas,
 - Maksym Lysak,
+- Nikolaos Livathinos
 - Santosh Borse,
 - Yousaf Shah,
 - Christoph Auer
@@ -31,7 +32,7 @@ DocTags addresses these challenges by providing a minimalist, unambiguous markup
 
 This standard builds upon research in document understanding and is intended to represent the content of a document as accurately as possible while maintaining implementation simplicity.
 
-## Scope 
+## Scope
 
 This standard specifies:
 
@@ -96,12 +97,30 @@ Docling:
   unit of text, i.e. without line breaks or vertical space between them.
 -->
 
+## Property Semantics
+
+In XML, the attribute syntax allows explicitly separating an element's properties from its content.
+Let's consider the following example: `<elem size="250" color="#ffeedd">foo</elem>`.
+This denotes an `elem` element, including its properties (`size` and `color`) and its content (`foo`).
+
+For an element with multiple possible property values, the attribute syntax can lead to an increased complexity of the respective possible tokenized representations.
+For instance, the following could all be valid variants of an `elem` start tag: `<elem size="300" color="#aabbcc">`, `<elem size="42">`, `<elem color="#112233">`, `<elem>`.
+
+Aiming at LM-friendliness, in such cases, the ISO DocTags format favors an alternative representation of property semantics, namely captured as respective elements leading the content.
+The example above could be represented as `<elem><size>250</size><color>#ffeedd</color>foo</elem>`. Depending on the specific properties, self-closing elements are used too.
+
+This representation can reduce the number of tokens, making it easier for language models to learn and predict.
+
+For elements with a strictly limited set of possible property values, attributes are still used.
+
 ## Content encoding
 
 The content of the elements is encoded according to the following rules:
 
 - unicode textual content is encoded as utf-8.
-- Special entities which overlap with the XML elements must be escaped, e.g. `<` becomes `&lt;`. The complete list of entities to escape is defined in Appendix B.
+- special characters reserved by XML, such as `<` (complete list defined in Appendix B), can be represented:
+  - either by escaping with the respective XML entities, e.g. `<` becomes `&lt;`,
+  - or using the CDATA section syntax, e.g. raw text `<foo>` can be represented as `<![CDATA[<foo>]]>`
 
 ## DocTags Structure
 
@@ -114,17 +133,18 @@ DocTags is a constrained subset of XML with the following characteristics:
 
 DocTags defines the following categories of elements:
 
-- **special**: Elements that establish document scope and pagination, such as `doctag`, `metadata`, and `page_break`.
+- **special**: Elements that establish document scope and pagination, such as `doctag`, `page_break`, and `time_break`.
 - **provenance**: Elements that can provide visual or time grounding. The visual grounding is necessary for documents with pagination, the temporal grounding is necessary for audio based documents (music and movies).
-	- **spatial**: Elements that capture spatial position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
-	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/>` for a timestamp and a double timestamp for time intervals.
-- **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, list items, forms, tables, formulas, code, pictures), optionally followed by a 4-tuple of location tokens.
+	- **geometric**: Elements that capture geometric position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
+	- **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/><centisecond value={integer}/>` for a timestamp and a double timestamp for time intervals.
+- **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
 - **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
 - **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
 - **structural**: Sequence tokens that define internal structure for complex constructs (primarily OTSL table layout: `otsl`, `fcel`, `ecel`, `lcel`, `ucel`, `xcel`, `nl`, `ched`, `rhed`, `corn`, `srow`; and form parts like `key`/`value`).
-- **content**: Lightweight content helpers used inside semantic blocks for explicit payload and annotations (e.g., `content`, `summary`, `class`, `marker`).
-- **binary data**: Elements that embed or reference non-text payloads for media—either inline as `base64` or via `uri`—e.g. allowed inside `picture`, `inline_picture`, or at page level.
-- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `<thread id="N"/>`, `continue_row`, `continue_col`) to merge content across different locations or pages.
+- **content**: Lightweight content helpers used inside semantic blocks for explicit payload and annotations (e.g., `marker`).
+- **binary data**: Elements that embed or reference non-text payloads for media—either inline as `base64` or via `uri`—allowed under `picture`, `inline_picture`, or at page level.
+- **metadata**: Elements that provide metadata about the document or its components, contained within `head` and `meta` respectively.
+- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `<thread id="N"/>`, `continue_row`, `continue_col`) to stitch fragmented content.
 
 ### Special Elements
 
@@ -132,73 +152,29 @@ These elements have a specific purpose in defining the high-level structure of t
 
 #### The `doctag` Element
 
-Every DocTags document is wrapped in a `<doctag>` root element with an optional version specification,
-following Semantic Versioning (MAJOR.MINOR.PATCH). When no version is specified, the default is v1.0.0.
+Every DocTags document is wrapped in a `<doctag>` root element.
 
-Here is an example:
-
-```xml
-<doctag version="1.0.0">
-  <!-- document content -->
-</doctag>
-```
-
-#### The `metadata` Element
-
-The document can optionally begin with a `<metadata>` element, which can contain the following optional special elements:
-
-- `version`
-- `title`  <!-- NOTE: conflicts with semantic element -->
-- `author`, whereby multiple instances are allowed
-  - each `author` element can optionally begin with one or more `affiliation` elements
-- `date`
-- `language`, whereby multiple instances are allowed
-- `default_resolution`
-- `page_size`, the actual page size. An element without the `page_no` attribute defines the default size for all pages, when `page_no` is specified it is counted from 1.
-- `language`, Identifies the document language (e.g., English, German, French, Spanish, Japanese). The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
-- `document_quality`,Content quality assessment score using standard algorithms such as DCLM, gneissdefault_resolutionweb, etc. where 0<=Scores<=1
-- `document_readability`,Indicates how easy a a document can be undertood by a general audiance. Classifier defines known classifier or method used to produce score where 0<=Scores<=1
-- `general_topic`,Topic that the document is most likely to fall in such as Science and Technology, Legal, etc. The topics should preferrably come from some taxonomy. Classifier defines the classifier used for classifying into the given topic and score is the confidence score of classifier and 0<=Scores<=1. This can be one or more.  
-- `document_hash`, Hash of the document, whereas hash_function defines the algorithm used to compute the hash, e.g., SHA2. This can be one or more.
-- `custom_attribute`, Any custom attribute that can be added later with its properties in keys and corresponding values. This can be one or more.
-  
 Here is an example:
 
 ```xml
 <doctag>
-  <metadata>
-    <version>1.2.3</version>
-    <title>Document Title</title>
-    <author>Author 1 Name</author>
-    <author>
-      <affiliation>Author 2 Affiliation A</affiliation>
-      <affiliation>Author 2 Affiliation B</affiliation>
-      Author 2 Name
-    </author>
-    <date>2024-01-01</date>
-    <language classifier="fastText" score="0.7">eng</language>
-    <language classifier="fastText" score="0.2">spa</language>
-    <document_quality classifier="dclm">0.8</document_quality>
-    <document_readability classifier="fastText_readability">0.4</document_readability>
-    <general_topic topic_taxonomy="taxonomy" classifier="WatsonNLP" score="0.5">Technology</general_topic>
-    <general_topic topic_taxonomy="taxonomy" classifier="WatsonNLP" score="0.5">Math</general_topic>
-    <document_hash hash_function="sha256sum"/>75f2db0c6124527bf6dd48440f95fc864a5108d28517633f937923a7d8199185</document_hash>
-    <custom_attribute key="hate" name="HAP"/>0.1</custom_attribute>
-    <custom_attribute key="abuse" name="HAP"/>0.1</custom_attribute>
-    <custom_attribute key="profanity" name="HAP"/>0.1</custom_attribute>
-    <default_resolution width="512" height="512"/>
-    <page_size width="612" height="792"/>
-    <page_size page_no="4" width="792" height="612"/>
-    <processing_tool>docling</processing_tool>
-  </metadata>
-  <!-- document content -->
+  <!-- rest of the document -->
 </doctag>
 ```
 
-These annotations can provide semantic insights or quality assessments for post processing purpose.
+#### The `version` Element
 
-<!-- I think we should allow metadata to be embded into any tag -->
+The `doctag` element can optionally begin with a `version` element, following Semantic Versioning (MAJOR.MINOR.PATCH).
+When no version is specified, the default is v1.0.0
 
+Here is an example:
+
+```xml
+<doctag>
+  <version>1.0.0</version>
+  <!-- rest of the document -->
+</doctag>
+```
 
 #### The `page_break` Element
 
@@ -234,7 +210,7 @@ The content between two `<time_break/>` is in itself a doctag document, if it is
 
 #### The `location` Element
 
-The `location` element represents spatial information with value (and optional resolution) attributes of the format `<location value="integer" resolution="integer"/>` with 0 <= value <= resolution.
+The `location` element represents geometric information with value (and optional resolution) attributes of the format `<location value="integer" resolution="integer"/>` with 0 <= value <= resolution.
 
 - Single coordinate at (100, 200): `<location value="100"/><location value="200"/>`
 - Bounding box with (x0, y0) = (100, 200) and (x1, y1) = (300, 400): `<location value="100"/><location value="200"/><location value="300"/><location value="400"/>`
@@ -254,11 +230,11 @@ Usage examples:
 
 ```xml
 <!-- Bounding box on a title -->
-<title>
+<heading level="1">
   <location value="100"/><location value="620"/>
   <location value="900"/><location value="680"/>
   Annual Report
-  </title>
+</heading>
 
 <!-- Paragraph anchored by a bounding box -->
 <text>
@@ -289,30 +265,32 @@ Usage examples:
 
 #### The `timestamp` Element
 
-The `timestamp` element represents temporal provenance using three self-closing tokens:
-`<hour value="integer"/>`, `<minute value="integer"/>`, and `<second value="integer"/>`.
+The `timestamp` element represents temporal provenance using four self-closing tokens:
+`<hour value="integer"/>`, `<minute value="integer"/>`, `<second value="integer"/>` and `<centisecond value="integer"/>`, where the first 3 tokens are compulsory and the last one is optional.
 
-- Point in time: Use exactly 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
-- Time interval: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
+- Point in time with second-level precision: Use 3 consecutive tokens to encode a single timestamp in strict order: hour, minute, second.
+- Point in time with sub-second precision: Use 4 consecutive tokens to encode a single timestamp in strict order: hour, minute, second, centisecond.
+- Time interval with second-level precision: Use exactly 6 consecutive tokens to encode a range: first the start timestamp (hour, minute, second), then the end timestamp (hour, minute, second).
+- Time interval with sub-second precision: Use exactly 8 consecutive tokens to encode a range: first the start timestamp (hour, minute, second, centisecond), then the end timestamp (hour, minute, second, centisecond).
+
 
 Examples:
 
 - Single timestamp at 0:01:23: `<hour value="0"/><minute value="1"/><second value="23"/>`
-- Single timestamp at 12:34:56: `<hour value="12"/><minute value="34"/><second value="56"/>`
+- Single timestamp with sub-second precision at 12:34:56.12: `<hour value="12"/><minute value="34"/><second value="56"/><centisecond value="12"/>`
 - Interval from 00:00:10 to 00:01:05:
   `<hour value="0"/><minute value="0"/><second value="10"/><hour value="0"/><minute value="1"/><second value="5"/>`
-- Interval across hours, 01:20:00–02:05:30:
-  `<hour value="1"/><minute value="20"/><second value="0"/><hour value="2"/><minute value="5"/><second value="30"/>`
+- Interval with sub-second precision from 01:20:00.0 to 02:05:30.67:
+  `<hour value="1"/><minute value="20"/><second value="0"/><centisecond value="0"/><hour value="2"/><minute value="5"/><second value="30.123"/><centisecond value="67"/>`
 
 Encoding rules:
 
-- Ordering: The token order is strictly `hour`, then `minute`, then `second`; for intervals, emit start triplet first, then end triplet.
-- Ranges: `hour.value` is a non-negative integer (no upper bound); `minute.value` and `second.value` are integers in `[0, 59]`.
+- Ordering: The token order is strictly `hour`, then `minute`, then `second`, then `centisecond`; for intervals, emit start triplet first, then end triplet. In case of sub-second timestamps use a quadruplet in the order `hour`, then `minute`, then `second`, then `centisecond`; for internals with sub-second precison use 2 quadruplets, first the start quadruplet and then the end quadruplet.
+- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `centisecond.value` is an integer in `[0, 99]`.
 - Normalization: Out-of-range carry is not allowed. Producers MUST pre-normalize (e.g., 0h 61m 5s must be encoded as 1h 1m 5s).
 - Monotonicity (intervals): The end timestamp MUST represent a time that is greater than or equal to the start timestamp when converted to total seconds. Equal start and end encodes a zero-length anchor.
-- Granularity: Precision is to whole seconds in this version. Sub-second precision is not defined.
 - Placement: Timestamp tokens MAY only be used on elements intended to be interpreted as block-level (see Semantic Elements). When present, they MUST precede the element’s textual content and any inline formatting tokens.
-- Coexistence with location: When both spatial `location` tokens and `timestamp` tokens are present, both sets MUST appear before content. The relative order between spatial and temporal tokens has no semantic impact; serializers SHOULD use a consistent order.
+- Coexistence with location: When both geometric `location` tokens and `timestamp` tokens are present, both sets MUST appear before content. The relative order between geometric and temporal tokens has no semantic impact; serializers SHOULD use a consistent order.
 - Interpretation: Timestamps are relative to the media’s timeline (e.g., an audio/video track or timed transcript) and are not wall-clock times; time zones and dates do not apply.
 
 Usage examples:
@@ -329,11 +307,12 @@ Usage examples:
 </text>
 
 <text>
-  <hour value="0"/><minute value="5"/><second value="0"/>
-  <hour value="0"/><minute value="6"/><second value="30"/>
+  <hour value="0"/><minute value="5"/><second value="0"/><centisecond value="72"/>
+  <hour value="0"/><minute value="6"/><second value="30"/><centisecond value="15"/>
   Applause segment
 </text>
 ```
+
 
 ### Semantic Elements
 
@@ -343,7 +322,7 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | Element | Description |
 |-------|-------------|
 | `title` | Document or section title |
-| `section_header` | Section header, with optional level N ≥ 1 |
+| `heading` | Section header, with optional level N ≥ 1 |
 | `text` | Generic text content |  <!--  TODO: rename to `paragraph` -->
 | `caption` | Caption for floating elements |
 | `footnote` | Footnote content |
@@ -352,7 +331,7 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `watermark` | Page contains watermark | <!-- watermark can be text or image - do we want to capture that? also do we want to know if watermark is in background or overlay?-->
 | `list_item` | List item |
 | `form_item` | Form item (with 1 key and 1 or more values as children) |
-| `form_header` | Form header |
+| `form_heading` | Form header |
 | `form_text` | Form text |
 | `key` | key of the form item: can only be a child of `form_item` |
 | `value` | value of the form item: can only be a child of `form_item`  |
@@ -387,15 +366,9 @@ These elements organize semantic content into logical structures. Groups can not
 
 | Element | Description | Allowed Children |
 |-------|-------------|------------------|
-| `<section level="N">` | Document section (N ≥ 1) | semantic, grouping |
 | `<list ordered=true>` | Numbered list | list\_item, checkbox |
 | `<list ordered=false>` | Bulleted list | list\_item, checkbox |
-| `<group type="table">` | | allows to add as children: `caption`, `footnote`, `otsl`|
-| `<group type="document_index">` | | allows to add as children: `caption`, `footnote`, `otsl` |
-| `<group type="form">` | | allows to add as children: `caption`, `footnote`, `form` |
-| `<group type="formula">` | | allows to add as children: `caption`, `footnote`, `formula` |
-| `<group type="code">` | | allows to add as children: `caption`, `footnote`, `code` |
-| `<group type="picture">` | | allows to add as children: `caption`, `footnote`, `picture` |
+| `<group>` | Generic group enabling e.g. association of caption or footnote with the respective document components | |
 
 **footnote regarding docling-core**: What we currently have as instantiations of `FloatingItem` (e.g., TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (e.g., the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and footnotes will have their own `ProvenanceItem`.
 
@@ -436,14 +409,149 @@ The OTSL representation follows these syntax rules:
 - First column rule: Only `<ucel/>` cells and `<fcel/>`(with variants) are allowed in the first column.
 - Rectangular rule: The table representation of structural OTSL tokens is always rectangular - all rows must have an equal number of OTSL tokens, terminated with `<nl/>` token.
 
+Example:
+```xml
+<otsl>
+  <ecel/>          <lcel/>                <ched/>Observer 1<lcel/>         <lcel/><nl/>
+  <ucel/>          <xcel/>                <ched/>benign    <ched/>malignant<ched/>Total observer 2<nl/>
+  <rhed/>Observer 2<rhed/>Benign          <fcel/>13        <fcel/>2        <fcel/>15<nl/>
+  <ucel/>          <rhed/>malignant       <fcel/>0         <fcel/>62       <fcel/>62<nl/>
+  <ucel/>          <rhed/>Total observer 1<fcel/>13        <fcel/>64       <fcel/>77<nl/>
+</otsl>
+```
+
+### Pictures of Charts
+
+`<picture>` can include `<class>` with picture classification value. In cases of numerical charts, it is also possible to include `<otsl>` that contain numerical data of a chart. This is applicable for charts with data series that can be represented in a tabular fashion: `bar_chart`, `line_chart`, `pie_chart`, `area_chart`, `scatter_plot`, `bubble_chart`, etc:
+
+```xml
+<picture>
+  <location value="50"/><location value="50"/>
+  <location value="150"/><location value="150"/>
+  <uri>assets/bar_chart.png</uri>
+  <class>bar_chart</class>
+  <otsl>
+    <ched/>sales<ched/>2022<ched/>2023<ched/>2024<ched/>2025<nl/>
+    <rhed/>ABCDE<fcel/>100M<fcel/>120M<fcel/>110M<fcel/>105M<nl/>
+    <rhed/>FGHIJ<fcel/>125M<fcel/>150M<fcel/>175M<fcel/>200M<nl/>
+    <rhed/>KLMNO<fcel/>300M<fcel/>270M<fcel/>250M<fcel/>210M<nl/>
+  </otsl>
+</picture>
+```
+
 ### Content Tokens
 
 | Token | Description |
 |-------|-------------|
-| `<content>` | Explicit content wrapper: this wrapper is mostly optional but can be useful for the case os escaping. |
-| `<summary>` | This token allows to provide a short summary of the content. |
-| `<class>` | Classification (language, chart type, etc.) |
-| `<marker>`| Marker (eg for in section-header, list-item, etc) |
+| `<marker>`| Marker (eg for in section-header, list-item, form-item, etc) |
+| `<facets>`| Container meant for application-specific properties for derived information, such as summary, classification label, etc. |
+
+The present standard does not prescribe the specific `facets` content, but a possible instantiation could be:
+
+```xml
+<doctag>
+  <picture>
+    <facets>
+      <summary>This image shows the distribution of the various data points in the dataset</summary>
+      <class>pie_chart</class>
+    </facets>
+    <location value="50"/><location value="60"/><location value="450"/><location value="360"/>
+    <base64>iVBORw0KGgoAAAANSUhEUgAA...truncated...5ErkJggg==</base64>
+  </picture>
+</facets>
+```
+
+### Metadata Elements
+
+Metadata elements are meant to capture information that is not directly part of the document *content*, but rather:
+- deriveable from the document
+  - either directly, e.g. a summary of a certain component
+  - or in combination with other context, e.g. from external knowledge sources
+- or reflects properties of the upstream pipeline, e.g. the VLM that generated the document.
+
+As applications can have varying requirements, this standard defines a set of reserved metadata elements for common use
+cases, but also allows for custom metadata elements to be added.
+To avoid collisions, custom metadata SHOULD always be properly namespaced, as illustrated in the examples further below.
+
+Document-level metadata is contained in the `<head>` element, while component-level metadata is contained in an `<meta>`
+element within the respective component element. We discuss the details in the subsections below.
+
+#### The `head` Element
+
+After the optional `version` element, the `doctag` element can continue with an optional `<head>` element.
+Below we list the reserved metadata elements to be used within `<head>`:
+
+- `title`
+- each `author` element can optionally begin with one or more `affiliation` elements
+- `date`
+- `default_resolution`
+- `page_size`, the actual page size. An element without the `page_no` attribute defines the default size for all pages, when `page_no` is specified it is counted from 1.
+- `language`, Identifies the (human) language of the document, e.g., English, German, French, Spanish, Japanese. The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
+- `generated_by`, upstream pipeline information, e.g. VLM ID
+- `topic`, topic that the document is most likely to fall in such as Science and Technology, Legal, etc. The topics should preferrably come from some taxonomy. Classifier defines the classifier used for classifying into the given topic and score is the confidence score of classifier and 0<=Scores<=1. This can be one or more.
+- `summary`, a summary of the document
+- `document_hash`, Hash of the document, whereas hash_function defines the algorithm used to compute the hash, e.g., SHA2. This can be one or more.
+
+Here is an example:
+
+```xml
+<doctag>
+  <head>
+    <!-- reserved elements -->
+    <title>My Company's Annual Report</title>
+    <author_info>
+      <author>Author 1 Name</author>
+      <author>
+        <affiliation>Affiliation A</affiliation>
+        <affiliation>Affiliation B</affiliation>
+        Author 2 Name
+      </author>
+    </author_info>
+    <date>2024-01-01</date>
+    <language classifier="fastText" score="0.7">eng</language>
+    <language classifier="fastText" score="0.2">spa</language>
+    <topic topic_taxonomy="taxonomy" score="0.5">Technology</topic>
+    <topic topic_taxonomy="taxonomy" score="0.5">Math</topic>
+    <document_hash hash_function="sha256sum"/>75f2db0c6124527bf6dd48440f95fc864a5108d28517633f937923a7d8199185</document_hash>
+    <summary>This is a summary of the document</summary>
+    <generated_by>example_vlm_org/example_vlm_name</generated_by>
+    <default_resolution width="512" height="512"/>
+    <page_size width="612" height="792"/>
+    <page_size page_no="4" width="792" height="612"/>
+
+      <!-- examples of custom elements -->
+    <my_company_hap_filter_hate/>0.1</my_company_hap_filter_hate>
+    <my_company_hap_filter_abuse/>0.1</my_company_hap_filter_abuse>
+    <my_company_hap_filter_profanity/>0.1</my_company_hap_filter_profanity>
+  </head>
+  <!-- document content -->
+</doctag>
+```
+
+### The `meta` Element
+
+The `meta` element is used to contain metadata about a specific component of the document.
+
+Below we list the reserved metadata elements to be used within `<meta>`:
+
+- `summary`
+- `class`
+- `language`
+
+Here is an example usage, for instance considering a picture:
+
+```xml
+<doctag>
+  <picture>
+    <meta>
+      <summary>This image shows the distribution of the various data points in the dataset</summary>
+      <class>pie_chart</class>
+    </meta>
+    <location value="50"/><location value="60"/><location value="450"/><location value="360"/>
+    <base64>iVBORw0KGgoAAAANSUhEUgAA...truncated...5ErkJggg==</base64>
+  </picture>
+</doctag>
+```
 
 ### Continuation Tokens
 
@@ -451,9 +559,8 @@ For content spanning page breaks:
 
 | Token | Description |
 |-------|-------------|
-| `<thread id="N"/>` | Content continues (N is a unique identifier) |
-| `<continue_row id="N"/>` | Content continues row-wise for the table (N is unique identifier), only used in OTSL |
-| `<continue_col id="N"/>` | Content continues column-wise (N is unique identifier), only used in OTSL |
+| `<thread_N/>` | Special element for capturing content that spans across pages ([example](./examples/cross_page/index.md)) |
+| `<h_thread_N/>` | Special element for horizontal stitching of table content ([example](./examples/split_tables/index.md)) |
 
 ### Binary Data Elements
 
@@ -499,7 +606,7 @@ Examples:
 
 If you want to include vector graphics elements, the doctags allow you to include
 
-1. SVG: enclosed in `<svg> ... </svg>` 
+1. SVG: enclosed in `<svg> ... </svg>`
 
 ## Grammar and Structure Rules
 
@@ -509,12 +616,12 @@ In the simplest document example, document elements are in a flat list,
 
 ```xml
 <doctag version="1.0.0">
-  <title>Research Paper Title</title>
-  <section_header level="1">Abstract</section_header>
+  <heading level="1">Research Paper Title</heading>
+  <heading level="2">Abstract</heading>
   <text>This paper presents...</text>
-  <section_header level="1">Introduction</section_header>
+  <heading level="2">Introduction</heading>
   <text>In recent years...</text>
-  <section_header level="2">Background</section_header>
+  <heading level="3">Background</heading>
   <text>Previous work has shown...</text>
 </doctag>
 ```
@@ -523,19 +630,19 @@ The user is allowed to add sections or groups as they see fit, but it is not a s
 
 ```xml
 <doctag version="1.0.0">
-  <title>Research Paper Title</title>
+  <heading level="1">Research Paper Title</heading>
 
   <section level="1">
-    <section_header level="1">Abstract</section_header>
+    <heading level="2">Abstract</heading>
     <text>This paper presents...</text>
   </section>
 
   <section level="1">
-    <section_header level="1">Introduction</section_header>
+    <heading level="2">Introduction</heading>
     <text>In recent years...</text>
 
     <section level="2">
-      <section_header level="2">Background</section_header>
+      <heading level="3">Background</heading>
       <text>Previous work has shown...</text>
     </section>
   </section>
@@ -546,16 +653,16 @@ In case of page-layout information, the coordinates are provided only at the sem
 
 ```xml
 <doctag version="1.0.0">
-  <title>
+  <heading level="1">
     <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
     Research Paper Title
-  </title>
+  </heading>
 
   <section level="1">
-    <section_header level="1">
+    <heading level="2">
       <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
       Abstract
-    </section_header>
+    </heading>
     <text>
       <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
       This paper presents...
@@ -563,11 +670,11 @@ In case of page-layout information, the coordinates are provided only at the sem
   </section>
 
   <section level="1">
-    <section_header level="1">Introduction</section_header>
+    <heading level="2">Introduction</heading>
     <text>In recent years...</text>
 
     <section level="2">
-      <section_header level="2">Background</section_header>
+      <heading level="3">Background</heading>
       <text>Previous work has shown...</text>
     </section>
   </section>
@@ -603,7 +710,7 @@ Basic inline code
   Use backticks sparingly; DocTags uses explicit tokens instead.
   <br/>
   End of examples.
-  
+
 </text>
 ```
 
@@ -632,7 +739,7 @@ Block with language classification via `<class>`
 Grouped code with caption and coordinates
 
 ```xml
-<group type="code">
+<group>
   <caption>
     <location value="10"/><location value="20"/><location value="400"/><location value="60"/>
     Listing 1: Minimal HTTP server
@@ -713,7 +820,7 @@ Block formula with optional marker (numbering/label)
 Grouped formula with caption and coordinates
 
 ```xml
-<group type="formula">
+<group>
   <caption>
     <location value="10"/><location value="20"/><location value="400"/><location value="60"/>
     Equation for the normal distribution
@@ -725,7 +832,7 @@ Grouped formula with caption and coordinates
   </formula>
   <footnote>Parameters: mean \mu and standard deviation \sigma.</footnote>
   <!-- Note: Coordinates apply to semantic elements like caption/formula, not the group. -->
-  
+
 </group>
 ```
 
@@ -767,13 +874,13 @@ Notes
 
 DocTags separates the table’s structure from its surrounding semantics:
 
-- `group type="table"`: Semantic container that may include `caption`, multiple `footnote` elements, and exactly one `otsl` child for the structure. Do not put coordinates on the `group`.
+- `group`: Semantic container that may include `caption`, multiple `footnote` elements, and exactly one `otsl` child for the structure. Do not put coordinates on the `group`.
 - `otsl`: The structural table token sequence. Put the table region’s coordinates on `otsl` for each page fragment. Cells are created by structural tokens (e.g., `<fcel/>`, `<ched/>`) and their content follows immediately after each cell token.
 
 Basic example
 
 ```xml
-<group type="table">
+<group>
   <caption>
     <location value="40"/><location value="80"/><location value="540"/><location value="110"/>
     Table 1: Experimental Results
@@ -785,7 +892,7 @@ Basic example
     <fcel/>Proposed<fcel/>0.92<nl/>
   </otsl>
   <footnote>Accuracy reported on validation set.</footnote>
-  
+
 </group>
 ```
 
@@ -796,7 +903,7 @@ Peculiarities and continuation
 Use `<continue_row id="..."/>` at the end of the first fragment and the start of the next fragment’s `otsl`.
 
 ```xml
-<group type="table">
+<group>
   <caption>Table 2: Long Results</caption>
   <otsl>
     <location value="40"/><location value="120"/><location value="540"/><location value="760"/>
@@ -807,7 +914,7 @@ Use `<continue_row id="..."/>` at the end of the first fragment and the start of
   </otsl>
 </group>
 <page_break/>
-<group type="table">
+<group>
   <otsl>
     <location value="40"/><location value="80"/><location value="540"/><location value="300"/>
     <continue_row id="T-rows"/>
@@ -823,7 +930,7 @@ Use `<continue_col id="..."/>` to indicate that columns continue on an adjacent 
 
 ```xml
 <!-- Left page -->
-<group type="table">
+<group>
   <otsl>
     <location value="40"/><location value="120"/><location value="300"/><location value="760"/>
     <ched/>Metric<ched/>Model A<nl/>
@@ -834,7 +941,7 @@ Use `<continue_col id="..."/>` to indicate that columns continue on an adjacent 
 </group>
 
 <!-- Right page -->
-<group type="table">
+<group>
   <otsl>
     <location value="320"/><location value="120"/><location value="820"/><location value="760"/>
     <continue_col id="T-cols"/>
@@ -850,7 +957,7 @@ Use `<continue_col id="..."/>` to indicate that columns continue on an adjacent 
 Immediately after a cell-creating token (e.g., `<fcel/>`, `<ched/>`), place the cell’s content, which may include `text`, `list`, even nested `group` elements like another `table` or `picture`.
 
 ```xml
-<group type="table">
+<group>
   <caption>Table 3: Rich Cells</caption>
   <otsl>
     <location value="40"/><location value="200"/><location value="560"/><location value="620"/>
@@ -867,7 +974,7 @@ Immediately after a cell-creating token (e.g., `<fcel/>`, `<ched/>`), place the 
     <fcel/>
       <text>Nested table</text>
     <fcel/>
-      <group type="table">
+      <group>
         <caption>Inner table</caption>
         <otsl>
           <ched/>Key<ched/>Value<nl/>
@@ -1030,16 +1137,17 @@ Fundamentally, forms are complex list with special list-items. This is why we in
 | Token | Description |
 |-------|-------------|
 | `<form_item>` | Form item (with 1 key and 1 or more values as children) |
-| `<form_header>` | Form header: this is specifically for headers in the form. |
+| `<form_heading>` | Form header: this is specifically for headers in the form. Has an optional attribute `level` |
 | `<form_text>` | Form text: this is specifically for text-blocks in the form |
 | `<key>` | key of the form item: can only be a child of `form_item` |
 | `<value>` | value of the form item: can only be a child of `form_item`  |
+| `<hint>` | a hint for a fillable value field, can describe a format, or an example, or an extra description, a hint |
 | `<form>` | Form structure |
 
 Notice that if we have captions or footnotes for the form, we will always start with the group of type form. Next, we can start with the form.
 
 ```xml
-<group type="form">
+<group>
    <form>
       ... # (nested list of form, form_items, etc)
    </form>
@@ -1048,40 +1156,53 @@ Notice that if we have captions or footnotes for the form, we will always start 
 
 If no caption/footnotes are present, one can skip the group of type form. In order to represent the hierarchy, we use the concept of nested forms. The children of a form item are supposed to be on the same level and the form-headers will be in reading-order, i.e. the form-items following the form-header will belong to that form header (similarly to items following the section-headers).
 
-One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a child, but potentially one or more children of the type of `<value>` and `<checkbox>`
+One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a child, but potentially one or more children of the type of `<value>` and `<checkbox>` as well as `<hint>`. `<key>` or `<value>` not necessarily just textual and can contain a picture, multiline text, etc.
 
 #### Form Examples
 
-<details><summary><strong>Example 1</strong></summary><table><tr><td><textarea readonly rows="16" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
-<form>
-    <form_item>
-        <key>Firma:</key>
-        <value>Holcim ... GmbH</value>
-    </form_item>
-    <form_item>
-        <key>Werk:</key>
-        <value>Scholkholz</value>
-    </form_item>
-    ...
-    <form_item>
-        <key>Petrograph. Typ:</key>
-        <value>Quartiarer Sand + Kies</value>
-    </form_item>
-</form>
-</textarea></td><td>
-<img src="examples/form/form_00.png" alt="form-00" width="100%">
-</td></tr></table></details>
+<details>
+  <summary>Simple key-values</summary>
 
-<details><summary><strong>Example 2</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
-<form>
-    <form_header>
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_00.png)
+
+  ```xml
+  <form>
+      <form_item>
+          <key>Firma:</key>
+          <value>Holcim ... GmbH</value>
+      </form_item>
+      <form_item>
+          <key>Werk:</key>
+          <value>Scholkholz</value>
+      </form_item>
+      ...
+      <form_item>
+          <key>Petrograph. Typ:</key>
+          <value>Quartiarer Sand + Kies</value>
+      </form_item>
+  </form>
+  ```
+</details>
+
+<details>
+  <summary>Nesting forms and using form headings</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_01.png)
+
+  ```xml
+  <form>
+    <form_heading>
         <marker>14.</marker>
         Transport Information
-    </form_header>
+    </form_heading>
     <form>
-        <form_header>
+        <form_heading>
             Land transport ... (Germany)
-        </form_header>
+        </form_heading>
         <form_item>
             <key>GGVS/GGVE class:</key>
             <value>8</value>
@@ -1097,9 +1218,9 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <value>not examined</value>
     </form_item>
     <form>
-        <form_header>
+        <form_heading>
             Sea transport IMDG
-        </form_header>
+        </form_heading>
         ...
     </form>
     ...
@@ -1109,76 +1230,94 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     <form_text>
         THESE TRANSPORT ... PACK!
     </form_text>
-</form>
-</textarea></td><td>
-<img src="examples/form/form_01.png" alt="form-00" width="100%">
-</td></tr></table></details>
+  </form>
+  ```
+</details>
 
-<details><summary><strong>Example 3</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
-<form>
-    <form_item>
-        <key>Description</key>
-        <value>A.A. Cat</value>
-    </form_item>
-    <form_item>
-        <key>Quant.</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Un</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Measure</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Price (in currency)</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Un</key>
-        <value></value>
-    </form_item>
-    <form_item>
-        <key>Total</key>
-        <value></value>
-    </form_item>
-    <form_text></form_text>
-    <form>
-        <form_item>
-            <key>Delivery Cost</key>
-            <value></value>
-        </form_item>
-        <form_item>
-            <key>Maintenance</key>
-            <value></value>
-        </form_item>
-        ...
-    <form>
-    <form>
-        <form_item>
-            <key>Date and time of delivery:</key>
-            <value></value>
-        </form_item>
-        ...
-        <form_item>
-            <key>Guarantee</key>
-            <value></value>
-        </form_item>
-        <form_text>
-            Delivery Supplies ... Finance Department
-        </form_text>
-    </form>
-    ...
-</form>
-</textarea></td><td>
-<img src="examples/form/form_02.png" alt="form-00" width="100%">
-</td></tr></table></details>
+<details>
+  <summary>Fillable form</summary>
 
-<details><summary><strong>Example 4</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
-<form>
-    <form_header>Information about you</form_header>
+  <!-- blank line after <summary> is important -->
+
+  <table><tr><td>
+
+  ```xml
+  <form>
+      <form_item>
+          <key>Description</key>
+          <value>A.A. Cat</value>
+      </form_item>
+      <form_item>
+          <key>Quant.</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Un</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Measure</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Price (in currency)</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Un</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <key>Total</key>
+          <value></value>
+      </form_item>
+      <form_text></form_text>
+      <form>
+          <form_item>
+              <key>Delivery Cost</key>
+              <value></value>
+          </form_item>
+          <form_item>
+              <key>Maintenance</key>
+              <value></value>
+          </form_item>
+          ...
+      <form>
+      <form>
+          <form_item>
+              <key>Date and time of delivery:</key>
+              <value></value>
+          </form_item>
+          ...
+          <form_item>
+              <key>Guarantee</key>
+              <value></value>
+          </form_item>
+          <text>
+              Delivery Suppl...Finance Department
+          </text>
+      </form>
+      ...
+  </form>
+  ```
+
+  </td><td style="vertical-align: top;">
+
+  ![Form Example](examples/form/form_02.png)
+
+  </td></tr></table>
+</details>
+
+<details>
+  <summary>Use of form headings</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_03.png)
+
+  ```xml
+  <form>
+    <form_heading>Information about you</form_heading>
     <form_item>
         <key>
             \*Family Name (Last Name)
@@ -1199,7 +1338,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <checkbox selected="false">Student</checkbox>
         <checkbox selected="false">Permanent Resident</checkbox>
         <checkbox selected="false">Other (Specify)</checkbox>
-        <form_text></form_text>
+        <value></value>
     <form_item>
     <form_item>
         <key>Country of Citizenship</key>
@@ -1213,7 +1352,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
         <key>Alien Registration Number (A-Number) (if any)</key>
         <value></value>
     </form_item>
-    <form_header>Information About Your Address</form_header>
+    <form_heading>Information About Your Address</form_heading>
     <form_text>\*Present Physical Address ()No Po Boxes</form_text>
     <form_item>
         <key>\*Street ... Name</key>
@@ -1229,58 +1368,410 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     </form_item>
     ...
 
-</form>
-</textarea></td><td>
-<img src="examples/form/form_03.png" alt="form-00" width="100%">
-</td></tr></table></details>
+  </form>
+  ```
+</details>
 
-<details><summary><strong>Example 5</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
-<form>
-</form>
-</textarea></td><td>
-<img src="examples/form/form_04.png" alt="form-00" width="100%">
-</td></tr></table></details>
+<details>
+  <summary>High density form</summary>
 
-<details><summary><strong>Example 6</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
-<form>
-</form>
-</textarea></td><td>
-<img src="examples/form/form_05.png" alt="form-00" width="100%">
-</td></tr></table></details>
+  <!-- blank line after <summary> is important -->
 
-Example 7 has a classical duality between tables and explicit key-values,
+  ![Form Example](examples/form/form_07.png)
 
-<details><summary><strong>Example 7</strong></summary><table><tr><td><textarea readonly rows="39" cols="40" style="resize: none; border: none; background: #f8f8f8; font-family: monospace;">
-<form>
-    <form_item>
-        <key>Adjusted CVSS v3.1 Score</key>
-        <value>10.0</value>
-    </form_item>
-    <form_item>
-        <key>Vector</key>
-        <value>AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H</value>
-    </form_item>
-    <form_item>
-        <key>Likelihood</key>
-        <value>Very High</value>
-    </form_item>
-    <form_item>
-        <key>Impact</key>
-        <value>Catastrophic</value>
-    </form_item>
-    <form_header>
-      Affected Systems
-    </form_header>
-    <otsl>
-    <ched/>IP Address<ched/>Port<ched/>Service<ched/>Version<nl/>
-    <fcell/>10.0.0.101<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
-    <fcell/>10.0.0.102<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
-    <fcell/>10.0.0.103<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
-    </otsl>
-</form>
-</textarea></td><td>
-<img src="examples/form/form_06.png" alt="form-00" width="100%">
-</td></tr></table></details>
+  ```xml
+  <form>
+      <form_heading level="1">M31</form_heading>
+      <form_heading level="2">REDDITI DI CAPITALE SOGGETTI AD IMPOSIZIONE SOSTITUTIVA</form_heading>
+      <form_item>
+        <marker>1</marker>
+          <key>Tipo</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>Codice Stato estero</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>Ammontare reddito</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>4</marker>
+          <key>Aliquota %</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>5</marker>
+          <key>Credito IVCA</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>6</marker>
+          <key>Proventi particolari</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>7</marker>
+          <key>Opzione tassazione ordinaria</key>
+          <value></value>
+      </form_item>
+      <form_heading level="1">M32</form_heading>
+      <form_heading level="2">PROVENTI DELLE OBBLIGAZIONI NON ASSOGGETTATI A IMPOSTA SOSTITUTIVA</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>Ammontare reddito</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>Aliquota %</key>
+          <value></value>
+      </form_item>
+      <form_heading level="1">M33</form_heading>
+      <form_heading level="2">PROVENTI DERIVANTI DA DEPOSITI IN GARANZIA</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>Ammontare reddito</key>
+          <value></value>
+      </form_item>
+      ...    
+  </form>
+  ```
+</details>
+
+<details>
+  <summary>Classical duality between tables and explicit key-values</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_06.png)
+
+  ```xml
+  <form>
+      <form_item>
+          <key>Adjusted CVSS v3.1 Score</key>
+          <value>10.0</value>
+      </form_item>
+      <form_item>
+          <key>Vector</key>
+          <value>AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H</value>
+      </form_item>
+      <form_item>
+          <key>Likelihood</key>
+          <value>Very High</value>
+      </form_item>
+      <form_item>
+          <key>Impact</key>
+          <value>Catastrophic</value>
+      </form_item>
+      <form_heading>
+        Affected Systems
+      </form_heading>
+      <otsl>
+      <ched/>IP Address<ched/>Port<ched/>Service<ched/>Version<nl/>
+      <fcell/>10.0.0.101<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+      <fcell/>10.0.0.102<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+      <fcell/>10.0.0.103<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+      </otsl>
+  </form>
+  ```
+</details>
+
+<details>
+  <summary>Values without Keys</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_08.png)
+
+  ```xml
+  <heading level="1">QUADRO W - Investimenti e...</heading>
+  <heading level="2">SEZIONE I - DATI RELATIVI...</heading>
+  <form>
+      <form_heading level="1">W1</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>CODICE TITOLO POSSESSO</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>TIPO CONTRIBUENTE - IVAFE</key>
+          <value></value>
+      </form_item>
+      ...
+      <form_heading level="1">W2</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <value></value>
+      </form_item>
+      ...
+  </form>
+  ```
+
+</details>
+
+<details>
+  <summary>Another complex form deconstructed into form items</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_09.png)
+
+  <table><tr><td>
+
+  ```xml
+  <heading level="1">QUADRO C - Redditi di lavoro...</heading>
+  <form>
+      <form_heading level="1">SEZIONE I - RE...</form_heading>
+      <form_item>
+          <key>Casi particolari</key>
+          <checkbox selected="false"></checkbox>
+          <key>Codice Stato estero</key>
+          <value></value>
+      </form_item>
+      <form_heading level="2">C1</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>TIPO</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>INDETERMINATO/DETERMINATO</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>REDDITO (punti 1,2,3 CU 2025)</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>4</marker>
+          <key>ALTRI DATI</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_heading level="2">C2</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>TIPO</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>INDETERMINATO/DETERMINATO</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>REDDITO (punti 1,2,3 CU 2025)</key>
+          <value>,00</value>
+      </form_item>
+      ...
+  ```
+
+  </td><td style="vertical-align: top;">
+
+  ```xml
+      ...
+      <form_item>
+          <marker>4</marker>
+          <key>ALTRI DATI</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_heading level="2">C3</form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>TIPO</key>
+          <value></value>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>INDETERMINATO/DETERMINATO</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>REDDITO (punti 1,2,3 CU 2025)</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>4</marker>
+          <key>ALTRI DATI</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_heading level="2">C4</form_heading>
+      <form_heading level="3">SOMME PER PREMI...
+      </form_heading>
+      <form_item>
+          <marker>1</marker>
+          <key>TIPOLOGIA LIMITE</key>
+          <checkbox selected="false"></checkbox>
+      </form_item>
+      <form_item>
+          <marker>2</marker>
+          <key>SOMME A TASSAZIONE ORDINARIA</key>
+          <value>,00</value>
+      </form_item>
+      <form_item>
+          <marker>3</marker>
+          <key>SOMME A IMPOSTA SOSTITUTIVA</key>
+          <value>,00</value>
+      </form_item>
+      ...
+  </form>
+  ```
+
+  </td></tr></table>
+</details>
+
+<details>
+  <summary>Middle section of a form with A and B choices</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_19_water_damage.png)
+
+  ```xml
+  <form>
+      <form_heading>COCHER LES CASES CONCERNEES</form_heading>
+      <form_item>
+          <key>La cause du sinistre se situe-t-elle chez vous ?</key>
+          <checkbox selected="false"><marker>A</marker>oui</checkbox>
+          <checkbox selected="false"><marker>A</marker>non</checkbox>
+          <checkbox selected="false"><marker>B</marker>oui</checkbox>
+          <checkbox selected="false"><marker>B</marker>non</checkbox>
+      </form_item>
+      <form_item>
+          <key>Êtes-vous assuré en dégâts des eaux ?</key>
+          <checkbox selected="false"><marker>A</marker>oui</checkbox>
+          <checkbox selected="false"><marker>A</marker>non</checkbox>
+          <checkbox selected="false"><marker>B</marker>oui</checkbox>
+          <checkbox selected="false"><marker>B</marker>non</checkbox>
+      </form_item>
+      <form_item>
+          <key>Si vous êtes occupant et que vous allez déménager avez-vous donné ou reçu congé ?</key>
+          <checkbox selected="false"><marker>A</marker>avant le sinistre</checkbox>
+          <checkbox selected="false"><marker>A</marker>après le sinistre</checkbox>
+          <checkbox selected="false"><marker>B</marker>avant le sinistre</checkbox>
+          <checkbox selected="false"><marker>B</marker>après le sinistre</checkbox>
+      </form_item>
+      <form_heading>NATURE DES DOMMAGES peinture et/ou papier peint</form_heading>
+      <form_item>
+          <key>revêtements (sol, mur, plafond)</key>
+          <checkbox selected="false"><marker>A</marker>collés</checkbox>
+          <checkbox selected="false"><marker>A</marker>agrafés ou cloués</checkbox>
+          <checkbox selected="false"><marker>B</marker>collés</checkbox>
+          <checkbox selected="false"><marker>B</marker>agrafés ou cloués</checkbox>
+      </form_item>
+      <form_item>
+          <key>Ces aménagements ont-ils été exécutés à vos frais ?</key>
+          <checkbox selected="false"><marker>A</marker>oui</checkbox>
+          <checkbox selected="false"><marker>A</marker>non</checkbox>
+          <checkbox selected="false"><marker>B</marker>oui</checkbox>
+          <checkbox selected="false"><marker>B</marker>non</checkbox>
+      </form_item>
+      <form_item>
+          <key>Autres dommages immobiliers (carrelage, parquet, plâtrerie...)</key>
+          <checkbox selected="false"><marker>A</marker></checkbox>
+          <checkbox selected="false"><marker>B</marker></checkbox>
+      </form_item>
+      <form_item>
+          <key>Objets mobiliers</key>
+          <checkbox selected="false"><marker>A</marker></checkbox>
+          <checkbox selected="false"><marker>B</marker></checkbox>
+      </form_item>
+      <form_item>
+          <key>Matériels ou marchandises</key>
+          <checkbox selected="false"><marker>A</marker></checkbox>
+          <checkbox selected="false"><marker>B</marker></checkbox>
+      </form_item>
+      <form_item>
+          <key>Autres dommages</key>
+          <value><marker>A</marker><hint>(à préciser)</hint></value>
+          <value><marker>B</marker><hint>(à préciser)</hint></value>
+      </form_item>
+  </form>
+  ```
+</details>
+
+<details>
+  <summary>Tabular form with strong 2D value relationship</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_17_tabular_form_with_many_elements.png)
+
+  ```xml
+  <otsl>
+  <srow>Beiträge zur Altersvorsorge<srow>52</lcel></srow><nl>
+  <fcel/><ched/>Steuerpflichtige Person / Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
+  <fcel/>Arbeitnehmeranteil laut Nr. 23 a / b der Lohnsteuerbescheinigung<fcel/>*FORM1*,-<fcel/>*FORM2*,-<fcel/>@<nl>
+  <fcel/>Beiträge zur landwirtschaftlichen Alterskasse; zu berufsständ...<fcel/>*FORM3*,-<fcel/>*FORM4*,-<fcel/> <nl>
+  <fcel/>Beiträge zu gesetzlichen Rentenversicherungen...<fcel/>*FORM5*,-<fcel/>*FORM6*,-<fcel/> <nl>
+  <fcel/>Erstattete Beiträge und / oder steuerfreie Zuschüsse zu den...<fcel/>*FORM7*,-<fcel/>*FORM8*,-<fcel/>@<nl>
+  ...
+  </otsl>
+  ...
+  *FORMS referred above:
+  *FORM1*: <form_item><key>300</key><value></value><hint>EUR</hint></form_item>
+  *FORM2*: <form_item><key>400</key><value></value><hint>EUR</hint></form_item>
+  *FORM4*: <form_item><key>401</key><value></value></form_item>
+  *FORM5*: <form_item><key>302</key><value></value></form_item>
+  *FORM3*: <form_item><key>301</key><value></value></form_item>
+  *FORM6*: <form_item><key>402</key><value></value></form_item>
+  *FORM7*: <form_item><key>309</key><value></value></form_item>
+  *FORM8*: <form_item><key>409</key><value></value></form_item>
+  ```
+</details>
+
+<details>
+  <summary>Mix table and form elements</summary>
+
+  <!-- blank line after <summary> is important -->
+
+  ![Form Example](examples/form/form_15_large_key.png)
+  
+  ```xml
+  ...
+  <heading>Part III</heading>
+  <text>Figure Your Credit</text>
+  <text>10</text>
+  <otsl>
+  <ched/>If you checked (in Part l):<ched/>Enter<nl>
+  <fcel/>Box 1, 2, 4, or 7<fcel/>$5,000<nl>
+  <fcel/>Box 3, 5, or 6<fcel/>$7,500<nl>
+  <fcel/>Box 8 or 9<fcel/>$3,750<nl>
+  </otsl>
+  <form_item><key>10</key><value></value></form_item>
+  <text>11 If you checked (in Part I):</text>
+  <list>
+      <list_item>Box 6, add $5,000 to the taxable...</list_item>
+      <list_item>Box 2, 4, or 9, enter your taxable...</list_item>
+      <list_item>BBox 5, add your taxable disabilit...</list_item>
+  </list>
+  <form_item><key>11</key><value>.</value></form_item>
+  <picture><class>pictogram</class></picture>
+  <text>For more details on what to include on line 11...</text>
+  <text>12 If you completed line 11, enter the smaller...</text>
+  <form_item><key>12</key><value>74,992</value></form_item>
+  ...
+  ```
+</details>
+
+
+Detailed examples can be seen here: [Form Examples](/examples/form/form-examples.md)
 
 ### Cross-page structure
 
@@ -1400,15 +1891,16 @@ A conforming DocTags serializer SHALL:
 
 #### Temporal Validation
 
-- Components: Timestamps are encoded with `hour`, `minute`, and `second` tokens in strict order.
-- Ranges: `hour.value` is a non-negative integer; `minute.value` and `second.value` are integers in [0, 59].
-- Point: Exactly 3 consecutive tokens are required (hour, then minute, then second).
-- Interval: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
+- Components: Timestamps with second-level precision are encoded with `hour`, `minute`, and `second` tokens in strict order. Timestamps with sub-second precision are encoded with `hour`, `minute`, `second` and `centisecond` tokens in strict order.
+- Ranges: `hour.value` is an integer in `[0, 99]`; `minute.value` is an integer in `[0, 59]`; `second.value` is an integer in `[0, 59]`; `centisecond.value` is an integer in `[0, 99]`.
+- Point with second-level precision: Exactly 3 consecutive tokens are required (hour, then minute, then second).
+- Point with sub-second precision: Exactly 4 consecutive tokens are required (hour, then minute, then second, then centisecond).
+- Interval with second-level precision: Exactly 6 consecutive tokens are required: start triplet followed by end triplet.
+- Interval with sub-second precision: Exactly 8 consecutive tokens are required: start quadruplet followed by end quadruplet.
 - Normalization: Out-of-range carry is not allowed; producers MUST pre-normalize values (e.g., 61 minutes becomes 1 hour and 1 minute).
 - Monotonicity (intervals): End time MUST be greater than or equal to start time when converted to total seconds.
 - Placement: Timestamp tokens MAY only appear on block-level elements and MUST precede textual content and inline formatting when present.
-- Coexistence: When both spatial and temporal tokens are present, both appear before content; relative order has no semantic effect.
-- Granularity: Precision is to whole seconds; sub-second precision is not defined in this version.
+- Coexistence: When both geometric and temporal tokens are present, both appear before content; relative order has no semantic effect.
 - Interpretation: Values are relative to a media timeline (not wall-clock), so dates/time zones do not apply.
 
 #### Content Validation
@@ -1444,7 +1936,8 @@ The `<class>` token supports extensible vocabularies:
 4. W3C XML 1.0 Specification (Fifth Edition)
 5. W3C HTML5 Specification
 6. ISO 32000-2:2020 (PDF 2.0)
-7. Semantic Versioning 2.0.0 (semver.org)
+7. ISO 8601
+8. Semantic Versioning 2.0.0 (semver.org)
 
 ## Appendix A: Complete Token Reference
 
@@ -1456,19 +1949,19 @@ The `<class>` token supports extensible vocabularies:
 | 2 | Special Elements | `page_break` | Yes | No | Page delimiter. |
 | 3 |  | `time_break` | Yes | No | Temporal segment delimiter. |
 | 4 |  | `metadata` | No | No | Document metadata container. |
-| 5 | Geometric Tokens | `location` | Yes | Yes | Spatial coordinate; attributes: `value`, optional `resolution`. |
-| 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` (non-negative integer). |
+| 5 | Geometric Tokens | `location` | Yes | Yes | Geometric coordinate; attributes: `value`, optional `resolution`. |
+| 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` in [0, 99]. |
 | 7 |  | `minute` | Yes | Yes | Minutes component of a timestamp; attribute: `value` in [0, 59]. |
 | 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` in [0, 59]. |
-| 9 | Semantic Tokens | `title` | No | No | Document or section title. |
-| 10 |  | `section_header` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
+| 9 |  | `centisecond` | Yes | Yes | Centiseconds component of a timestamp; attribute: `value` in [0, 99]. |
+| 10 | Semantic Tokens | `heading` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
 | 11 |  | `text` | No | No | Generic text content. |
 | 12 |  | `caption` | No | No | Caption for floating/grouped elements. |
 | 13 |  | `footnote` | No | No | Footnote content. |
 | 14 |  | `page_header` | No | No | Page header content. |
 | 15 |  | `page_footer` | No | No | Page footer content. |
 | 16 |  | `watermark` | No | No | Watermark indicator or content. |
-| 17 |  | `picture` | No | No | Image/graphic; may contain `base64` or `uri`. |
+| 17 |  | `picture` | No | No | Image/graphic; may contain `base64`, `uri`, `class` - for image classification, `otsl` - to describe numerical values of charts, `group` - can contain document sub-tree for example in case of infographics |
 | 18 |  | `form` | No | No | Form structure container. |
 | 19 |  | `formula` | No | No | Mathematical expression block. |
 | 20 |  | `code` | No | No | Code block; may include classification via `class` token. |
@@ -1476,7 +1969,7 @@ The `<class>` token supports extensible vocabularies:
 | 22 |  | `checkbox` | No | Yes | Checkbox item; attribute: `selected`. |
 | 23 | Grouping Tokens | `section` | No | Yes | Document section; attribute: `level` (N ≥ 1). |
 | 24 |  | `list` | No | Yes | List container; attribute: `ordered` (true/false). |
-| 25 |  | `group` | No | Yes | Generic group; attribute: `type` (e.g., table, form, code). |
+| 25 |  | `group` | No | Yes | Generic group. |
 | 26 | Formatting Tokens | `bold` | No | No | Bold text. |
 | 27 |  | `italic` | No | No | Italic text. |
 | 28 |  | `strikethrough` | No | No | Strike-through text. |
@@ -1498,17 +1991,15 @@ The `<class>` token supports extensible vocabularies:
 | 44 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
 | 45 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
 | 46 |  | `nl` | Yes | No | New line (row separator). |
-| 47 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker; attribute: `id`. |
-| 48 |  | `continue_row` | Yes | Yes | Row continuation; attribute: `id`. |
-| 49 |  | `continue_col` | Yes | Yes | Column continuation; attribute: `id`. |
-| 50 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
-| 51 |  | `uri` | No | No | External resource reference. |
-| 52 | Content Tokens | `marker` | No | No | List/form marker content. |
-| 53 |  | `class` | No | Yes | Class token value can can be used to classify chart types for pictures that display charts (e.g. `pie_chart`, `bar_chart`, `line_chart`, ...), or as a language marker for code (e.g. `python`, `c`, `c++`, `java_script`, ...). We reserve it to have open set of values, depending on use case; attribute: `value`. |
-| 54 |  | `content` | No | No | Generic content wrapper. |
-| 55 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
-| 56 |  | `implicit_key` | No | No | Implicit key in forms. |
-| 57 |  | `value` | No | No | Form item value (child of `form_item`). |
+| 47 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker. |
+| 48 |  | `h_thread` | Yes | Yes | Continutation marker for horizontal table stitching. |
+| 49 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
+| 50 |  | `uri` | No | No | External resource reference. |
+| 51 | Content Tokens | `marker` | No | No | List/form marker content. |
+| 52 |  | `facets` | No | No | Container for application-specific properties for derived information, such as summary, classification label, etc. |
+| 53 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
+| 54 |  | `implicit_key` | No | No | Implicit key in forms. |
+| 55 |  | `value` | No | No | Form item value (child of `form_item`). |
 
 ### Metadata Sub-elements
 
@@ -1532,4 +2023,3 @@ The `<class>` token supports extensible vocabularies:
 ## Appendix B: Escape entities
 
 TBA
-
