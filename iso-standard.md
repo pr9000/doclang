@@ -150,7 +150,7 @@ DocTags defines the following categories of elements:
 - **content**: Lightweight content helpers used inside semantic blocks for explicit payload and annotations (e.g., `marker`).
 - **binary data**: Elements that embed or reference non-text payloads for media—either inline as `base64` or via `uri`—allowed under `picture`, `inline_picture`, or at page level.
 - **metadata**: Elements that provide metadata about the document or its components, contained within `head` and `meta` respectively.
-- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `<thread id="N"/>`, `continue_row`, `continue_col`) to stitch fragmented content.
+- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `thread_N`, `h_thread_N`) to stitch split content (e.g. spanning multiple columns or pages).
 
 ### Special Elements
 
@@ -565,8 +565,8 @@ For content spanning page breaks:
 
 | Token | Description |
 |-------|-------------|
-| `<thread_N/>` | Special element for capturing content that spans across pages ([example](./examples/cross_page/index.md)) |
-| `<h_thread_N/>` | Special element for horizontal stitching of table content ([example](./examples/split_tables/index.md)) |
+| `<thread_N/>` | Special element for capturing content that spans across pages (see [Split Structure](#split-structure)) |
+| `<h_thread_N/>` | Special element for horizontal stitching of table content (see [Split Structure](#split-structure)) |
 
 ### Binary Data Elements
 
@@ -1777,27 +1777,253 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
 
 Detailed examples can be seen here: [Form Examples](/examples/form/form-examples.md)
 
-### Cross-page structure
+### Split structure
 
-We can capture content that is split across pages using the `<thread id="N"/>` token, where `N` is a unique identifier.
+We can capture content that is split (e.g. across columns or across pages) using the `<thread_N/>` token, where `N` is a unique identifier.
 
 The basic structure is shown below, e.g. for a `text` tag:
 
 ```xml
 <text>
-  <thread id="1"/>
+  <thread_1/>
   This text item starts here
 </text>
 ...
-<page_break/>
-...
 <text>
-  <thread id="1"/>
+  <thread_1/>
   and continues here.
 </text>
 ```
 
-Detailed examples: [link](./examples/cross_page/index.md)
+<details>
+  <summary>Cross-column structure example</summary>
+
+  <!-- blank line after <summary> is important -->
+
+![inline-00](./examples/inline/inline_00.png)
+
+Each block that has location information is a top-level tag of the corresponding label, e.g. "text".
+
+Top-level tags which belong to the same item should have the same thread token.
+
+```xml
+<text>
+    <loc_10/><loc_20/><loc_30/><loc_40/>
+    <thread_1/>
+    where τ<subscript>x,y,z</subscript> are the Pauli matrices acting
+    on Nambu space. We consider a circular-shaped boundary, the nor-
+</text>
+
+<caption>
+    <loc_15/><loc_25/><loc_35/><loc_45/>
+    FIG. 3. The modules of the inner product of two MES spinors
+    <formula>...<formula/>
+    ...
+</caption>
+
+<text>
+    <loc_20/><loc_30/><loc_40/><loc_50/>
+    <thread_1/>
+    mal direction of the boundary tangent for arbitrary angle θ is
+    <formula>ˆx⊥ = (cos θ, sin θ)</formula>
+    . Next, we assume an ansatz for the edge state wave function at θ as
+	<formula>Ψu/l(x⊥) =eλx⊥ eik∥ x∥ ξu/l </formula>
+	with
+	<formula>k∥ = sin θkx − cos θky</formula>
+	Here, |ξu⟩ and |ξl⟩ represent the spinors ...  of the chiral MESs with
+	<formula>φu = 0</formula>
+    and
+	<formula>φl = φ:</formula>
+</text>
+```
+</details>
+
+<details>
+  <summary>Cross-page structure example</summary>
+
+  <!-- blank line after <summary> is important -->
+
+![cross-page-00](./examples/cross_page/cross_page_00.png)
+
+The scenario in the above figure is represented as follows:
+
+```xml
+...
+<text>
+    <loc_10/><loc_20/><loc_30/><loc_40/>
+    Our multi-faceted DE&I program includes the following initiatives:
+</text>
+
+<unordered_list>
+    <thread_1/>
+    <list_item>
+        <loc_15/><loc_25/><loc_35/><loc_45/>
+        Mentorships and internship programs featuring diverse employees and students
+    </list_item>
+    ...
+    <list_item>
+        <loc_20/><loc_30/><loc_40/><loc_50/>
+        Build Science, Technology, Engineering and Mathematics (STEM) employee candidate pipeline via involvement with:
+        <unordered_list>
+            <list_item>
+                <loc_25/><loc_35/><loc_45/><loc_55/>
+                Historically Black Colleges and Universities (HBCUs) site visits and career fairs
+            </list_item>
+            ...
+            <list_item>
+                <loc_30/><loc_40/><loc_50/><loc_60/>
+                San Diego Squared (STEM-focused nonprofit organization connecting underrepresented student to the power
+                of STEM by providing access to education, mentorship and resources to develop STEM careers)
+            </list_item>
+        </unordered_list>
+    </list_item>
+</unordered_list>
+
+<page_footer><loc_35/><loc_45/><loc_55/><loc_65/>16 Neurocrine Biosciences</page_footer>
+
+<page_break/>
+
+<unordered_list>
+    <thread_1/>
+    <list_item>
+        <loc_40/><loc_50/><loc_60/><loc_70/>
+        Build upon DE&I employee education initiatives including:
+        ...
+    </list_item>
+    ...
+</unordered_list>
+...
+```
+</details>
+
+<details>
+  <summary>Split table example</summary>
+
+  <!-- blank line after <summary> is important -->
+
+The table shown on the left may be split across pages, e.g. as shown on the middle. The figure on the right visualizes
+the thread elements (more details further below):
+
+<table style="min-width: 1800px">
+    <tr>
+        <td>
+            Original table:
+            <br />
+            <img src="./examples/split_tables/original_table.png" height="900" width="644" />
+        </td>
+        <td>
+            Table split across pages:
+            <br />
+            <img src="./examples/split_tables/split_table.png" height="900" width="644" />
+        </td>
+        <td>
+            Table threads:
+            <br />
+            <img src="./examples/split_tables/table_threads.png" height="900" width="644" />
+        </td>
+    </tr>
+</table>
+
+The scenario in the above figure is represented below.
+
+- We introduce a new horizontal thread token, `h_thread_N`, which is used to capture table content that spans pages sidewise,
+similarly to the usual thread tokens `thread_N`.
+- Only the content that is visible within the page is included in the OTSL token (e.g. see "2025 d").
+- When thread linking is resolvable through `ucel`/`lcel` or `h_thread_N`, the `thread_N` token is not used, as it would be redundant.
+- When thread linking must be captured, we capture it the earliest possible, i.e. we don't wait for the bottom-most cell
+to be reached to add the thread for "Europe" in the example above.
+
+```xml
+...
+<!-- page 1: -->
+<table>
+    <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
+        <thread_1/>
+        <h_thread_1/>
+
+        <ecel/>                             <ecel/>                      <ecel/><nl/>
+        <ecel/>                             <ched/>Continent             <ched/>Country<nl/>
+        <rhed/><thread_2/>                  <rhed/>Asia                  <rhed/>Japan<nl/>
+    </otsl>
+</table>
+<page_break/>
+
+<!-- page 2: -->
+<table>
+    <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
+        <thread_1/>
+        <h_thread_2/>
+
+        <rhed/><thread_2/>G7 member         <rhed/><thread_3/>Europe           <rhed/>France<nl/>
+        <ucel/>                             <ucel/>                            <rhed/>Germany<nl/>
+        <ucel/>                             <ucel/>                            <rhed/>Italy<nl/>
+    </otsl>
+</table>
+<page_break/>
+
+<!-- page 3: -->
+<table>
+    <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
+        <thread_1/>
+        <h_thread_3/>
+
+        <rhed/><thread_2/>                  <rhed/><thread_3/>                 <rhed/>United Kingdom<nl/>
+        <ucel/>                             <rhed/>North America               <rhed/>Canada<nl/>
+        <ucel/>                             <ucel/>                            <rhed/>United States<nl/>
+    </otsl>
+</table>
+<page_break/>
+
+<!-- page 4: -->
+<table>
+    <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
+        <h_thread_1/>
+
+        <ched/><h_thread_4/>2025 d          <lcel/>                            <lcel/><nl/>
+        <ched/>GDP (PPP) per capita in USD  <ched/>Currency                    <ched/><h_thread_5/>Key l<nl/>
+        <fcel/>46,097                       <fcel/>Japanese yen (JPY)          <fcel/>Shigeru Ishiba<nl/>
+    </otsl>
+</table>
+<page_break/>
+
+<!-- page 5: -->
+<table>
+    <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
+        <h_thread_2/>
+
+        <fcel/>54,465                       <fcel/>Euro (EUR)                  <fcel/>Emmanuel Macron<nl/>
+        <fcel/>62,830                       <fcel/>Euro (EUR)                  <fcel/>Friedrich Merz<nl/>
+        <fcel/>53,115                       <fcel/>Euro (EUR)                  <fcel/>Giorgia Meloni<nl/>
+    </otsl>
+</table>
+<page_break/>
+
+<!-- page 6: -->
+<table>
+    <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
+        <h_thread_3/>
+
+        <fcel/>52,518                       <fcel/>Pound sterling (GBP)        <fcel/>Keir Starmer<nl/>
+        <fcel/>62,830                       <fcel/>Canadian dollar             <fcel/>Mark Carney<nl/>
+        <fcel/>53,115                       <fcel/>United States dollar (USD)  <fcel/>Donald Trump<nl/>
+    </otsl>
+</table>
+<page_break/>
+
+<!-- page 7: -->
+<table>
+    <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
+        <h_thread_1/>
+
+        <ched/><h_thread_4/>etails          <lcel/>                            <lcel/><nl/>
+        <ched/><h_thread_5/>eader           <ched/>Population in millions      <ched/>Area in km2<nl/>
+        <fcel/>Prime Minister               <fcel/>125.1                       <fcel/>377,975<nl/>
+    </otsl>
+</table>
+<page_break/>
+...
+```
+</details>
 
 ### Formatting
 
