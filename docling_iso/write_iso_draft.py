@@ -132,7 +132,7 @@ def finalize_paragraph_buf(document: Document, buf: List[str]) -> None:
         return
     text = " ".join(line.strip() for line in buf).strip()
     if text:
-        document.add_paragraph(text)
+        add_formatted_paragraph(document, text)
     buf.clear()
 
 
@@ -195,6 +195,11 @@ def split_md_row(row: str) -> List[str]:
 def add_code_block(document: Document, code_lines: List[str], language: Optional[str]) -> None:
     # Add a monospaced, preformatted code block.
     p = document.add_paragraph()
+    # Light grey background for the whole block
+    try:
+        _set_paragraph_shading(p, fill="F2F2F2")
+    except Exception:
+        pass
     run = p.add_run()
     run.font.name = "Consolas"
     run.font.size = Pt(9)
@@ -202,6 +207,73 @@ def add_code_block(document: Document, code_lines: List[str], language: Optional
         if idx:
             run.add_break(WD_BREAK.LINE)
         run.add_text(line.rstrip("\n"))
+
+
+INLINE_CODE_TAG_RE = re.compile(r"<inline-code>(.*?)</inline-code>")
+BOLD_RE = re.compile(r"\*\*(.*?)\*\*")
+CODE_SPAN_RE = re.compile(r"(<inline-code>(.*?)</inline-code>|`([^`]+)`)")
+
+
+def _set_paragraph_shading(paragraph, fill: str = "F2F2F2") -> None:
+    p = paragraph._p
+    pPr = p.get_or_add_pPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), fill)
+    pPr.append(shd)
+
+
+def _set_run_shading(run, fill: str = "F2F2F2") -> None:
+    rPr = run._r.get_or_add_rPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), fill)
+    rPr.append(shd)
+
+
+def _add_bold_and_text_runs(paragraph, text: str) -> None:
+    # Split by bold markers and add runs accordingly
+    pos = 0
+    for m in BOLD_RE.finditer(text):
+        if m.start() > pos:
+            t = text[pos : m.start()]
+            if t:
+                paragraph.add_run(t)
+        bold_txt = m.group(1)
+        br = paragraph.add_run(bold_txt)
+        br.bold = True
+        pos = m.end()
+    if pos < len(text):
+        paragraph.add_run(text[pos:])
+
+
+def _add_inline_formatted_runs(paragraph, text: str) -> None:
+    # First, split into code and non-code spans
+    cursor = 0
+    for m in CODE_SPAN_RE.finditer(text):
+        if m.start() > cursor:
+            normal_text = text[cursor : m.start()]
+            if normal_text:
+                _add_bold_and_text_runs(paragraph, normal_text)
+        code_txt = m.group(2) if m.group(2) is not None else m.group(3)
+        r = paragraph.add_run(code_txt)
+        r.font.name = "Consolas"
+        try:
+            _set_run_shading(r, fill="F2F2F2")
+        except Exception:
+            pass
+        cursor = m.end()
+    if cursor < len(text):
+        tail = text[cursor:]
+        _add_bold_and_text_runs(paragraph, tail)
+
+
+def add_formatted_paragraph(document: Document, text: str):
+    p = document.add_paragraph()
+    _add_inline_formatted_runs(p, text)
+    return p
 
 
 def add_image(document: Document, src: str, base_dir: Path) -> bool:
@@ -309,15 +381,19 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
                 indent = mb.group("indent")
                 text = mb.group("text")
                 level = list_level_for_indent(indent)
-                p = document.add_paragraph(text, style="List Bullet")
+                p = document.add_paragraph(style="List Bullet")
+                _add_inline_formatted_runs(p, text)
             else:
                 indent = mo.group("indent")
                 text = mo.group("text")
                 level = list_level_for_indent(indent)
-                p = document.add_paragraph(text, style="List Number")
+                p = document.add_paragraph(style="List Number")
+                _add_inline_formatted_runs(p, text)
             # Indent to reflect nesting level
             try:
-                p.paragraph_format.left_indent = Inches(0.25 * level)
+                p.paragraph_format.left_indent = Inches(0.25 * (level + 1))
+                # Use a hanging indent so wrapped lines align cleanly
+                p.paragraph_format.first_line_indent = -Inches(0.25)
             except Exception:
                 pass
             i += 1
