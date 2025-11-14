@@ -35,6 +35,7 @@ try:
     from docx.enum.text import WD_BREAK
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
+    from docx.opc.constants import RELATIONSHIP_TYPE
 except ImportError as exc:
     print(
         "Missing dependency: python-docx. Install with `pip install python-docx`.",
@@ -182,6 +183,9 @@ _LIST_BULLET_RE = re.compile(r"^(?P<indent>\s*)([-+*])\s+(?P<text>.+?)\s*$")
 _LIST_ORDERED_RE = re.compile(r"^(?P<indent>\s*)(\d+)([.)])\s+(?P<text>.+?)\s*$")
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
 _IMAGE_RE = re.compile(r'!\[(?P<alt>[^\]]*)\]\((?P<src>[^)\s]+)(?:\s+"(?P<title>[^"]*)")?\)')
+_LINK_OR_URL_RE = re.compile(
+    r'(?:\[(?P<link_text>[^\]]+)\]\((?P<link_url>[^)\s]+)(?:\s+"[^"]*")?\))|(?P<bare>(?:https?://|mailto:)[^\s<)]+)'
+)
 
 
 def parse_table_block(lines: List[str], start: int) -> Tuple[int, List[List[str]], Optional[List[str]]]:
@@ -291,6 +295,30 @@ def _add_bold_and_text_runs(paragraph, text: str) -> None:
         paragraph.add_run(text[pos:])
 
 
+def _add_links_and_text_runs(paragraph, text: str) -> None:
+    """Add runs handling Markdown links [text](url) and bare URLs, plus bold.
+
+    This does not handle inline code; the caller should have already split
+    code spans and pass only normal text here.
+    """
+    pos = 0
+    for m in _LINK_OR_URL_RE.finditer(text):
+        if m.start() > pos:
+            pre = text[pos : m.start()]
+            if pre:
+                _add_bold_and_text_runs(paragraph, pre)
+        if m.group("link_url") is not None:
+            link_text = m.group("link_text")
+            link_url = m.group("link_url")
+            add_hyperlink(paragraph, link_url, link_text)
+        else:
+            url = m.group("bare")
+            add_hyperlink(paragraph, url, url)
+        pos = m.end()
+    if pos < len(text):
+        _add_bold_and_text_runs(paragraph, text[pos:])
+
+
 def _add_inline_formatted_runs(paragraph, text: str) -> None:
     # First, split into code and non-code spans
     cursor = 0
@@ -298,7 +326,7 @@ def _add_inline_formatted_runs(paragraph, text: str) -> None:
         if m.start() > cursor:
             normal_text = text[cursor : m.start()]
             if normal_text:
-                _add_bold_and_text_runs(paragraph, normal_text)
+                _add_links_and_text_runs(paragraph, normal_text)
         code_txt = m.group(2) if m.group(2) is not None else m.group(3)
         r = paragraph.add_run(code_txt)
         r.font.name = "Consolas"
@@ -309,7 +337,7 @@ def _add_inline_formatted_runs(paragraph, text: str) -> None:
         cursor = m.end()
     if cursor < len(text):
         tail = text[cursor:]
-        _add_bold_and_text_runs(paragraph, tail)
+        _add_links_and_text_runs(paragraph, tail)
 
 
 def add_formatted_paragraph(document: Document, text: str):
@@ -348,6 +376,39 @@ def add_image(document: Document, src: str, base_dir: Path) -> bool:
 
 
 FIGURE_IMG_SRC_RE = re.compile(r"<img[^>]*\bsrc\s*=\s*['\"]([^'\"]+)['\"][^>]*>", re.IGNORECASE | re.DOTALL)
+FIGCAPTION_RE = re.compile(r"<figcaption[^>]*>(.*?)</figcaption>", re.IGNORECASE | re.DOTALL)
+HTML_A_TAG_RE = re.compile(r"<a[^>]*\bhref\s*=\s*['\"]([^'\"]+)['\"][^>]*>(.*?)</a>", re.IGNORECASE | re.DOTALL)
+HTML_TAG_RE = re.compile(r"<[^>]+>")
+from html import unescape as _html_unescape
+
+def add_hyperlink(paragraph, url: str, text: str):
+    """Add a clickable hyperlink run to a paragraph.
+
+    Uses low-level OXML since python-docx lacks a high-level API.
+    """
+    # Create relationship id
+    part = paragraph.part
+    r_id = part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+
+    # Create the w:hyperlink tag and set relationship id
+    hyperlink = OxmlElement("w:hyperlink")
+    hyperlink.set(qn("r:id"), r_id)
+
+    # Create a run with the hyperlink style
+    new_run = OxmlElement("w:r")
+    rPr = OxmlElement("w:rPr")
+    rStyle = OxmlElement("w:rStyle")
+    rStyle.set(qn("w:val"), "Hyperlink")
+    rPr.append(rStyle)
+    new_run.append(rPr)
+
+    w_t = OxmlElement("w:t")
+    w_t.text = text
+    new_run.append(w_t)
+
+    hyperlink.append(new_run)
+    paragraph._p.append(hyperlink)
+    return paragraph
 
 
 def _strip_html_comments_outside_code(md_text: str) -> str:
@@ -473,6 +534,40 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
             # Find and embed all images within the figure
             for src in FIGURE_IMG_SRC_RE.findall(block):
                 add_image(document, src.strip(), base_dir)
+            # If a figcaption exists, add it as a caption paragraph beneath the image(s)
+            mcap = FIGCAPTION_RE.search(block)
+            if mcap:
+                caption_html = mcap.group(1).strip()
+                # Build a caption paragraph. Try to use the 'Caption' style if available.
+                try:
+                    p = document.add_paragraph(style="Caption")
+                except Exception:
+                    p = document.add_paragraph()
+                # Mix plain text and HTML <a href> links
+                pos = 0
+                for am in HTML_A_TAG_RE.finditer(caption_html):
+                    if am.start() > pos:
+                        pre_html = caption_html[pos : am.start()]
+                        pre_txt = _html_unescape(HTML_TAG_RE.sub("", pre_html))
+                        if pre_txt:
+                            p.add_run(pre_txt)
+                    url = _html_unescape(am.group(1))
+                    link_text_html = am.group(2)
+                    link_text = _html_unescape(HTML_TAG_RE.sub("", link_text_html)) or url
+                    add_hyperlink(p, url, link_text)
+                    pos = am.end()
+                if pos < len(caption_html):
+                    tail_html = caption_html[pos:]
+                    tail_txt = _html_unescape(HTML_TAG_RE.sub("", tail_html))
+                    if tail_txt:
+                        p.add_run(tail_txt)
+                # Light italic for readability if no Caption style applied
+                try:
+                    if p.style is None or getattr(p.style, 'name', '') != 'Caption':
+                        for r in p.runs:
+                            r.italic = True
+                except Exception:
+                    pass
             continue
 
         # Blank line ends a paragraph buffer.
