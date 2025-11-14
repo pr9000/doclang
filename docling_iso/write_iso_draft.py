@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import re
 import sys
 from pathlib import Path
@@ -44,7 +45,7 @@ except ImportError as exc:
 
 ROOT = Path(__file__).resolve().parents[1]
 ISO_STANDARDS_DIR = ROOT / "iso-standards"
-ISO_TEMPLATE = ISO_STANDARDS_DIR / "ISO_standard_template.dotx-"
+ISO_TEMPLATE = ISO_STANDARDS_DIR / "ISO_standard_template.dotx"
 DEFAULT_MD = ROOT / "iso-standard.md"
 
 
@@ -134,6 +135,47 @@ def finalize_paragraph_buf(document: Document, buf: List[str]) -> None:
     if text:
         add_formatted_paragraph(document, text)
     buf.clear()
+
+
+def replace_docx_parts_from_template(template_path: Path, docx_path: Path, parts: List[str]) -> None:
+    """
+    Copy specific parts from a DOCX/DOTX template into a target DOCX, replacing
+    any existing entries with the same names. This avoids duplicate entries and
+    the associated zipfile UserWarning messages.
+
+    - template_path: path to a .docx/.dotx file to read parts from
+    - docx_path: path to the .docx file to modify in-place
+    - parts: list of ZIP member names to copy (e.g., 'word/styles.xml')
+    """
+    import zipfile
+
+    parts_set = set(parts)
+    tmp_path = docx_path.with_suffix(docx_path.suffix + ".tmp")
+
+    # Build a new zip: copy everything from the destination except the parts
+    # we intend to replace, then write the parts from the template.
+    with zipfile.ZipFile(docx_path, "r") as zread, zipfile.ZipFile(tmp_path, "w") as zwrite:
+        # Copy existing entries except those to be replaced
+        for info in zread.infolist():
+            if info.filename in parts_set:
+                continue
+            data = zread.read(info.filename)
+            # Preserve metadata by reusing ZipInfo when writing
+            zwrite.writestr(info, data)
+
+        # Append parts from the template if present
+        with zipfile.ZipFile(template_path, "r") as zsrc:
+            for name in parts:
+                try:
+                    src_info = zsrc.getinfo(name)
+                    data = zsrc.read(name)
+                    zwrite.writestr(src_info, data)
+                except KeyError:
+                    # Part not present in template; skip
+                    pass
+
+    # Atomically replace the original docx with the rebuilt archive
+    tmp_path.replace(docx_path)
 
 
 _LIST_BULLET_RE = re.compile(r"^(?P<indent>\s*)([-+*])\s+(?P<text>.+?)\s*$")
@@ -291,7 +333,14 @@ def add_image(document: Document, src: str, base_dir: Path) -> bool:
             print(f"[warn] Image not found: {src}", file=sys.stderr)
             return False
     try:
-        document.add_picture(str(img_path))
+        # Resize to visible page width while preserving aspect ratio.
+        try:
+            section = document.sections[-1]
+            max_width = section.page_width - section.left_margin - section.right_margin
+            document.add_picture(str(img_path), width=max_width)
+        except Exception:
+            # Fallback if section metrics are unavailable
+            document.add_picture(str(img_path))
         return True
     except Exception as e:
         print(f"[warn] Failed to embed image {src}: {e}", file=sys.stderr)
@@ -341,15 +390,19 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
                 nrows = len(rows)
                 ncols = len(rows[0])
                 table = document.add_table(rows=nrows, cols=ncols)
-                for r_idx, row in enumerate(rows):
-                    cells = table.rows[r_idx].cells
-                    for c_idx, cell_text in enumerate(row):
-                        cells[c_idx].text = cell_text
-                # Header row style
+                # Apply a readable table style if available
                 try:
                     table.style = "Light List Accent 1"
                 except Exception:
                     pass
+                # Fill cells with inline formatting (bold, inline code)
+                for r_idx, row in enumerate(rows):
+                    cells = table.rows[r_idx].cells
+                    for c_idx, cell_text in enumerate(row):
+                        cell = cells[c_idx]
+                        cell.text = ""
+                        p = cell.paragraphs[0]
+                        _add_inline_formatted_runs(p, cell_text)
             i = t_end
             continue
 
@@ -424,12 +477,9 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
     finalize_paragraph_buf(document, para_buf)
 
 
-def build_document(md_path: Path, out_path: Path) -> None:
-    # Try to load the ISO template for styles if present; otherwise start fresh.
-    if ISO_TEMPLATE.exists():
-        document = Document(str(ISO_TEMPLATE))
-    else:
-        document = Document()
+def build_document(md_path: Path, out_path: Path, copy_iso_style: bool = True) -> None:
+
+    document = Document()
 
     # Title page is handled by the template if present. Insert a TOC after any
     # initial content (e.g., before main body when no specialized template).
@@ -440,8 +490,23 @@ def build_document(md_path: Path, out_path: Path) -> None:
     parse_markdown_to_docx(document, md_text, base_dir=md_path.parent)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    # Save the original, unmodified styling version
     document.save(str(out_path))
 
+    # Additionally save a copy with ISO styling applied, if requested and available
+    if ISO_TEMPLATE.exists() and copy_iso_style:
+        iso_styled_path = out_path.with_name(out_path.stem + ".iso-styling.docx")
+        # Start from the original file contents
+        shutil.copyfile(out_path, iso_styled_path)
+        # Lift styles (and related assets) from the template into the copied docx,
+        # replacing existing entries to avoid duplicate ZIP names warnings.
+        to_copy = [
+            "word/styles.xml",           # styles (required)
+            # "word/numbering.xml",        # lists/bullets (if present)
+            # "word/theme/theme1.xml",     # theme (if present)
+            # "word/fontTable.xml",        # font table (optional)
+        ]
+        replace_docx_parts_from_template(ISO_TEMPLATE, iso_styled_path, to_copy)
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Write doctags ISO draft DOCX from markdown")
@@ -472,6 +537,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     except Exception as e:
         print(f"Failed to write document: {e}", file=sys.stderr)
         return 1
+    # Inform about the ISO-styled file when template is available
+    if ISO_TEMPLATE.exists():
+        iso_styled_path = out_path.with_name(out_path.stem + ".iso-styling.docx")
+        print(f"Also generated: {iso_styled_path}")
     print("Done.")
     return 0
 
