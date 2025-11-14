@@ -351,6 +351,8 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
     lines = md_text.splitlines()
     i = 0
     para_buf: List[str] = []
+    # Track the last seen Markdown heading level to place sub-headers
+    current_heading_level: int = 1
 
     # For list indentation, 2 spaces per level is common in this repo.
     def list_level_for_indent(s: str) -> int:
@@ -358,6 +360,35 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
 
     while i < len(lines):
         line = lines[i]
+
+        # Handle <details> wrapper with <summary> header: inject a sub-heading and
+        # skip wrapper/comment lines; keep inner content for normal parsing.
+        if re.match(r"^\s*<details>\s*$", line):
+            finalize_paragraph_buf(document, para_buf)
+            i += 1
+            # Optional immediate <summary>Title</summary>
+            if i < len(lines):
+                msum = re.match(r"^\s*<summary>(.*?)</summary>\s*$", lines[i])
+                if msum:
+                    summary_text = msum.group(1).strip()
+                    sub_level = min(current_heading_level + 1, 6)
+                    document.add_heading(summary_text, level=sub_level)
+                    # Do not update current_heading_level so siblings remain at same level
+                    i += 1
+            # Skip optional blank/comment lines after <summary>
+            while i < len(lines):
+                s = lines[i].strip()
+                if not s or re.match(r"^<!--.*?-->$", s):
+                    i += 1
+                    continue
+                break
+            continue
+
+        # Ignore closing </details>
+        if re.match(r"^\s*</details>\s*$", line):
+            finalize_paragraph_buf(document, para_buf)
+            i += 1
+            continue
 
         # Blank line ends a paragraph buffer.
         if not line.strip():
@@ -414,6 +445,7 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
             text = mhead.group(2).strip()
             # python-docx supports heading levels 0..9; use 1..6 for Markdown.
             document.add_heading(text, level=level)
+            current_heading_level = level
             i += 1
             continue
 
