@@ -754,7 +754,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Inform about the ISO-styled file when template is available
     if ISO_TEMPLATE.exists():
         iso_styled_path = out_path.with_name(out_path.stem + ".iso-styling.docx")
-        print(f"Also generated: {iso_styled_path}")
+        print(f"Generating: {iso_styled_path}")
     print("Done.")
     return 0
 
