@@ -347,6 +347,73 @@ def add_image(document: Document, src: str, base_dir: Path) -> bool:
         return False
 
 
+FIGURE_IMG_SRC_RE = re.compile(r"<img[^>]*\bsrc\s*=\s*['\"]([^'\"]+)['\"][^>]*>", re.IGNORECASE | re.DOTALL)
+
+
+def _strip_html_comments_outside_code(md_text: str) -> str:
+    """Remove HTML comments (<!-- ... -->) outside fenced code blocks.
+
+    Preserves comment markers that appear inside fenced code blocks. Also
+    removes multi-line comments and inline fragments within a line.
+    """
+    lines = md_text.splitlines(keepends=True)
+    out: List[str] = []
+    in_code = False
+    code_fence: Optional[str] = None
+    in_comment = False
+    for line in lines:
+        # Detect fenced code block start/end (must be fence-only line, like parser)
+        if not in_comment:
+            mcode = re.match(r"^(\s*)(`{3,}|~{3,})(\w+)?\s*$", line)
+            if mcode:
+                # Toggle code state
+                if not in_code:
+                    in_code = True
+                    code_fence = mcode.group(2)
+                else:
+                    # Closing fence (any fence-only line ends block in our parser)
+                    in_code = False
+                    code_fence = None
+                out.append(line)
+                continue
+
+        if in_code:
+            out.append(line)
+            continue
+
+        # Strip HTML comments in non-code text
+        i = 0
+        L = len(line)
+        buf: List[str] = []
+        while i < L:
+            if in_comment:
+                end = line.find("-->", i)
+                if end == -1:
+                    # Entire remainder is within comment
+                    i = L
+                    in_comment = True
+                    break
+                else:
+                    # Close comment and continue scanning after it
+                    i = end + 3
+                    in_comment = False
+                    continue
+            else:
+                start = line.find("<!--", i)
+                if start == -1:
+                    buf.append(line[i:])
+                    break
+                else:
+                    # Keep text before the comment start
+                    if start > i:
+                        buf.append(line[i:start])
+                    i = start + 4
+                    in_comment = True
+                    continue
+        out.append("".join(buf))
+    return "".join(out)
+
+
 def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> None:
     lines = md_text.splitlines()
     i = 0
@@ -388,6 +455,24 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
         if re.match(r"^\s*</details>\s*$", line):
             finalize_paragraph_buf(document, para_buf)
             i += 1
+            continue
+
+        # HTML <figure> block with one or more <img> tags: embed images like markdown
+        if re.match(r"^\s*<figure\b", line, flags=re.IGNORECASE):
+            finalize_paragraph_buf(document, para_buf)
+            block_lines = [line]
+            i += 1
+            # Accumulate until closing </figure>
+            while i < len(lines) and re.search(r"</figure>", lines[i], flags=re.IGNORECASE) is None:
+                block_lines.append(lines[i])
+                i += 1
+            if i < len(lines):
+                block_lines.append(lines[i])
+                i += 1
+            block = "\n".join(block_lines)
+            # Find and embed all images within the figure
+            for src in FIGURE_IMG_SRC_RE.findall(block):
+                add_image(document, src.strip(), base_dir)
             continue
 
         # Blank line ends a paragraph buffer.
@@ -519,6 +604,8 @@ def build_document(md_path: Path, out_path: Path, copy_iso_style: bool = True) -
     add_toc(document)
 
     md_text = md_path.read_text(encoding="utf-8")
+    # Remove HTML comments outside fenced code blocks
+    md_text = _strip_html_comments_outside_code(md_text)
     parse_markdown_to_docx(document, md_text, base_dir=md_path.parent)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
