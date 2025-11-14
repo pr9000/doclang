@@ -2,9 +2,11 @@
 
 This repo keeps all the documentation for the ISO standardization of DocTags.
 
-## Standard draft
+## ISO standard
 
-The current draft document for the DocTags standard can be found [here](./iso-standard.md).
+The official ISO standard is described in the Markdown file [iso-standard.md](./iso-standard.md).
+
+To create the Word document, simply run `uv run ./docling_iso/write_iso_draft.py`.
 
 ## Parser
 
