@@ -539,16 +539,16 @@ Here is an example:
   <!-- document content -->
 </doctag>
 ```
-##### Governance
+##### Governance metadata
 In addition to the core metadata elements, publishers can optionally provide metadata pertaining to document governance. These elements allow the communication of acceptable use, policy, licensing, contact information and compliance requirements. 
 
-- `licenses` Indicate one or more licenses covering use of the documents
-- `data_classification` One or more data classifications con be goven for the document content. There is not an international standard of data classifications and organizations usually implement a classifications they have defined for their respective mission. 
-- `acceptable_use`
-- `stewardship`
-- `access_policy`
-- `retention_policy`
-- `compliance_requirements`, upstream pipeline information, e.g. VLM ID
+- `licenses` Indicate one or more licenses covering use of the documents.
+- `data_classification` One or more data classifications can be given for the document content. In general, data classification is not globally standardized. Organizations usually define a classification system suitable for their respective mission. These elements allow an organization to classify document sensitivity in their own terms.
+- `acceptable_use` Organizations may express acceptable use cases for the provided document data.
+- `stewardship` provides a name and/or organization with governance responsibility at the document's creator organzation.
+- `access_policy` provides the ability to reference access policy as well as enumerate roles which can access the data. Similar to data classification, there are no standards specifying role semantics. This element allows organizations to express access policy and roles in their own terms.
+- `retention_policy` allows organizations to state retention objectives regaridng the document data.
+- `compliance_requirements` state the compliance frameworks - regulatory or industrial - governance the lifecycle and use of the documents.
 
 Example use of these elements is shown below:
 
