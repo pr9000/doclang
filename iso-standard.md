@@ -540,8 +540,17 @@ Here is an example:
 </doctag>
 ```
 ##### Governance
-In addition to the core metadata elements, publishers can optionally provide metadata pertaining to document governance. These elements provide information about data classification as well as security requirements. 
+In addition to the core metadata elements, publishers can optionally provide metadata pertaining to document governance. These elements allow the communication of acceptable use, policy, licensing, contact information and compliance requirements. 
 
+- `licenses` Indicate one or more licenses covering use of the documents
+- `data_classification` One or more data classifications con be goven for the document content. There is not an international standard of data classifications and organizations usually implement a classifications they have defined for their respective mission. 
+- `acceptable_use`
+- `stewardship`
+- `access_policy`
+- `retention_policy`
+- `compliance_requirements`, upstream pipeline information, e.g. VLM ID
+
+Example use of these elements is shown below:
 
 ```xml
 <doctag>
