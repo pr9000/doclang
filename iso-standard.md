@@ -545,10 +545,10 @@ In addition to the core metadata elements, publishers can optionally provide met
 - `licenses` Indicate one or more licenses covering use of the documents.
 - `data_classification` One or more data classifications can be given for the document content. In general, data classification is not globally standardized. Organizations usually define a classification system suitable for their respective mission. These elements allow an organization to classify document sensitivity in their own terms.
 - `acceptable_use` Organizations may express acceptable use cases for the provided document data.
-- `stewardship` provides a name and/or organization with governance responsibility at the document's creator organzation.
-- `access_policy` provides the ability to reference access policy as well as enumerate roles which can access the data. Similar to data classification, there are no standards specifying role semantics. This element allows organizations to express access policy and roles in their own terms.
-- `retention_policy` allows organizations to state retention objectives regaridng the document data.
-- `compliance_requirements` state the compliance frameworks - regulatory or industrial - governance the lifecycle and use of the documents.
+- `stewardship` Provides the name of a person and/or organization with governance responsibility at the document owning  organzation.
+- `access_policy` Provides the ability to express access policy as well as enumerate roles allowed to access the data. Similar to data classification, there are no standards specifying role semantics. This element allows organizations to describe access policy and roles in their own terms.
+- `retention_policy` Allows organizations to state retention objectives for the document data.
+- `compliance_requirements` States the compliance frameworks - regulatory or industrial - governing the lifecycle and use of the documents.
 
 Example use of these elements is shown below:
 
