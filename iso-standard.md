@@ -605,7 +605,7 @@ Example use of these elements is shown below:
         <ref>http://www.some.org/policies/AC-2345</ref>
         <retention_period unit="year">5</retention_period>
         <deletion_method>permamenent secure deletion</<deletion_method>>
-        <documentation>record deletion event, date, method and personnel responsivle</documentation>
+        <documentation>record deletion event, date, method and personnel responsible</documentation>
       </policy>
     </retention_policy>
 
