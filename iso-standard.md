@@ -491,7 +491,7 @@ element within the respective component element. We discuss the details in the s
 #### The `head` Element
 
 After the optional `version` element, the `doctag` element can continue with an optional `<head>` element.
-Below we list the reserved metadata elements to be used within `<head>`:
+Below we list the reserved core metadata elements to be used within `<head>`:
 
 - `title`
 - each `author` element can optionally begin with one or more `affiliation` elements
@@ -535,6 +535,79 @@ Here is an example:
     <my_company_hap_filter_hate/>0.1</my_company_hap_filter_hate>
     <my_company_hap_filter_abuse/>0.1</my_company_hap_filter_abuse>
     <my_company_hap_filter_profanity/>0.1</my_company_hap_filter_profanity>
+  </head>
+  <!-- document content -->
+</doctag>
+```
+##### Governance
+In addition to the core metadata elements, publishers can optionally provide metadata pertaining to document governance. These elements provide information about data classification as well as security requirements. 
+
+
+```xml
+<doctag>
+  <head>
+    <!-- reserved elements -->
+    <title>My Company's Annual Report</title>
+    <author_info>
+      <author>Author 1 Name</author>
+    </author_info>
+    <date>2024-01-01</date>
+    <language classifier="fastText" score="0.7">eng</language>
+    <language classifier="fastText" score="0.2">spa</language>
+    <topic topic_taxonomy="taxonomy" score="0.5">Technology</topic>
+    <document_hash hash_function="sha256sum"/>75f2db0c6124527bf6dd48440f95fc864a5108d28517633f937923a7d8199185</document_hash>
+    <summary>This is a summary of the document</summary>
+    <generated_by>example_vlm_org/example_vlm_name</generated_by>
+
+    <licenses>
+     <license>https://www.apache.org/licenses/LICENSE-2.0</license>
+    </licenses>
+
+    <data_classification>
+      <data_class>confidential</data_class>
+      <data_class>personal information</data_class>
+    </data_classificiation>
+
+    <acceptable_use>
+      <purpose>General-purpose language models</purpose>
+      <purpose>Sales and marketing</purpose>
+    </acceptable_use>
+
+    <stewardship>
+       <steward>
+         <name>Charles Owens</name>
+         <contact>abc@some.org</contact>
+         <org>Dataset Organzation</org>
+      </steward>
+    <stewardship>
+
+    <access_policy>
+      <policy>
+        <ref>http://www.some.org/policies/AC-2345</ref>
+        <roles>
+           <role>viewer</role>
+           <role>reader</role>
+        </roles>
+      </policy>
+    </acess_policy>
+
+    <retention_policy>
+      <policy>
+        <ref>http://www.some.org/policies/AC-2345</ref>
+        <retention_period unit="year">5</retention_period>
+        <deletion_method>permamenent secure deletion</<deletion_method>>
+        <documentation>record deletion event, date, method and personnel responsivle</documentation>
+      </policy>
+    </retention_policy>
+
+    <compliance_requirements>
+      <compliance_req>GDPR</compliance_req>
+      <compliance_req>HIPAA</compliance_req>
+      <compliance_req>FedRAMP</compliance_req>
+      <compliance_req>PCI DSS</compliance_req>
+      <compliance_req>EU AI Act</compliance_req>
+    </compliance_requirements>
+
   </head>
   <!-- document content -->
 </doctag>
