@@ -491,7 +491,7 @@ element within the respective component element. We discuss the details in the s
 #### The `head` Element
 
 After the optional `version` element, the `doctag` element can continue with an optional `<head>` element.
-Below we list the reserved metadata elements to be used within `<head>`:
+Below we list the reserved core metadata elements to be used within `<head>`:
 
 - `title`
 - each `author` element can optionally begin with one or more `affiliation` elements
@@ -535,6 +535,88 @@ Here is an example:
     <my_company_hap_filter_hate/>0.1</my_company_hap_filter_hate>
     <my_company_hap_filter_abuse/>0.1</my_company_hap_filter_abuse>
     <my_company_hap_filter_profanity/>0.1</my_company_hap_filter_profanity>
+  </head>
+  <!-- document content -->
+</doctag>
+```
+##### Governance metadata
+In addition to the core metadata elements, publishers can optionally provide metadata pertaining to document governance. These elements allow the communication of acceptable use, policy, licensing, contact information and compliance requirements. 
+
+- `licenses` Indicate one or more licenses covering use of the documents.
+- `data_classification` One or more data classifications can be given for the document content. In general, data classification is not globally standardized. Organizations usually define a classification system suitable for their respective mission. These elements allow an organization to classify document sensitivity in their own terms.
+- `acceptable_use` Organizations may express acceptable use cases for the provided document data.
+- `stewardship` Provides the name of a person and/or organization with governance responsibility at the document owning  organzation.
+- `access_policy` Provides the ability to express access policy as well as enumerate roles allowed to access the data. Similar to data classification, there are no standards specifying role semantics. This element allows organizations to describe access policy and roles in their own terms.
+- `retention_policy` Allows organizations to state retention objectives for the document data.
+- `compliance_requirements` States the compliance frameworks - regulatory or industrial - governing the lifecycle and use of the documents.
+
+Example use of these elements is shown below:
+
+```xml
+<doctag>
+  <head>
+    <!-- reserved elements -->
+    <title>My Company's Annual Report</title>
+    <author_info>
+      <author>Author 1 Name</author>
+    </author_info>
+    <date>2024-01-01</date>
+    <language classifier="fastText" score="0.7">eng</language>
+    <language classifier="fastText" score="0.2">spa</language>
+    <topic topic_taxonomy="taxonomy" score="0.5">Technology</topic>
+    <document_hash hash_function="sha256sum"/>75f2db0c6124527bf6dd48440f95fc864a5108d28517633f937923a7d8199185</document_hash>
+    <summary>This is a summary of the document</summary>
+    <generated_by>example_vlm_org/example_vlm_name</generated_by>
+
+    <licenses>
+     <license>https://www.apache.org/licenses/LICENSE-2.0</license>
+    </licenses>
+
+    <data_classification>
+      <data_class>confidential</data_class>
+      <data_class>personal information</data_class>
+    </data_classificiation>
+
+    <acceptable_use>
+      <purpose>General-purpose language models</purpose>
+      <purpose>Sales and marketing</purpose>
+    </acceptable_use>
+
+    <stewardship>
+       <steward>
+         <name>Charles Owens</name>
+         <contact>abc@some.org</contact>
+         <org>Dataset Organzation</org>
+      </steward>
+    <stewardship>
+
+    <access_policy>
+      <policy>
+        <ref>http://www.some.org/policies/AC-2345</ref>
+        <roles>
+           <role>viewer</role>
+           <role>reader</role>
+        </roles>
+      </policy>
+    </acess_policy>
+
+    <retention_policy>
+      <policy>
+        <ref>http://www.some.org/policies/AC-2345</ref>
+        <retention_period unit="year">5</retention_period>
+        <deletion_method>permamenent secure deletion</<deletion_method>>
+        <documentation>record deletion event, date, method and personnel responsible</documentation>
+      </policy>
+    </retention_policy>
+
+    <compliance_requirements>
+      <compliance_req>GDPR</compliance_req>
+      <compliance_req>HIPAA</compliance_req>
+      <compliance_req>FedRAMP</compliance_req>
+      <compliance_req>PCI DSS</compliance_req>
+      <compliance_req>EU AI Act</compliance_req>
+    </compliance_requirements>
+
   </head>
   <!-- document content -->
 </doctag>
