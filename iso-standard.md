@@ -374,10 +374,15 @@ These elements organize semantic content into logical structures. Groups can not
 
 | Element | Description | Allowed Children |
 |-------|-------------|------------------|
-| `<list ordered=true>` | Numbered list | list\_item, checkbox |
-| `<list ordered=false>` | Bulleted list | list\_item, checkbox |
+| `<list ordered=true>` | Numbered list | list\_text, checkbox |
+| `<list ordered=false>` | Bulleted list | list\_text, checkbox |
 | `<group>` | Generic group enabling e.g. association of caption or footnote with the respective document components | |
 | `<floating_group class="table|picture|form|code">` | Floating container that groups a floating component with its associated caption, footnotes, and metadata. No `location` tokens. | table, picture, form, code (as appropriate) |
+
+List groups
+
+- Primary children: In list-oriented groups, the primary children are `list_text` elements.
+- Associated children: Other elements may appear between or after `list_text` items — e.g., `text`, `checkbox`, `otsl`, nested `list`, etc. These are logically associated with the most recent preceding `list_text`, which acts as the item container (equivalent to an HTML `<li>`).
 
 **footnote regarding docling-core**: What we currently have as instantiations of `FloatingItem` (e.g., TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (e.g., the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and footnotes will have their own `ProvenanceItem`.
 
