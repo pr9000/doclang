@@ -339,7 +339,7 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `page_header` | Page header content |
 | `page_footer` | Page footer content |
 | `watermark` | Page contains watermark | <!-- watermark can be text or image - do we want to capture that? also do we want to know if watermark is in background or overlay?-->
-| `list_item` | List item |
+| `list_text` | List item |
 | `form_item` | Form item (with 1 key and 1 or more values as children) |
 | `form_heading` | Form header |
 | `form_text` | Form text |
@@ -1058,9 +1058,9 @@ Immediately after a cell-creating token (e.g., `<fcel/>`, `<ched/>`), place the 
       <text>Pipeline steps</text>
     <fcel/>
       <list ordered=false>
-        <list_item><marker>•</marker>Ingest</list_item>
-        <list_item><marker>•</marker>Process</list_item>
-        <list_item><marker>•</marker>Export</list_item>
+        <list_text><marker>•</marker>Ingest</list_text>
+        <list_text><marker>•</marker>Process</list_text>
+        <list_text><marker>•</marker>Export</list_text>
       </list>
     <nl/>
     <fcel/>
@@ -1096,24 +1096,24 @@ Notes
 
 ### Lists
 
-Lists are containers of homogeneous items. Allowed direct children are only `list_item` and `checkbox`. Both can include an optional `<marker>` to hold the printed bullet/number/checkbox symbol. When needed, the `<marker>` may also carry its own `<location>` coordinates to capture where the glyph appears on the page.
+Lists are containers of homogeneous items. Allowed direct children are only `list_text` and `checkbox`. Both can include an optional `<marker>` to hold the printed bullet/number/checkbox symbol. When needed, the `<marker>` may also carry its own `<location>` coordinates to capture where the glyph appears on the page.
 
 Unordered list with optional markers
 
 ```xml
 <list ordered=false>
-  <list_item>
+  <list_text>
     <marker>•</marker>
     First item with <bold>bold</bold> text
-  </list_item>
-  <list_item>
+  </list_text>
+  <list_text>
     <!-- Marker with its own coordinates -->
     <marker>
       <location value="50"/><location value="110"/><location value="60"/><location value="120"/>
       •
     </marker>
     Second item
-  </list_item>
+  </list_text>
 </list>
 ```
 
@@ -1121,18 +1121,18 @@ Ordered list; markers are optional and can hold the printed numbering
 
 ```xml
 <list ordered=true>
-  <list_item>
+  <list_text>
     <marker>1.</marker>
     Install dependencies
-  </list_item>
-  <list_item>
+  </list_text>
+  <list_text>
     <marker>2.</marker>
     Run tests
-  </list_item>
-  <list_item>
+  </list_text>
+  <list_text>
     <!-- No marker provided; numbering can be inferred from order -->
     Ship release
-  </list_item>
+  </list_text>
 </list>
 ```
 
@@ -1155,43 +1155,43 @@ Nested lists (mixing ordered and unordered)
 
 ```xml
 <list ordered=true>
-  <list_item>
+  <list_text>
     <marker>1.</marker>
     Setup project
     <list ordered=false>
-      <list_item>
+      <list_text>
         <marker>•</marker>
         Create virtual environment
-      </list_item>
-      <list_item>
+      </list_text>
+      <list_text>
         <marker>•</marker>
         Configure linter
-      </list_item>
+      </list_text>
     </list>
-  </list_item>
-  <list_item>
+  </list_text>
+  <list_text>
     <marker>2.</marker>
     Implement features
-  </list_item>
+  </list_text>
 </list>
 ```
 
 Page breaks and continuation
 
-Lists can span multiple pages. Use `<thread id="..."/>` to indicate continuation. You may thread the whole list and, if a particular `list_item` is broken, also thread the item itself.
+Lists can span multiple pages. Use `<thread id="..."/>` to indicate continuation. You may thread the whole list and, if a particular `list_text` is broken, also thread the item itself.
 
 List split across pages
 
 ```xml
 <list ordered=true>
   <thread id="L1"/>
-  <list_item><marker>1.</marker>First item</list_item>
-  <list_item><marker>2.</marker>Second item</list_item>
+  <list_text><marker>1.</marker>First item</list_text>
+  <list_text><marker>2.</marker>Second item</list_text>
 </list>
 <page_break/>
 <list ordered=true>
   <thread id="L1"/>
-  <list_item><marker>3.</marker>Third item</list_item>
+  <list_text><marker>3.</marker>Third item</list_text>
 </list>
 ```
 
@@ -1200,28 +1200,28 @@ Single list-item broken by a page break
 ```xml
 <list ordered=false>
   <thread id="L2"/>
-  <list_item>
+  <list_text>
     <thread id="I7"/>
     <marker>•</marker>
     This item starts on page 1 and continues
-  </list_item>
+  </list_text>
 </list>
 <page_break/>
 <list ordered=false>
   <thread id="L2"/>
-  <list_item>
+  <list_text>
     <thread id="I7"/>
     on page 2 until it ends.
-  </list_item>
+  </list_text>
 </list>
 ```
 
 Notes
 
-- Only `list_item` and `checkbox` are valid as children of `list`.
-- `<marker>` is optional on both `list_item` and `checkbox`. Include it when the printed glyph/number is visible.
+- Only `list_text` and `checkbox` are valid as children of `list`.
+- `<marker>` is optional on both `list_text` and `checkbox`. Include it when the printed glyph/number is visible.
 - `<marker>` can include its own `location` coordinates to pinpoint bullet/number placement.
-- Lists can nest; place the nested `list` inside a `list_item` of the parent list.
+- Lists can nest; place the nested `list` inside a `list_text` of the parent list.
 - When broken across pages, close items before the `page_break`, then re-open and continue with matching `thread` ids after the break.
 
 ### Forms
@@ -1860,9 +1860,9 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   <form_item><key>10</key><value></value></form_item>
   <text>11 If you checked (in Part I):</text>
   <list>
-      <list_item>Box 6, add $5,000 to the taxable...</list_item>
-      <list_item>Box 2, 4, or 9, enter your taxable...</list_item>
-      <list_item>BBox 5, add your taxable disabilit...</list_item>
+      <list_text>Box 6, add $5,000 to the taxable...</list_text>
+      <list_text>Box 2, 4, or 9, enter your taxable...</list_text>
+      <list_text>BBox 5, add your taxable disabilit...</list_text>
   </list>
   <form_item><key>11</key><value>.</value></form_item>
   <picture><class>pictogram</class></picture>
@@ -1975,27 +1975,27 @@ The scenario in the above figure is represented as follows:
 
 <unordered_list>
     <thread_1/>
-    <list_item>
+    <list_text>
         <loc_15/><loc_25/><loc_35/><loc_45/>
         Mentorships and internship programs featuring diverse employees and students
-    </list_item>
+    </list_text>
     ...
-    <list_item>
+    <list_text>
         <loc_20/><loc_30/><loc_40/><loc_50/>
         Build Science, Technology, Engineering and Mathematics (STEM) employee candidate pipeline via involvement with:
         <unordered_list>
-            <list_item>
+            <list_text>
                 <loc_25/><loc_35/><loc_45/><loc_55/>
                 Historically Black Colleges and Universities (HBCUs) site visits and career fairs
-            </list_item>
+            </list_text>
             ...
-            <list_item>
+            <list_text>
                 <loc_30/><loc_40/><loc_50/><loc_60/>
                 San Diego Squared (STEM-focused nonprofit organization connecting underrepresented student to the power
                 of STEM by providing access to education, mentorship and resources to develop STEM careers)
-            </list_item>
+            </list_text>
         </unordered_list>
-    </list_item>
+    </list_text>
 </unordered_list>
 
 <page_footer><loc_35/><loc_45/><loc_55/><loc_65/>16 Neurocrine Biosciences</page_footer>
@@ -2004,11 +2004,11 @@ The scenario in the above figure is represented as follows:
 
 <unordered_list>
     <thread_1/>
-    <list_item>
+    <list_text>
         <loc_40/><loc_50/><loc_60/><loc_70/>
         Build upon DE&I employee education initiatives including:
         ...
-    </list_item>
+    </list_text>
     ...
 </unordered_list>
 ...
@@ -2178,15 +2178,15 @@ A more complicated example is shown below in which we break the content of a lis
 <doctag>
   <list ordered=true>
     <thread id="1"/>
-    <list_item>First item</list_item>
-    <list_item><thread id="2"/>Second </list_item>
+    <list_text>First item</list_text>
+    <list_text><thread id="2"/>Second </list_text>
     ...
   </list>
   <page_footer>...</page_footer>
   <page_break/>
   <list ordered=true>
     <thread id="1"/>
-    <list_item><thread id="2"/>item</list_item>
+    <list_text><thread id="2"/>item</list_text>
   </list>
   ...
 </doctag>
@@ -2316,7 +2316,7 @@ The `<class>` token supports extensible vocabularies:
 | 20 |  | `form` | No | No | — | Form structure container. |
 | 21 |  | `formula` | No | No | — | Mathematical expression block. |
 | 22 |  | `code` | No | No | — | Code block. |
-| 23 |  | `list_item` | No | No | — | List item content. |
+| 23 |  | `list_text` | No | No | — | List item content. |
 | 24 |  | `checkbox` | No | Yes | `selected` | Checkbox item; `selected` in {`true`,`false`}. |
 | 25 |  | `form_item` | No | No | — | Form item; exactly one `key`; one or more of `value`/`checkbox`/`marker`/`hint`. |
 | 26 |  | `form_heading` | No | Yes | `level?` | Form header; optional `level` (N ≥ 1). |
