@@ -345,8 +345,6 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `form_text` | Form text |
 | `key` | key of the form item: can only be a child of `form_item` |
 | `value` | value of the form item: can only be a child of `form_item`  |
-| `checkbox selected="true"` | Selected checkbox item |
-| `checkbox selected="false"` | Unselected checkbox item |
 | `otsl` | Table structure |
 | `formula` | Mathematical expression |
 | `code` | Code block |
@@ -374,8 +372,8 @@ These elements organize semantic content into logical structures. Groups can not
 
 | Element | Description | Allowed Children |
 |-------|-------------|------------------|
-| `<list ordered="true">` | Numbered list | list\_text, checkbox |
-| `<list ordered="false">` | Bulleted list | list\_text, checkbox |
+| `<list ordered="true">` | Numbered list | Any, with every new list item being introduced by a `list_text` element |
+| `<list ordered="false">` | Bulleted list | Any, with every new list item being introduced by a `list_text` element |
 | `<group>` | Generic group enabling e.g. association of caption or footnote with the respective document components | |
 | `<floating_group class="table\|picture\|form\|code">` | Floating container that groups a floating component with its associated caption, footnotes, and metadata. No `location` tokens. | table, picture, form, code (as appropriate) |
 
