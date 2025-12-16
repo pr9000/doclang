@@ -4,21 +4,22 @@
 
 This document was prepared by
 
-- Peter Staar,
-- Maroun touma,
-- Panos Vagenas,
-- Maksym Lysak,
-- Nikolaos Livathinos,
-- Santosh Borse,
-- Yousaf Shah,
-- Christoph Auer,
-- Michele Dolfi,
-- Said Gürbüz,
-- Marlene Wolfgruber,
-- Maxime Vermeir,
-- Morgan Logue,
-- Alexander Eremenko,
-- (FILL IN!).
+| Name | Company | Email |
+|------|---------|-------|
+| Peter Staar |  |  |
+| Maroun Touma |  |  |
+| Panos Vagenas |  |  |
+| Maksym Lysak |  |  |
+| Nikolaos Livathinos |  |  |
+| Santosh Borse |  |  |
+| Yousaf Shah |  |  |
+| Christoph Auer |  |  |
+| Michele Dolfi |  |  |
+| Said Gürbüz |  |  |
+| Marlene Wolfgruber |  |  |
+| Maxime Vermeir |  |  |
+| Morgan Logue |  |  |
+| Alexander Eremenko |  |  |
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
 
@@ -150,13 +151,13 @@ DocTags defines the following categories of elements:
   - **geometric**: Elements that capture geometric position as normalized coordinates/bounding boxes (via repeated `location`) anchoring block-level content to the page.
   - **time**: Elements that capture temporal positions using `<hour value={integer}/><minute value={integer}/><second value={integer}/><centisecond value={integer}/>` for a timestamp and a double timestamp for time intervals.
 - **semantic**: Block-level elements that convey document meaning (e.g., titles, paragraphs, captions, lists, forms, tables, formulas, code, pictures), optionally preceded by location tokens.
-- **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline_formula`, `inline_code`, `inline_picture`, `br`).
-- **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `section`, `list`, `group type=*`) and never carry location tokens.
+- **formatting**: Inline elements that modify textual presentation within semantic content (e.g., `bold`, `italic`, `strikethrough`, `superscript`, `subscript`, `rtl`, `inline class="formula|code|picture"`, `br`).
+- **grouping**: Elements that organize semantic blocks into logical hierarchies and composites (e.g., `list`, `group type=*`) and never carry location tokens.
 - **structural**: Sequence tokens that define internal structure for complex constructs (primarily OTSL table layout: `otsl`, `fcel`, `ecel`, `lcel`, `ucel`, `xcel`, `nl`, `ched`, `rhed`, `corn`, `srow`; and form parts like `key`/`value`).
-- **content**: Lightweight content helpers used inside semantic blocks for explicit payload and annotations (e.g., `marker`).
-- **binary data**: Elements that embed or reference non-text payloads for media—either inline as `base64` or via `uri`—allowed under `picture`, `inline_picture`, or at page level.
+- **content**: Lightweight content helpers used inside semantic blocks for explicit payload and annotations (e.g., `marker`, `checkbox`).
+- **binary data**: Elements that embed or reference non-text payloads for media—either inline as `base64` or via `uri`—allowed under `picture`, `inline class="picture"`, or at page level.
 - **metadata**: Elements that provide metadata about the document or its components, contained within `head` and `meta` respectively.
-- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `thread_N`, `h_thread_N`) to stitch split content (e.g. spanning multiple columns or pages).
+- **continuation** tokens: Markers that indicate content spanning pages or table boundaries (e.g., `thread`, `h_thread`, each with a required `id` attribute) to stitch split content (e.g., across columns or pages).
 
 ### Special Elements
 
@@ -174,16 +175,15 @@ Here is an example:
 </doctag>
 ```
 
-#### The `version` Element
+#### The `version` Attribute
 
-The `doctag` element can optionally begin with a `version` element, following Semantic Versioning (MAJOR.MINOR.PATCH).
-When no version is specified, the default is v1.0.0
+The `doctag` root element MAY carry an optional `version` attribute following Semantic Versioning (MAJOR.MINOR.PATCH).
+When no version is specified, the default is `1.0.0`.
 
-Here is an example:
+Example:
 
 ```xml
-<doctag>
-  <version>1.0.0</version>
+<doctag version="1.0.0">
   <!-- rest of the document -->
 </doctag>
 ```
@@ -331,7 +331,7 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 
 | Element | Description |
 |-------|-------------|
-| `title` | Document or section title |
+| `title` | Document title |
 | `heading` | Section header, with optional level N ≥ 1 |
 | `text` | Generic text content |  <!--  TODO: rename to `paragraph` -->
 | `caption` | Caption for floating elements |
@@ -339,14 +339,12 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `page_header` | Page header content |
 | `page_footer` | Page footer content |
 | `watermark` | Page contains watermark | <!-- watermark can be text or image - do we want to capture that? also do we want to know if watermark is in background or overlay?-->
-| `list_item` | List item |
+| `list_text` | Leading text of a list item, including any available marker or checkbox information |
 | `form_item` | Form item (with 1 key and 1 or more values as children) |
 | `form_heading` | Form header |
 | `form_text` | Form text |
 | `key` | key of the form item: can only be a child of `form_item` |
 | `value` | value of the form item: can only be a child of `form_item`  |
-| `checkbox selected=true` | Selected checkbox item |
-| `checkbox selected=false` | Unselected checkbox item |
 | `otsl` | Table structure |
 | `formula` | Mathematical expression |
 | `code` | Code block |
@@ -365,9 +363,7 @@ Formatting elements represent formatting information within the content of a sem
 | `superscript` | Superscript |
 | `subscript` | Subscript |
 | `rtl` | Right-to-left text direction |
-| `inline_formula` | Inline formula |
-| `inline_code` | Inline code |
-| `inline_picture` | Inline picture; might have a binary data child (`base64` or `uri`) |
+| `inline class="formula\|code\|picture"` | Inline content: formula, code, or picture. If `class="picture"`, may include one of `base64` or `uri` as a child. |
 | `br`| Line break (empty-element tag) |
 
 ### Grouping Elements
@@ -376,9 +372,13 @@ These elements organize semantic content into logical structures. Groups can not
 
 | Element | Description | Allowed Children |
 |-------|-------------|------------------|
-| `<list ordered=true>` | Numbered list | list\_item, checkbox |
-| `<list ordered=false>` | Bulleted list | list\_item, checkbox |
+| `<list class="ordered\|unordered">` | List | Any, with every new list item being introduced by a `list_text` element |
 | `<group>` | Generic group enabling e.g. association of caption or footnote with the respective document components | |
+| `<floating_group class="table\|picture\|form\|code">` | Floating container that groups a floating component with its associated caption, footnotes, and metadata. No `location` tokens. | table, picture, form, code (as appropriate) |
+
+Lists
+
+- Can in principle contain any children, with every new list item being introduced by a `list_text` element, which also contains any marker and checkbox information.
 
 **footnote regarding docling-core**: What we currently have as instantiations of `FloatingItem` (e.g., TableItem) should have been groups, as the `FloatingItem` contains captions, the `data structure` (e.g., the `data` in TableItem or the `graph` in FormItem) and the footnotes. As a matter of fact, it is currently even more mis-constructed, since the `ProvenanceItem` of the `TableItem` will in fact point to location of only the table, while the captions and footnotes will have their own `ProvenanceItem`.
 
@@ -455,6 +455,7 @@ Example:
 | Token | Description |
 |-------|-------------|
 | `<marker>`| Marker (eg for in section-header, list-item, form-item, etc) |
+| `<checkbox>`| Self-closing elemnt for checkbox status; optional `selected` in {`true`,`false`} defaults to `false`. |
 | `<facets>`| Container meant for application-specific properties for derived information, such as summary, classification label, etc. |
 
 The present standard does not prescribe the specific `facets` content, but a possible instantiation could be:
@@ -540,7 +541,7 @@ Here is an example:
 </doctag>
 ```
 ##### Governance metadata
-In addition to the core metadata elements, publishers can optionally provide metadata pertaining to document governance. These elements allow the communication of acceptable use, policy, licensing, contact information and compliance requirements. 
+In addition to the core metadata elements, publishers can optionally provide metadata pertaining to document governance. These elements allow the communication of acceptable use, policy, licensing, contact information and compliance requirements.
 
 - `licenses` Indicate one or more licenses covering use of the documents.
 - `data_classification` One or more data classifications can be given for the document content. In general, data classification is not globally standardized. Organizations usually define a classification system suitable for their respective mission. These elements allow an organization to classify document sensitivity in their own terms.
@@ -653,8 +654,8 @@ For content spanning page breaks:
 
 | Token | Description |
 |-------|-------------|
-| `<thread_N/>` | Special element for capturing content that spans across pages (see [Split Structure](#split-structure)) |
-| `<h_thread_N/>` | Special element for horizontal stitching of table content (see [Split Structure](#split-structure)) |
+| `<thread id="N"/>` | Special element for capturing content that spans across pages (see [Split Structure](#split-structure)); `id` is a required identifier reused across parts. |
+| `<h_thread id="N"/>` | Special element for horizontal stitching of table content (see [Split Structure](#split-structure)); `id` is a required identifier reused across parts. |
 
 ### Binary Data Elements
 
@@ -665,8 +666,8 @@ Binary data elements encode non-text payloads that semantic content can referenc
 
 Usage rules:
 
-- Allowed parents: `picture`, `inline_picture`, and page-level flow (i.e., between `page_break` markers) when associating a resource with the current page.
-- For `picture` and `inline_picture`, include at most one of `base64` or `uri` as a child.
+- Allowed parents: `picture`, `inline class="picture"`, and page-level flow (i.e., between `page_break` markers) when associating a resource with the current page.
+- For `picture` and `inline class="picture"`, include at most one of `base64` or `uri` as a child.
 - Content of `base64` is a raw base64 string (no data URI prefix).
 - Content of `uri` must be a valid URI or filesystem path resolvable by the implementation.
 
@@ -688,7 +689,7 @@ Examples:
 
 <!-- Inline image referenced by URI inside text -->
 <text>
-  The logo <inline_picture><uri>assets/logo.png</uri></inline_picture> appears here.
+  The logo <inline class="picture"><uri>assets/logo.png</uri></inline> appears here.
 </text>
 
 <!-- Page-level binary payload associated with the current page -->
@@ -719,29 +720,6 @@ In the simplest document example, document elements are in a flat list,
 </doctag>
 ```
 
-The user is allowed to add sections or groups as they see fit, but it is not a strong requirement,
-
-```xml
-<doctag version="1.0.0">
-  <heading level="1">Research Paper Title</heading>
-
-  <section level="1">
-    <heading level="2">Abstract</heading>
-    <text>This paper presents...</text>
-  </section>
-
-  <section level="1">
-    <heading level="2">Introduction</heading>
-    <text>In recent years...</text>
-
-    <section level="2">
-      <heading level="3">Background</heading>
-      <text>Previous work has shown...</text>
-    </section>
-  </section>
-</doctag>
-```
-
 In case of page-layout information, the coordinates are provided only at the semantic element level. Coordinates are not allowed at the group level.
 
 ```xml
@@ -751,52 +729,46 @@ In case of page-layout information, the coordinates are provided only at the sem
     Research Paper Title
   </heading>
 
-  <section level="1">
-    <heading level="2">
-      <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
-      Abstract
-    </heading>
-    <text>
-      <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
-      This paper presents...
-    </text>
-  </section>
+  <heading level="2">
+    <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
+    Abstract
+  </heading>
+  <text>
+    <location value="10"/><location value="20"/><location value="30"/><location value="40"/>
+    This paper presents...
+  </text>
 
-  <section level="1">
-    <heading level="2">Introduction</heading>
-    <text>In recent years...</text>
+  <heading level="2">Introduction</heading>
+  <text>In recent years...</text>
 
-    <section level="2">
-      <heading level="3">Background</heading>
-      <text>Previous work has shown...</text>
-    </section>
-  </section>
+  <heading level="3">Background</heading>
+  <text>Previous work has shown...</text>
 </doctag>
 ```
 
 ### Code snippets
 
-Code content can appear inline via `inline_code` or as block code via `code`. To classify the programming language of a block, include a `<class>...</class>` child inside `code`. When using groups, place coordinates only on semantic elements (e.g., `caption`, `code`), not on the `group` itself.
+Code content can appear inline via `inline class="code"` or as block code via `code`. To classify the programming language of a block, include a `<class>...</class>` child inside `code`. When using groups, place coordinates only on semantic elements (e.g., `caption`, `code`), not on the `group` itself.
 
 Basic inline code
 
 ```xml
 <text>
-  Install with <inline_code>pip install docling</inline_code> and run.
-  For environment checks, use <inline_code>python --version</inline_code>.
+  Install with <inline class="code">pip install docling</inline> and run.
+  For environment checks, use <inline class="code">python --version</inline>.
   Inline code preserves spacing and punctuation.
   <br/>
-  Example path: <inline_code>/usr/local/bin</inline_code>
+  Example path: <inline class="code">/usr/local/bin</inline>
   <br/>
-  Variables like <inline_code>API_KEY</inline_code> should not be committed.
+  Variables like <inline class="code">API_KEY</inline> should not be committed.
   <br/>
-  Use <inline_code>Ctrl+C</inline_code> to stop the server.
+  Use <inline class="code">Ctrl+C</inline> to stop the server.
   <br/>
-  Command substitution: <inline_code>$(echo hello)</inline_code>
+  Command substitution: <inline class="code">$(echo hello)</inline>
   <br/>
-  JSON snippet: <inline_code>{"ok":true}</inline_code>
+  JSON snippet: <inline class="code">{"ok":true}</inline>
   <br/>
-  Escaping: <inline_code>&lt;tag&gt;value&lt;/tag&gt;</inline_code>
+  Escaping: <inline class="code">&lt;tag&gt;value&lt;/tag&gt;</inline>
   <br/>
   Code fragments can mix with <bold>formatting</bold> seamlessly.
   <br/>
@@ -880,15 +852,15 @@ Long code blocks can be split across pages using continuation tokens; keep `<cla
 
 ### Math and Equations
 
-All math is authored as LaTeX inside `inline_formula` (inline) or `formula` (block). Do not use `<class>` for math; language classification is not applicable here. The optional `<marker>` child inside `formula` carries the printed equation number or label (e.g., “(1)”, “Eq. 3”). If present, include it as plain text within `<marker>`.
+All math is authored as LaTeX inside `inline class="formula"` (inline) or `formula` (block). Do not use `<class>` for math; language classification is not applicable here. The optional `<marker>` child inside `formula` carries the printed equation number or label (e.g., “(1)”, “Eq. 3”). If present, include it as plain text within `<marker>`.
 
 Inline math examples
 
 ```xml
 <text>
-  The famous relation <inline_formula>E = mc^2</inline_formula> connects mass and energy.
-  For small x, <inline_formula>\sin x \approx x - x^3/3!</inline_formula> holds.
-  The binomial: <inline_formula>(a+b)^n = \sum_{k=0}^n \binom{n}{k} a^{n-k} b^k</inline_formula>.
+  The famous relation <inline class="formula">E = mc^2</inline> connects mass and energy.
+  For small x, <inline class="formula">\sin x \approx x - x^3/3!</inline> holds.
+  The binomial: <inline class="formula">(a+b)^n = \sum_{k=0}^n \binom{n}{k} a^{n-k} b^k</inline>.
 </text>
 ```
 
@@ -1058,10 +1030,10 @@ Immediately after a cell-creating token (e.g., `<fcel/>`, `<ched/>`), place the 
     <fcel/>
       <text>Pipeline steps</text>
     <fcel/>
-      <list ordered=false>
-        <list_item><marker>•</marker>Ingest</list_item>
-        <list_item><marker>•</marker>Process</list_item>
-        <list_item><marker>•</marker>Export</list_item>
+      <list class="unordered">
+        <list_text><marker>•</marker>Ingest</list_text>
+        <list_text><marker>•</marker>Process</list_text>
+        <list_text><marker>•</marker>Export</list_text>
       </list>
     <nl/>
     <fcel/>
@@ -1097,132 +1069,131 @@ Notes
 
 ### Lists
 
-Lists are containers of homogeneous items. Allowed direct children are only `list_item` and `checkbox`. Both can include an optional `<marker>` to hold the printed bullet/number/checkbox symbol. When needed, the `<marker>` may also carry its own `<location>` coordinates to capture where the glyph appears on the page.
+Lists can in principle contain any children, with every new list item being introduced by a `list_text` element, which also contains any marker and checkbox information.
 
 Unordered list with optional markers
 
 ```xml
-<list ordered=false>
-  <list_item>
+<list class="unordered">
+  <list_text>
     <marker>•</marker>
     First item with <bold>bold</bold> text
-  </list_item>
-  <list_item>
+  </list_text>
+  <list_text>
     <!-- Marker with its own coordinates -->
     <marker>
       <location value="50"/><location value="110"/><location value="60"/><location value="120"/>
       •
     </marker>
     Second item
-  </list_item>
+  </list_text>
 </list>
 ```
 
 Ordered list; markers are optional and can hold the printed numbering
 
 ```xml
-<list ordered=true>
-  <list_item>
+<list class="ordered">
+  <list_text>
     <marker>1.</marker>
     Install dependencies
-  </list_item>
-  <list_item>
+  </list_text>
+  <list_text>
     <marker>2.</marker>
     Run tests
-  </list_item>
-  <list_item>
+  </list_text>
+  <list_text>
     <!-- No marker provided; numbering can be inferred from order -->
     Ship release
-  </list_item>
+  </list_text>
 </list>
 ```
 
 Checkbox items with selection state; markers optional
 
 ```xml
-<list ordered=false>
-  <checkbox selected=true>
-    <marker>[x]</marker>
+<list class="unordered">
+  <list_text>
+    <checkbox class="selected"/>
     Completed task
-  </checkbox>
-  <checkbox selected=false>
-    <marker>[ ]</marker>
+  </list_text>
+  <list_text>
+    <checkbox class="unselected"/>
     Pending task
-  </checkbox>
+  </list_text>
 </list>
 ```
 
 Nested lists (mixing ordered and unordered)
 
 ```xml
-<list ordered=true>
-  <list_item>
+<list class="ordered">
+  <list_text>
     <marker>1.</marker>
     Setup project
-    <list ordered=false>
-      <list_item>
-        <marker>•</marker>
-        Create virtual environment
-      </list_item>
-      <list_item>
-        <marker>•</marker>
-        Configure linter
-      </list_item>
-    </list>
-  </list_item>
-  <list_item>
+  </list_text>
+  <list class="unordered">
+    <list_text>
+      <marker>•</marker>
+      Create virtual environment
+    </list_text>
+    <list_text>
+      <marker>•</marker>
+      Configure linter
+    </list_text>
+  </list>
+  <list_text>
     <marker>2.</marker>
     Implement features
-  </list_item>
+  </list_text>
 </list>
 ```
 
 Page breaks and continuation
 
-Lists can span multiple pages. Use `<thread id="..."/>` to indicate continuation. You may thread the whole list and, if a particular `list_item` is broken, also thread the item itself.
+Lists can span multiple pages. Use `<thread id="..."/>` to indicate continuation. You may thread the whole list and, if a particular component, e.g. a `text` is broken, also thread the component itself.
 
 List split across pages
 
 ```xml
-<list ordered=true>
+<list class="ordered">
   <thread id="L1"/>
-  <list_item><marker>1.</marker>First item</list_item>
-  <list_item><marker>2.</marker>Second item</list_item>
+  <list_text><marker>1.</marker>First item</list_text>
+  <list_text><marker>2.</marker>Second item</list_text>
 </list>
 <page_break/>
-<list ordered=true>
+<list class="ordered">
   <thread id="L1"/>
-  <list_item><marker>3.</marker>Third item</list_item>
+  <list_text><marker>3.</marker>Third item</list_text>
 </list>
 ```
 
 Single list-item broken by a page break
 
 ```xml
-<list ordered=false>
+<list class="unordered">
   <thread id="L2"/>
-  <list_item>
+  <list_text>
     <thread id="I7"/>
     <marker>•</marker>
     This item starts on page 1 and continues
-  </list_item>
+  </list_text>
 </list>
 <page_break/>
-<list ordered=false>
+<list class="unordered">
   <thread id="L2"/>
-  <list_item>
+  <list_text>
     <thread id="I7"/>
     on page 2 until it ends.
-  </list_item>
+  </list_text>
 </list>
 ```
 
 Notes
 
-- Only `list_item` and `checkbox` are valid as children of `list`.
-- `<marker>` is optional on both `list_item` and `checkbox`. Include it when the printed glyph/number is visible.
+- `<marker>` is optional. Include it when the printed glyph/number is visible.
 - `<marker>` can include its own `location` coordinates to pinpoint bullet/number placement.
-- Lists can nest; place the nested `list` inside a `list_item` of the parent list.
+- Lists can nest as shown above.
 - When broken across pages, close items before the `page_break`, then re-open and continue with matching `thread` ids after the break.
 
 ### Forms
@@ -1431,10 +1402,10 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     </form_item>
     <form_item>
         <key>I am in the United States as a:</key>
-        <checkbox selected="false">Visitor</checkbox>
-        <checkbox selected="false">Student</checkbox>
-        <checkbox selected="false">Permanent Resident</checkbox>
-        <checkbox selected="false">Other (Specify)</checkbox>
+        <text><checkbox class="unselected"/>Visitor</text>
+        <text><checkbox class="unselected"/>Student</text>
+        <text><checkbox class="unselected"/>Permanent Resident</text>
+        <text><checkbox class="unselected"/>Other (Specify)</text>
         <value></value>
     <form_item>
     <form_item>
@@ -1457,11 +1428,11 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     </form_item>
     <form_item>
         <key>Apt.</key>
-        <checkbox selected="false"></checkbox>
+        <checkbox class="unselected"/>
     </form_item>
     <form_item>
         <key>Ste.</key>
-        <checkbox selected="false"></checkbox>
+        <checkbox class="unselected"/>
     </form_item>
     ...
 
@@ -1637,7 +1608,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_heading level="1">SEZIONE I - RE...</form_heading>
       <form_item>
           <key>Casi particolari</key>
-          <checkbox selected="false"></checkbox>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
         <key>Codice Stato estero</key>
@@ -1652,7 +1623,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>2</marker>
           <key>INDETERMINATO/DETERMINATO</key>
-          <checkbox selected="false"></checkbox>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
           <marker>3</marker>
@@ -1662,7 +1633,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>4</marker>
           <key>ALTRI DATI</key>
-          <checkbox selected="false"></checkbox>
+          <checkbox class="unselected"/>
       </form_item>
       <form_heading level="2">C2</form_heading>
       <form_item>
@@ -1673,7 +1644,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>2</marker>
           <key>INDETERMINATO/DETERMINATO</key>
-          <checkbox selected="false"></checkbox>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
           <marker>3</marker>
@@ -1690,7 +1661,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>4</marker>
           <key>ALTRI DATI</key>
-          <checkbox selected="false"></checkbox>
+          <checkbox class="unselected"/>
       </form_item>
       <form_heading level="2">C3</form_heading>
       <form_item>
@@ -1701,7 +1672,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>2</marker>
           <key>INDETERMINATO/DETERMINATO</key>
-          <checkbox selected="false"></checkbox>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
           <marker>3</marker>
@@ -1711,7 +1682,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>4</marker>
           <key>ALTRI DATI</key>
-          <checkbox selected="false"></checkbox>
+          <checkbox class="unselected"/>
       </form_item>
       <form_heading level="2">C4</form_heading>
       <form_heading level="3">SOMME PER PREMI...
@@ -1719,7 +1690,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>1</marker>
           <key>TIPOLOGIA LIMITE</key>
-          <checkbox selected="false"></checkbox>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
           <marker>2</marker>
@@ -1750,54 +1721,54 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_heading>COCHER LES CASES CONCERNEES</form_heading>
       <form_item>
           <key>La cause du sinistre se situe-t-elle chez vous ?</key>
-          <checkbox selected="false"><marker>A</marker>oui</checkbox>
-          <checkbox selected="false"><marker>A</marker>non</checkbox>
-          <checkbox selected="false"><marker>B</marker>oui</checkbox>
-          <checkbox selected="false"><marker>B</marker>non</checkbox>
+          <text><checkbox class="unselected"/><marker>A</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>A</marker>non</text>
+          <text><checkbox class="unselected"/><marker>B</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>B</marker>non</text>
       </form_item>
       <form_item>
           <key>Êtes-vous assuré en dégâts des eaux ?</key>
-          <checkbox selected="false"><marker>A</marker>oui</checkbox>
-          <checkbox selected="false"><marker>A</marker>non</checkbox>
-          <checkbox selected="false"><marker>B</marker>oui</checkbox>
-          <checkbox selected="false"><marker>B</marker>non</checkbox>
+          <text><checkbox class="unselected"/><marker>A</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>A</marker>non</text>
+          <text><checkbox class="unselected"/><marker>B</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>B</marker>non</text>
       </form_item>
       <form_item>
           <key>Si vous êtes occupant et que vous allez déménager avez-vous donné ou reçu congé ?</key>
-          <checkbox selected="false"><marker>A</marker>avant le sinistre</checkbox>
-          <checkbox selected="false"><marker>A</marker>après le sinistre</checkbox>
-          <checkbox selected="false"><marker>B</marker>avant le sinistre</checkbox>
-          <checkbox selected="false"><marker>B</marker>après le sinistre</checkbox>
+          <text><checkbox class="unselected"/><marker>A</marker>avant le sinistre</text>
+          <text><checkbox class="unselected"/><marker>A</marker>après le sinistre</text>
+          <text><checkbox class="unselected"/><marker>B</marker>avant le sinistre</text>
+          <text><checkbox class="unselected"/><marker>B</marker>après le sinistre</text>
       </form_item>
       <form_heading>NATURE DES DOMMAGES peinture et/ou papier peint</form_heading>
       <form_item>
           <key>revêtements (sol, mur, plafond)</key>
-          <checkbox selected="false"><marker>A</marker>collés</checkbox>
-          <checkbox selected="false"><marker>A</marker>agrafés ou cloués</checkbox>
-          <checkbox selected="false"><marker>B</marker>collés</checkbox>
-          <checkbox selected="false"><marker>B</marker>agrafés ou cloués</checkbox>
+          <text><checkbox class="unselected"/><marker>A</marker>collés</text>
+          <text><checkbox class="unselected"/><marker>A</marker>agrafés ou cloués</text>
+          <text><checkbox class="unselected"/><marker>B</marker>collés</text>
+          <text><checkbox class="unselected"/><marker>B</marker>agrafés ou cloués</text>
       </form_item>
       <form_item>
           <key>Ces aménagements ont-ils été exécutés à vos frais ?</key>
-          <checkbox selected="false"><marker>A</marker>oui</checkbox>
-          <checkbox selected="false"><marker>A</marker>non</checkbox>
-          <checkbox selected="false"><marker>B</marker>oui</checkbox>
-          <checkbox selected="false"><marker>B</marker>non</checkbox>
+          <text><checkbox class="unselected"/><marker>A</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>A</marker>non</text>
+          <text><checkbox class="unselected"/><marker>B</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>B</marker>non</text>
       </form_item>
       <form_item>
           <key>Autres dommages immobiliers (carrelage, parquet, plâtrerie...)</key>
-          <checkbox selected="false"><marker>A</marker></checkbox>
-          <checkbox selected="false"><marker>B</marker></checkbox>
+          <text><checkbox class="unselected"/><marker>A</marker></text>
+          <text><checkbox class="unselected"/><marker>B</marker></text>
       </form_item>
       <form_item>
           <key>Objets mobiliers</key>
-          <checkbox selected="false"><marker>A</marker></checkbox>
-          <checkbox selected="false"><marker>B</marker></checkbox>
+          <text><checkbox class="unselected"/><marker>A</marker></text>
+          <text><checkbox class="unselected"/><marker>B</marker></text>
       </form_item>
       <form_item>
           <key>Matériels ou marchandises</key>
-          <checkbox selected="false"><marker>A</marker></checkbox>
-          <checkbox selected="false"><marker>B</marker></checkbox>
+          <text><checkbox class="unselected"/><marker>A</marker></text>
+          <text><checkbox class="unselected"/><marker>B</marker></text>
       </form_item>
       <form_item>
           <key>Autres dommages</key>
@@ -1860,10 +1831,10 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   </otsl>
   <form_item><key>10</key><value></value></form_item>
   <text>11 If you checked (in Part I):</text>
-  <list>
-      <list_item>Box 6, add $5,000 to the taxable...</list_item>
-      <list_item>Box 2, 4, or 9, enter your taxable...</list_item>
-      <list_item>BBox 5, add your taxable disabilit...</list_item>
+  <list class="unordered">
+      <list_text>Box 6, add $5,000 to the taxable...</list_text>
+      <list_text>Box 2, 4, or 9, enter your taxable...</list_text>
+      <list_text>BBox 5, add your taxable disabilit...</list_text>
   </list>
   <form_item><key>11</key><value>.</value></form_item>
   <picture><class>pictogram</class></picture>
@@ -1899,18 +1870,18 @@ Detailed examples can be seen here: [Form Examples](/examples/form/form-examples
 
 ### Split structure
 
-We can capture content that is split (e.g. across columns or across pages) using the `<thread_N/>` token, where `N` is a unique identifier.
+We can capture content that is split (e.g. across columns or across pages) using the `<thread id="N"/>` token, where `N` is a unique identifier.
 
 The basic structure is shown below, e.g. for a `text` tag:
 
 ```xml
 <text>
-  <thread_1/>
+  <thread id="1"/>
   This text item starts here
 </text>
 ...
 <text>
-  <thread_1/>
+  <thread id="1"/>
   and continues here.
 </text>
 ```
@@ -1929,7 +1900,7 @@ Top-level tags which belong to the same item should have the same thread token.
 ```xml
 <text>
     <loc_10/><loc_20/><loc_30/><loc_40/>
-    <thread_1/>
+    <thread id="1"/>
     where τ<subscript>x,y,z</subscript> are the Pauli matrices acting
     on Nambu space. We consider a circular-shaped boundary, the nor-
 </text>
@@ -1943,7 +1914,7 @@ Top-level tags which belong to the same item should have the same thread token.
 
 <text>
     <loc_20/><loc_30/><loc_40/><loc_50/>
-    <thread_1/>
+    <thread id="1"/>
     mal direction of the boundary tangent for arbitrary angle θ is
     <formula>ˆx⊥ = (cos θ, sin θ)</formula>
     . Next, we assume an ansatz for the edge state wave function at θ as
@@ -1974,44 +1945,44 @@ The scenario in the above figure is represented as follows:
     Our multi-faceted DE&I program includes the following initiatives:
 </text>
 
-<unordered_list>
-    <thread_1/>
-    <list_item>
+<list class="unordered">
+    <thread id="1"/>
+    <list_text>
         <loc_15/><loc_25/><loc_35/><loc_45/>
         Mentorships and internship programs featuring diverse employees and students
-    </list_item>
+    </list_text>
     ...
-    <list_item>
+    <list_text>
         <loc_20/><loc_30/><loc_40/><loc_50/>
         Build Science, Technology, Engineering and Mathematics (STEM) employee candidate pipeline via involvement with:
-        <unordered_list>
-            <list_item>
+        <list class="unordered">
+            <list_text>
                 <loc_25/><loc_35/><loc_45/><loc_55/>
                 Historically Black Colleges and Universities (HBCUs) site visits and career fairs
-            </list_item>
+            </list_text>
             ...
-            <list_item>
+            <list_text>
                 <loc_30/><loc_40/><loc_50/><loc_60/>
                 San Diego Squared (STEM-focused nonprofit organization connecting underrepresented student to the power
                 of STEM by providing access to education, mentorship and resources to develop STEM careers)
-            </list_item>
-        </unordered_list>
-    </list_item>
-</unordered_list>
+            </list_text>
+        <list>
+    </list_text>
+<list>
 
 <page_footer><loc_35/><loc_45/><loc_55/><loc_65/>16 Neurocrine Biosciences</page_footer>
 
 <page_break/>
 
-<unordered_list>
-    <thread_1/>
-    <list_item>
+<list class="unordered">
+    <thread id="1"/>
+    <list_text>
         <loc_40/><loc_50/><loc_60/><loc_70/>
         Build upon DE&I employee education initiatives including:
         ...
-    </list_item>
+    </list_text>
     ...
-</unordered_list>
+<list>
 ...
 ```
 </details>
@@ -2046,10 +2017,10 @@ the thread elements (more details further below):
 
 The scenario in the above figure is represented below.
 
-- We introduce a new horizontal thread token, `h_thread_N`, which is used to capture table content that spans pages sidewise,
-similarly to the usual thread tokens `thread_N`.
+- We introduce a new horizontal thread token, `h_thread`, which is used to capture table content that spans pages sidewise,
+similarly to the usual thread tokens `thread`.
 - Only the content that is visible within the page is included in the OTSL token (e.g. see "2025 d").
-- When thread linking is resolvable through `ucel`/`lcel` or `h_thread_N`, the `thread_N` token is not used, as it would be redundant.
+- When thread linking is resolvable through `ucel`/`lcel` or `h_thread`, the `thread` token is not used, as it would be redundant.
 - When thread linking must be captured, we capture it the earliest possible, i.e. we don't wait for the bottom-most cell
 to be reached to add the thread for "Europe" in the example above.
 
@@ -2058,12 +2029,12 @@ to be reached to add the thread for "Europe" in the example above.
 <!-- page 1: -->
 <table>
     <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <thread_1/>
-        <h_thread_1/>
+        <thread id="1"/>
+        <h_thread id="1"/>
 
         <ecel/>                             <ecel/>                      <ecel/><nl/>
         <ecel/>                             <ched/>Continent             <ched/>Country<nl/>
-        <rhed/><thread_2/>                  <rhed/>Asia                  <rhed/>Japan<nl/>
+        <rhed/><thread id="2"/>             <rhed/>Asia                  <rhed/>Japan<nl/>
     </otsl>
 </table>
 <page_break/>
@@ -2071,10 +2042,10 @@ to be reached to add the thread for "Europe" in the example above.
 <!-- page 2: -->
 <table>
     <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <thread_1/>
-        <h_thread_2/>
+        <thread id="1"/>
+        <h_thread id="2"/>
 
-        <rhed/><thread_2/>G7 member         <rhed/><thread_3/>Europe           <rhed/>France<nl/>
+        <rhed/><thread id="2"/>G7 member    <rhed/><thread id="3"/>Europe        <rhed/>France<nl/>
         <ucel/>                             <ucel/>                            <rhed/>Germany<nl/>
         <ucel/>                             <ucel/>                            <rhed/>Italy<nl/>
     </otsl>
@@ -2084,10 +2055,10 @@ to be reached to add the thread for "Europe" in the example above.
 <!-- page 3: -->
 <table>
     <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <thread_1/>
-        <h_thread_3/>
+        <thread id="1"/>
+        <h_thread id="3"/>
 
-        <rhed/><thread_2/>                  <rhed/><thread_3/>                 <rhed/>United Kingdom<nl/>
+        <rhed/><thread id="2"/>             <rhed/><thread id="3"/>            <rhed/>United Kingdom<nl/>
         <ucel/>                             <rhed/>North America               <rhed/>Canada<nl/>
         <ucel/>                             <ucel/>                            <rhed/>United States<nl/>
     </otsl>
@@ -2097,10 +2068,10 @@ to be reached to add the thread for "Europe" in the example above.
 <!-- page 4: -->
 <table>
     <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <h_thread_1/>
+        <h_thread id="1"/>
 
-        <ched/><h_thread_4/>2025 d          <lcel/>                            <lcel/><nl/>
-        <ched/>GDP (PPP) per capita in USD  <ched/>Currency                    <ched/><h_thread_5/>Key l<nl/>
+        <ched/><h_thread id="4"/>2025 d     <lcel/>                            <lcel/><nl/>
+        <ched/>GDP (PPP) per capita in USD  <ched/>Currency                    <ched/><h_thread id="5"/>Key l<nl/>
         <fcel/>46,097                       <fcel/>Japanese yen (JPY)          <fcel/>Shigeru Ishiba<nl/>
     </otsl>
 </table>
@@ -2109,7 +2080,7 @@ to be reached to add the thread for "Europe" in the example above.
 <!-- page 5: -->
 <table>
     <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <h_thread_2/>
+        <h_thread id="2"/>
 
         <fcel/>54,465                       <fcel/>Euro (EUR)                  <fcel/>Emmanuel Macron<nl/>
         <fcel/>62,830                       <fcel/>Euro (EUR)                  <fcel/>Friedrich Merz<nl/>
@@ -2121,7 +2092,7 @@ to be reached to add the thread for "Europe" in the example above.
 <!-- page 6: -->
 <table>
     <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <h_thread_3/>
+        <h_thread id="3"/>
 
         <fcel/>52,518                       <fcel/>Pound sterling (GBP)        <fcel/>Keir Starmer<nl/>
         <fcel/>62,830                       <fcel/>Canadian dollar             <fcel/>Mark Carney<nl/>
@@ -2133,10 +2104,10 @@ to be reached to add the thread for "Europe" in the example above.
 <!-- page 7: -->
 <table>
     <otsl><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <h_thread_1/>
+        <h_thread id="1"/>
 
-        <ched/><h_thread_4/>etails          <lcel/>                            <lcel/><nl/>
-        <ched/><h_thread_5/>eader           <ched/>Population in millions      <ched/>Area in km2<nl/>
+        <ched/><h_thread id="4"/>etails     <lcel/>                            <lcel/><nl/>
+        <ched/><h_thread id="5"/>eader      <ched/>Population in millions      <ched/>Area in km2<nl/>
         <fcel/>Prime Minister               <fcel/>125.1                       <fcel/>377,975<nl/>
     </otsl>
 </table>
@@ -2177,17 +2148,17 @@ A more complicated example is shown below in which we break the content of a lis
 
 ```xml
 <doctag>
-  <list ordered=true>
+  <list class="ordered">
     <thread id="1"/>
-    <list_item>First item</list_item>
-    <list_item><thread id="2"/>Second </list_item>
+    <list_text>First item</list_text>
+    <list_text><thread id="2"/>Second </list_text>
     ...
   </list>
   <page_footer>...</page_footer>
   <page_break/>
-  <list ordered=true>
+  <list class="ordered">
     <thread id="1"/>
-    <list_item><thread id="2"/>item</list_item>
+    <list_text><thread id="2"/>item</list_text>
   </list>
   ...
 </doctag>
@@ -2293,82 +2264,111 @@ The `<class>` token supports extensible vocabularies:
 
 ### Token Table
 
-| # | Category | Token | Self-Closing [Yes/No] | Parametrized [Yes,No] | Description |
-|---|----------|-------|-----------------------|-----------------------|-------------|
-| 1 | Root Elements | `doctag` | No | Yes | Root container; optional `version` attribute. |
-| 2 | Special Elements | `page_break` | Yes | No | Page delimiter. |
-| 3 |  | `time_break` | Yes | No | Temporal segment delimiter. |
-| 4 |  | `metadata` | No | No | Document metadata container. |
-| 5 | Geometric Tokens | `location` | Yes | Yes | Geometric coordinate; attributes: `value`, optional `resolution`. |
-| 6 | Temporal Tokens | `hour` | Yes | Yes | Hours component of a timestamp; attribute: `value` in [0, 99]. |
-| 7 |  | `minute` | Yes | Yes | Minutes component of a timestamp; attribute: `value` in [0, 59]. |
-| 8 |  | `second` | Yes | Yes | Seconds component of a timestamp; attribute: `value` in [0, 59]. |
-| 9 |  | `centisecond` | Yes | Yes | Centiseconds component of a timestamp; attribute: `value` in [0, 99]. |
-| 10 | Semantic Tokens | `heading` | No | Yes | Section header; attribute: `level` (N ≥ 1). |
-| 11 |  | `text` | No | No | Generic text content. |
-| 12 |  | `caption` | No | No | Caption for floating/grouped elements. |
-| 13 |  | `footnote` | No | No | Footnote content. |
-| 14 |  | `page_header` | No | No | Page header content. |
-| 15 |  | `page_footer` | No | No | Page footer content. |
-| 16 |  | `watermark` | No | No | Watermark indicator or content. |
-| 17 |  | `picture` | No | No | Image/graphic; may contain `base64`, `uri`, `class` - for image classification, `otsl` - to describe numerical values of charts, `group` - can contain document sub-tree for example in case of infographics |
-| 18 |  | `form` | No | No | Form structure container. |
-| 19 |  | `formula` | No | No | Mathematical expression block. |
-| 20 |  | `code` | No | No | Code block; may include classification via `class` token. |
-| 21 |  | `list_item` | No | No | List item content. |
-| 22 |  | `checkbox` | No | Yes | Checkbox item; attribute: `selected`. |
-| 23 | Grouping Tokens | `section` | No | Yes | Document section; attribute: `level` (N ≥ 1). |
-| 24 |  | `list` | No | Yes | List container; attribute: `ordered` (true/false). |
-| 25 |  | `group` | No | Yes | Generic group. |
-| 26 | Formatting Tokens | `bold` | No | No | Bold text. |
-| 27 |  | `italic` | No | No | Italic text. |
-| 28 |  | `strikethrough` | No | No | Strike-through text. |
-| 29 |  | `superscript` | No | No | Superscript text. |
-| 30 |  | `subscript` | No | No | Subscript text. |
-| 31 |  | `rtl` | No | No | Right-to-left text direction. |
-| 32 |  | `inline_formula` | No | No | Inline formula. |
-| 33 |  | `inline_code` | No | No | Inline code. |
-| 34 |  | `inline_picture` | No | No | Inline image/graphic. |
-| 35 |  | `br` | Yes | No | Line break. |
-| 36 | Structural Tokens (OTSL) | `otsl` | No | No | Table structure container. |
-| 37 |  | `fcel` | Yes | No | New cell with content. |
-| 38 |  | `ecel` | Yes | No | New cell without content. |
-| 39 |  | `ched` | Yes | No | Column header cell. |
-| 40 |  | `rhed` | Yes | No | Row header cell. |
-| 41 |  | `corn` | Yes | No | Corner header cell. |
-| 42 |  | `srow` | Yes | No | Section row separator cell. |
-| 43 |  | `lcel` | Yes | No | Merge with left neighbor (horizontal span). |
-| 44 |  | `ucel` | Yes | No | Merge with upper neighbor (vertical span). |
-| 45 |  | `xcel` | Yes | No | Merge with left and upper neighbors (2D span). |
-| 46 |  | `nl` | Yes | No | New line (row separator). |
-| 47 | Continuation Tokens | `thread` | Yes | Yes | Continuation marker. |
-| 48 |  | `h_thread` | Yes | Yes | Continutation marker for horizontal table stitching. |
-| 49 | Binary Data Tokens | `base64` | No | No | Embedded binary data (base64). |
-| 50 |  | `uri` | No | No | External resource reference. |
-| 51 | Content Tokens | `marker` | No | No | List/form marker content. |
-| 52 |  | `facets` | No | No | Container for application-specific properties for derived information, such as summary, classification label, etc. |
-| 53 | Structural Tokens (Form) | `key` | No | No | Form item key (child of `form_item`). |
-| 54 |  | `implicit_key` | No | No | Implicit key in forms. |
-| 55 |  | `value` | No | No | Form item value (child of `form_item`). |
+| # | Category | Token | Self-Closing [Yes/No] | Parametrized [Yes/No] | Attributes | Description |
+|---|----------|-------|-----------------------|-----------------------|------------|-------------|
+| 1 | Root Elements | `doctag` | No | Yes | `version` | Root container; optional semantic version `version`. |
+| 2 | Special Elements | `page_break` | Yes | No | — | Page delimiter. |
+| 3 |  | `time_break` | Yes | No | — | Temporal segment delimiter. |
+| 4 | Metadata Containers | `head` | No | No | — | Document-level metadata container. |
+| 5 |  | `meta` | No | No | — | Component-level metadata container. |
+| 6 | Geometric Tokens | `location` | Yes | Yes | `value`, `resolution?` | Geometric coordinate; `value` in [0, res]; optional `resolution`. |
+| 7 | Temporal Tokens | `hour` | Yes | Yes | `value` | Hours component; `value` in [0, 99]. |
+| 8 |  | `minute` | Yes | Yes | `value` | Minutes component; `value` in [0, 59]. |
+| 9 |  | `second` | Yes | Yes | `value` | Seconds component; `value` in [0, 59]. |
+| 10 |  | `centisecond` | Yes | Yes | `value` | Centiseconds component; `value` in [0, 99]. |
+| 11 | Semantic Tokens | `title` | No | No | — | Document or section title (content). |
+| 12 |  | `heading` | No | Yes | `level` | Section header; `level` (N ≥ 1). |
+| 13 |  | `text` | No | No | — | Generic text content. |
+| 14 |  | `caption` | No | No | — | Caption for floating/grouped elements. |
+| 15 |  | `footnote` | No | No | — | Footnote content. |
+| 16 |  | `page_header` | No | No | — | Page header content. |
+| 17 |  | `page_footer` | No | No | — | Page footer content. |
+| 18 |  | `watermark` | No | No | — | Watermark indicator or content. |
+| 19 |  | `picture` | No | No | — | Block image/graphic; at most one of `base64`/`uri`; may include `meta` for classification; `otsl` may encode chart data. |
+| 20 |  | `form` | No | No | — | Form structure container. |
+| 21 |  | `formula` | No | No | — | Mathematical expression block. |
+| 22 |  | `code` | No | No | — | Code block. |
+| 23 |  | `list_text` | No | No | — | Leading text of a list item, including any available marker or checkbox information. |
+| 24 |  | `form_item` | No | No | — | Form item; exactly one `key`; one or more of `value`/`checkbox`/`marker`/`hint`. |
+| 25 |  | `form_heading` | No | Yes | `level?` | Form header; optional `level` (N ≥ 1). |
+| 26 |  | `form_text` | No | No | — | Form text block. |
+| 27 |  | `hint` | No | No | — | Hint for a fillable field (format/example/description). |
+| 28 | Grouping Tokens | `group` | No | Yes | `type?` | Generic group; no `location` tokens; associates composite content (e.g., captions/footnotes). |
+| 39 |  | `list` | No | Yes | `class` in {`unordered`, `ordered`}; defaults to `unordered` | List container. |
+| 30 |  | `floating_group` | No | Yes | `class` in {`table`,`picture`,`form`,`code`} | Floating container that groups a floating component with its caption, footnotes, and metadata; no `location` tokens. |
+| 31 | Formatting Tokens | `bold` | No | No | — | Bold text. |
+| 32 |  | `italic` | No | No | — | Italic text. |
+| 33 |  | `strikethrough` | No | No | — | Strike-through text. |
+| 34 |  | `superscript` | No | No | — | Superscript text. |
+| 35 |  | `subscript` | No | No | — | Subscript text. |
+| 36 |  | `rtl` | No | No | — | Right-to-left text direction. |
+| 37 |  | `inline` | No | Yes | `class` in {`formula`,`code`,`picture`} | Inline content; if `class="picture"`, may include one of `base64` or `uri`. |
+| 38 |  | `br` | Yes | No | — | Line break. |
+| 39 | Structural Tokens (OTSL) | `otsl` | No | No | — | Table structure container. |
+| 40 |  | `fcel` | Yes | No | — | New cell with content. |
+| 41 |  | `ecel` | Yes | No | — | New cell without content. |
+| 42 |  | `ched` | Yes | No | — | Column header cell. |
+| 43 |  | `rhed` | Yes | No | — | Row header cell. |
+| 44 |  | `corn` | Yes | No | — | Corner header cell. |
+| 45 |  | `srow` | Yes | No | — | Section row separator cell. |
+| 46 |  | `lcel` | Yes | No | — | Merge with left neighbor (horizontal span). |
+| 47 |  | `ucel` | Yes | No | — | Merge with upper neighbor (vertical span). |
+| 48 |  | `xcel` | Yes | No | — | Merge with left and upper neighbors (2D span). |
+| 49 |  | `nl` | Yes | No | — | New line (row separator). |
+| 50 | Continuation Tokens | `thread` | Yes | Yes | `id` | Continuation marker for split content; reuse same `id` across parts. |
+| 51 |  | `h_thread` | Yes | Yes | `id` | Horizontal stitching marker for split tables; reuse same `id`. |
+| 52 | Binary Data Tokens | `base64` | No | No | — | Embedded binary data (base64). |
+| 53 |  | `uri` | No | No | — | External resource reference. |
+| 54 | Content Tokens | `marker` | No | No | — | List/form marker content. |
+| 55 |  | `checkbox` | Yes | Yes | `class` in {`unselected`, `selected`}; defaults to `unselected` | Checkbox status. |
+| 56 |  | `facets` | No | No | — | Container for application-specific derived properties. |
+| 57 | Structural Tokens (Form) | `key` | No | No | — | Form item key (child of `form_item`). |
+| 58 |  | `value` | No | No | — | Form item value (child of `form_item`). |
 
 ### Metadata Sub-elements
 
 | # | Token | Self-Closing [Yes/No] | Parametrized [Yes,No] | Description |
 |---|-------|-----------------------|-----------------------|-------------|
-| 1 | `version` | No | No | Document version string (semantic versioning). |
-| 2 | `title` | No | No | Document title (metadata context). |
-| 3 | `author` | No | No | Author entry; may contain `affiliation` children and text. |
-| 4 | `affiliation` | No | No | Author affiliation; child of `author`. |
-| 5 | `date` | No | No | Document date in ISO 8601 format (e.g., YYYY-MM-DD). |
-| 6 | `language` | No | Yes | Language code (ISO 639-3); attributes: `classifier`, `score`. |
-| 7 | `default_resolution` | Yes | Yes | Default coordinate resolution; attributes: `width`, `height`. |
-| 8 | `page_size` | Yes | Yes | Original page size; attributes: `width`, `height`. The optional `page_no` attribute start counting at 1. |
-| 9 | `document_quality` | No | Yes | Quality score; attribute: `classifier`; content is a number [0,1]. |
-| 10 | `document_readability` | No | Yes | Readability score; attribute: `classifier`; content is a number [0,1]. |
-| 11 | `general_topic` | No | Yes | Topic label; attributes: `topic_taxonomy`, `classifier`, `score`. |
-| 12 | `document_hash` | No | Yes | Document hash value; attribute: `hash_function` (e.g., SHA-256). |
-| 13 | `custom_attribute` | No | Yes | Custom key/value; attributes: `key`, `name`; content is value. |
-| 14 | `processing_tool` | No | No | Name of the processing tool (e.g., docling). |
+| 1 | `title` | No | No | Document title (metadata context). |
+| 2 | `author` | No | No | Author entry; may contain `affiliation` children and text. |
+| 3 | `affiliation` | No | No | Author affiliation; child of `author`. |
+| 4 | `date` | No | No | Document date in ISO 8601 format (e.g., YYYY-MM-DD). |
+| 5 | `language` | No | Yes | Language code (ISO 639-3); attributes: `classifier`, `score`. |
+| 6 | `default_resolution` | Yes | Yes | Default coordinate resolution; attributes: `width`, `height`. |
+| 7 | `page_size` | Yes | Yes | Original page size; attributes: `width`, `height`; optional `page_no` starts at 1. |
+| 8 | `document_quality` | No | Yes | Quality score; attribute: `classifier`; content is a number [0,1]. |
+| 9 | `document_readability` | No | Yes | Readability score; attribute: `classifier`; content is a number [0,1]. |
+| 10 | `general_topic` | No | Yes | Topic label; attributes: `topic_taxonomy`, `classifier`, `score`. |
+| 11 | `document_hash` | No | Yes | Document hash value; attribute: `hash_function` (e.g., SHA-256). |
+| 12 | `custom_attribute` | No | Yes | Custom key/value; attributes: `key`, `name`; content is value. |
+| 13 | `processing_tool` | No | No | Name of the processing tool (e.g., docling). |
+
+### Governance Metadata Sub-elements
+
+| # | Token | Self-Closing [Yes/No] | Parametrized [Yes/No] | Description |
+|---|-------|-----------------------|-----------------------|-------------|
+| 1 | `licenses` | No | No | Container for one or more `license` entries. |
+| 2 | `license` | No | No | License URL, SPDX identifier, or text. |
+| 3 | `data_classification` | No | No | Container for one or more `data_class` entries. |
+| 4 | `data_class` | No | No | Organization-defined data sensitivity class. |
+| 5 | `acceptable_use` | No | No | Container for one or more `purpose` entries describing acceptable use. |
+| 6 | `purpose` | No | No | A specific acceptable use purpose description. |
+| 7 | `stewardship` | No | No | Container for one or more `steward` entries. |
+| 8 | `steward` | No | No | Governance contact entry; may include `name`, `contact`, and `org`. |
+| 9 | `name` | No | No | Steward’s person or team name. |
+| 10 | `contact` | No | No | Steward contact information (e.g., email or URI). |
+| 11 | `org` | No | No | Steward’s organization. |
+| 12 | `access_policy` | No | No | Container for one or more `policy` entries defining access rules. |
+| 13 | `policy` | No | No | Policy entry; may include `ref`, `roles`. Reused under multiple governance parents. |
+| 14 | `ref` | No | No | Reference to policy documentation (e.g., URL or identifier). |
+| 15 | `roles` | No | No | Container for one or more `role` entries. |
+| 16 | `role` | No | No | Role name allowed by policy (organization-defined semantics). |
+| 17 | `retention_policy` | No | No | Container for one or more `policy` entries defining retention. |
+| 18 | `retention_period` | No | Yes | Retention duration; attribute: `unit` (e.g., year, month, day); content is a number. |
+| 19 | `deletion_method` | No | No | Method for deletion (e.g., secure erasure approach). |
+| 20 | `documentation` | No | No | Free-text or URI documenting retention actions. |
+| 21 | `compliance_requirements` | No | No | Container for one or more `compliance_req` entries. |
+| 22 | `compliance_req` | No | No | Compliance framework requirement (e.g., GDPR, HIPAA, PCI DSS). |
 
 ## Appendix B: Escape entities
 
