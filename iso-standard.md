@@ -345,8 +345,6 @@ Each semantic element may begin with a bounding box, capturing the element's bou
 | `form_text` | Form text |
 | `key` | key of the form item: can only be a child of `form_item` |
 | `value` | value of the form item: can only be a child of `form_item`  |
-| `checkbox selected="true"` | Selected checkbox item |
-| `checkbox selected="false"` | Unselected checkbox item |
 | `otsl` | Table structure |
 | `formula` | Mathematical expression |
 | `code` | Code block |
@@ -374,8 +372,7 @@ These elements organize semantic content into logical structures. Groups can not
 
 | Element | Description | Allowed Children |
 |-------|-------------|------------------|
-| `<list ordered="true">` | Numbered list | list\_text, checkbox |
-| `<list ordered="false">` | Bulleted list | list\_text, checkbox |
+| `<list class="ordered\|unordered">` | List | Any, with every new list item being introduced by a `list_text` element |
 | `<group>` | Generic group enabling e.g. association of caption or footnote with the respective document components | |
 | `<floating_group class="table\|picture\|form\|code">` | Floating container that groups a floating component with its associated caption, footnotes, and metadata. No `location` tokens. | table, picture, form, code (as appropriate) |
 
@@ -1033,7 +1030,7 @@ Immediately after a cell-creating token (e.g., `<fcel/>`, `<ched/>`), place the 
     <fcel/>
       <text>Pipeline steps</text>
     <fcel/>
-      <list ordered="false">
+      <list class="unordered">
         <list_text><marker>•</marker>Ingest</list_text>
         <list_text><marker>•</marker>Process</list_text>
         <list_text><marker>•</marker>Export</list_text>
@@ -1077,7 +1074,7 @@ Lists can in principle contain any children, with every new list item being intr
 Unordered list with optional markers
 
 ```xml
-<list ordered="false">
+<list class="unordered">
   <list_text>
     <marker>•</marker>
     First item with <bold>bold</bold> text
@@ -1096,7 +1093,7 @@ Unordered list with optional markers
 Ordered list; markers are optional and can hold the printed numbering
 
 ```xml
-<list ordered="true">
+<list class="ordered">
   <list_text>
     <marker>1.</marker>
     Install dependencies
@@ -1115,13 +1112,13 @@ Ordered list; markers are optional and can hold the printed numbering
 Checkbox items with selection state; markers optional
 
 ```xml
-<list ordered="false">
+<list class="unordered">
   <list_text>
-    <checkbox selected="true"/>
+    <checkbox class="selected"/>
     Completed task
   </list_text>
   <list_text>
-    <checkbox selected="false"/>
+    <checkbox class="unselected"/>
     Pending task
   </list_text>
 </list>
@@ -1130,12 +1127,12 @@ Checkbox items with selection state; markers optional
 Nested lists (mixing ordered and unordered)
 
 ```xml
-<list ordered="true">
+<list class="ordered">
   <list_text>
     <marker>1.</marker>
     Setup project
   </list_text>
-  <list ordered="false">
+  <list class="unordered">
     <list_text>
       <marker>•</marker>
       Create virtual environment
@@ -1159,13 +1156,13 @@ Lists can span multiple pages. Use `<thread id="..."/>` to indicate continuation
 List split across pages
 
 ```xml
-<list ordered="true">
+<list class="ordered">
   <thread id="L1"/>
   <list_text><marker>1.</marker>First item</list_text>
   <list_text><marker>2.</marker>Second item</list_text>
 </list>
 <page_break/>
-<list ordered="true">
+<list class="ordered">
   <thread id="L1"/>
   <list_text><marker>3.</marker>Third item</list_text>
 </list>
@@ -1174,7 +1171,7 @@ List split across pages
 Single list-item broken by a page break
 
 ```xml
-<list ordered="false">
+<list class="unordered">
   <thread id="L2"/>
   <list_text>
     <thread id="I7"/>
@@ -1183,7 +1180,7 @@ Single list-item broken by a page break
   </list_text>
 </list>
 <page_break/>
-<list ordered="false">
+<list class="unordered">
   <thread id="L2"/>
   <list_text>
     <thread id="I7"/>
@@ -1405,10 +1402,10 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     </form_item>
     <form_item>
         <key>I am in the United States as a:</key>
-        <text><checkbox selected="false"/>Visitor</text>
-        <text><checkbox selected="false"/>Student</text>
-        <text><checkbox selected="false"/>Permanent Resident</text>
-        <text><checkbox selected="false"/>Other (Specify)</text>
+        <text><checkbox class="unselected"/>Visitor</text>
+        <text><checkbox class="unselected"/>Student</text>
+        <text><checkbox class="unselected"/>Permanent Resident</text>
+        <text><checkbox class="unselected"/>Other (Specify)</text>
         <value></value>
     <form_item>
     <form_item>
@@ -1431,11 +1428,11 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
     </form_item>
     <form_item>
         <key>Apt.</key>
-        <checkbox selected="false"/>
+        <checkbox class="unselected"/>
     </form_item>
     <form_item>
         <key>Ste.</key>
-        <checkbox selected="false"/>
+        <checkbox class="unselected"/>
     </form_item>
     ...
 
@@ -1611,7 +1608,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_heading level="1">SEZIONE I - RE...</form_heading>
       <form_item>
           <key>Casi particolari</key>
-          <checkbox selected="false"/>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
         <key>Codice Stato estero</key>
@@ -1626,7 +1623,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>2</marker>
           <key>INDETERMINATO/DETERMINATO</key>
-          <checkbox selected="false"/>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
           <marker>3</marker>
@@ -1636,7 +1633,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>4</marker>
           <key>ALTRI DATI</key>
-          <checkbox selected="false"/>
+          <checkbox class="unselected"/>
       </form_item>
       <form_heading level="2">C2</form_heading>
       <form_item>
@@ -1647,7 +1644,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>2</marker>
           <key>INDETERMINATO/DETERMINATO</key>
-          <checkbox selected="false"/>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
           <marker>3</marker>
@@ -1664,7 +1661,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>4</marker>
           <key>ALTRI DATI</key>
-          <checkbox selected="false"/>
+          <checkbox class="unselected"/>
       </form_item>
       <form_heading level="2">C3</form_heading>
       <form_item>
@@ -1675,7 +1672,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>2</marker>
           <key>INDETERMINATO/DETERMINATO</key>
-          <checkbox selected="false"/>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
           <marker>3</marker>
@@ -1685,7 +1682,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>4</marker>
           <key>ALTRI DATI</key>
-          <checkbox selected="false"/>
+          <checkbox class="unselected"/>
       </form_item>
       <form_heading level="2">C4</form_heading>
       <form_heading level="3">SOMME PER PREMI...
@@ -1693,7 +1690,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_item>
           <marker>1</marker>
           <key>TIPOLOGIA LIMITE</key>
-          <checkbox selected="false"/>
+          <checkbox class="unselected"/>
       </form_item>
       <form_item>
           <marker>2</marker>
@@ -1724,54 +1721,54 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
       <form_heading>COCHER LES CASES CONCERNEES</form_heading>
       <form_item>
           <key>La cause du sinistre se situe-t-elle chez vous ?</key>
-          <text><checkbox selected="false"/><marker>A</marker>oui</text>
-          <text><checkbox selected="false"/><marker>A</marker>non</text>
-          <text><checkbox selected="false"/><marker>B</marker>oui</text>
-          <text><checkbox selected="false"/><marker>B</marker>non</text>
+          <text><checkbox class="unselected"/><marker>A</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>A</marker>non</text>
+          <text><checkbox class="unselected"/><marker>B</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>B</marker>non</text>
       </form_item>
       <form_item>
           <key>Êtes-vous assuré en dégâts des eaux ?</key>
-          <text><checkbox selected="false"/><marker>A</marker>oui</text>
-          <text><checkbox selected="false"/><marker>A</marker>non</text>
-          <text><checkbox selected="false"/><marker>B</marker>oui</text>
-          <text><checkbox selected="false"/><marker>B</marker>non</text>
+          <text><checkbox class="unselected"/><marker>A</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>A</marker>non</text>
+          <text><checkbox class="unselected"/><marker>B</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>B</marker>non</text>
       </form_item>
       <form_item>
           <key>Si vous êtes occupant et que vous allez déménager avez-vous donné ou reçu congé ?</key>
-          <text><checkbox selected="false"/><marker>A</marker>avant le sinistre</text>
-          <text><checkbox selected="false"/><marker>A</marker>après le sinistre</text>
-          <text><checkbox selected="false"/><marker>B</marker>avant le sinistre</text>
-          <text><checkbox selected="false"/><marker>B</marker>après le sinistre</text>
+          <text><checkbox class="unselected"/><marker>A</marker>avant le sinistre</text>
+          <text><checkbox class="unselected"/><marker>A</marker>après le sinistre</text>
+          <text><checkbox class="unselected"/><marker>B</marker>avant le sinistre</text>
+          <text><checkbox class="unselected"/><marker>B</marker>après le sinistre</text>
       </form_item>
       <form_heading>NATURE DES DOMMAGES peinture et/ou papier peint</form_heading>
       <form_item>
           <key>revêtements (sol, mur, plafond)</key>
-          <text><checkbox selected="false"/><marker>A</marker>collés</text>
-          <text><checkbox selected="false"/><marker>A</marker>agrafés ou cloués</text>
-          <text><checkbox selected="false"/><marker>B</marker>collés</text>
-          <text><checkbox selected="false"/><marker>B</marker>agrafés ou cloués</text>
+          <text><checkbox class="unselected"/><marker>A</marker>collés</text>
+          <text><checkbox class="unselected"/><marker>A</marker>agrafés ou cloués</text>
+          <text><checkbox class="unselected"/><marker>B</marker>collés</text>
+          <text><checkbox class="unselected"/><marker>B</marker>agrafés ou cloués</text>
       </form_item>
       <form_item>
           <key>Ces aménagements ont-ils été exécutés à vos frais ?</key>
-          <text><checkbox selected="false"/><marker>A</marker>oui</text>
-          <text><checkbox selected="false"/><marker>A</marker>non</text>
-          <text><checkbox selected="false"/><marker>B</marker>oui</text>
-          <text><checkbox selected="false"/><marker>B</marker>non</text>
+          <text><checkbox class="unselected"/><marker>A</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>A</marker>non</text>
+          <text><checkbox class="unselected"/><marker>B</marker>oui</text>
+          <text><checkbox class="unselected"/><marker>B</marker>non</text>
       </form_item>
       <form_item>
           <key>Autres dommages immobiliers (carrelage, parquet, plâtrerie...)</key>
-          <text><checkbox selected="false"/><marker>A</marker></text>
-          <text><checkbox selected="false"/><marker>B</marker></text>
+          <text><checkbox class="unselected"/><marker>A</marker></text>
+          <text><checkbox class="unselected"/><marker>B</marker></text>
       </form_item>
       <form_item>
           <key>Objets mobiliers</key>
-          <text><checkbox selected="false"/><marker>A</marker></text>
-          <text><checkbox selected="false"/><marker>B</marker></text>
+          <text><checkbox class="unselected"/><marker>A</marker></text>
+          <text><checkbox class="unselected"/><marker>B</marker></text>
       </form_item>
       <form_item>
           <key>Matériels ou marchandises</key>
-          <text><checkbox selected="false"/><marker>A</marker></text>
-          <text><checkbox selected="false"/><marker>B</marker></text>
+          <text><checkbox class="unselected"/><marker>A</marker></text>
+          <text><checkbox class="unselected"/><marker>B</marker></text>
       </form_item>
       <form_item>
           <key>Autres dommages</key>
@@ -1834,7 +1831,7 @@ One peculiarity with the `<form_item>` is that it can have only 1 `<key>` as a c
   </otsl>
   <form_item><key>10</key><value></value></form_item>
   <text>11 If you checked (in Part I):</text>
-  <list ordered="false">
+  <list class="unordered">
       <list_text>Box 6, add $5,000 to the taxable...</list_text>
       <list_text>Box 2, 4, or 9, enter your taxable...</list_text>
       <list_text>BBox 5, add your taxable disabilit...</list_text>
@@ -1948,7 +1945,7 @@ The scenario in the above figure is represented as follows:
     Our multi-faceted DE&I program includes the following initiatives:
 </text>
 
-<list ordered="false">
+<list class="unordered">
     <thread id="1"/>
     <list_text>
         <loc_15/><loc_25/><loc_35/><loc_45/>
@@ -1958,7 +1955,7 @@ The scenario in the above figure is represented as follows:
     <list_text>
         <loc_20/><loc_30/><loc_40/><loc_50/>
         Build Science, Technology, Engineering and Mathematics (STEM) employee candidate pipeline via involvement with:
-        <list ordered="false">
+        <list class="unordered">
             <list_text>
                 <loc_25/><loc_35/><loc_45/><loc_55/>
                 Historically Black Colleges and Universities (HBCUs) site visits and career fairs
@@ -1977,7 +1974,7 @@ The scenario in the above figure is represented as follows:
 
 <page_break/>
 
-<list ordered="false">
+<list class="unordered">
     <thread id="1"/>
     <list_text>
         <loc_40/><loc_50/><loc_60/><loc_70/>
@@ -2151,7 +2148,7 @@ A more complicated example is shown below in which we break the content of a lis
 
 ```xml
 <doctag>
-  <list ordered="true">
+  <list class="ordered">
     <thread id="1"/>
     <list_text>First item</list_text>
     <list_text><thread id="2"/>Second </list_text>
@@ -2159,7 +2156,7 @@ A more complicated example is shown below in which we break the content of a lis
   </list>
   <page_footer>...</page_footer>
   <page_break/>
-  <list ordered="true">
+  <list class="ordered">
     <thread id="1"/>
     <list_text><thread id="2"/>item</list_text>
   </list>
@@ -2292,13 +2289,12 @@ The `<class>` token supports extensible vocabularies:
 | 21 |  | `formula` | No | No | — | Mathematical expression block. |
 | 22 |  | `code` | No | No | — | Code block. |
 | 23 |  | `list_text` | No | No | — | Leading text of a list item, including any available marker or checkbox information. |
-
 | 24 |  | `form_item` | No | No | — | Form item; exactly one `key`; one or more of `value`/`checkbox`/`marker`/`hint`. |
 | 25 |  | `form_heading` | No | Yes | `level?` | Form header; optional `level` (N ≥ 1). |
 | 26 |  | `form_text` | No | No | — | Form text block. |
 | 27 |  | `hint` | No | No | — | Hint for a fillable field (format/example/description). |
 | 28 | Grouping Tokens | `group` | No | Yes | `type?` | Generic group; no `location` tokens; associates composite content (e.g., captions/footnotes). |
-| 39 |  | `list` | No | Yes | `ordered` | List container; optional `ordered` in {`true`,`false`} defaults to `false`. |
+| 39 |  | `list` | No | Yes | `class` in {`unordered`, `ordered`}; defaults to `unordered` | List container. |
 | 30 |  | `floating_group` | No | Yes | `class` in {`table`,`picture`,`form`,`code`} | Floating container that groups a floating component with its caption, footnotes, and metadata; no `location` tokens. |
 | 31 | Formatting Tokens | `bold` | No | No | — | Bold text. |
 | 32 |  | `italic` | No | No | — | Italic text. |
@@ -2324,7 +2320,7 @@ The `<class>` token supports extensible vocabularies:
 | 52 | Binary Data Tokens | `base64` | No | No | — | Embedded binary data (base64). |
 | 53 |  | `uri` | No | No | — | External resource reference. |
 | 54 | Content Tokens | `marker` | No | No | — | List/form marker content. |
-| 55 |  | `checkbox` | Yes | Yes | `selected` | Checkbox status; optional `selected` in {`true`,`false`} defaults to `false`. |
+| 55 |  | `checkbox` | Yes | Yes | `class` in {`unselected`, `selected`}; defaults to `unselected` | Checkbox status. |
 | 56 |  | `facets` | No | No | — | Container for application-specific derived properties. |
 | 57 | Structural Tokens (Form) | `key` | No | No | — | Form item key (child of `form_item`). |
 | 58 |  | `value` | No | No | — | Form item value (child of `form_item`). |
