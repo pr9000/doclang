@@ -470,7 +470,7 @@ The present standard does not prescribe the specific `facets` content, but a pos
     <location value="50"/><location value="60"/><location value="450"/><location value="360"/>
     <base64>iVBORw0KGgoAAAANSUhEUgAA...truncated...5ErkJggg==</base64>
   </picture>
-</facets>
+</doctag>
 ```
 
 ### Metadata Elements
