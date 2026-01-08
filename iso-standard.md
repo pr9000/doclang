@@ -6,20 +6,23 @@ This document was prepared by
 
 | Name | Company | Email |
 |------|---------|-------|
-| Peter Staar |  |  |
-| Maroun Touma |  |  |
-| Panos Vagenas |  |  |
-| Maksym Lysak |  |  |
-| Nikolaos Livathinos |  |  |
-| Santosh Borse |  |  |
-| Yousaf Shah |  |  |
-| Christoph Auer |  |  |
-| Michele Dolfi |  |  |
-| Said Gürbüz |  |  |
-| Marlene Wolfgruber |  |  |
-| Maxime Vermeir |  |  |
-| Morgan Logue |  |  |
-| Alexander Eremenko |  |  |
+| Peter Staar | IBM | taa@zurich.ibm.com |
+| Panos Vagenas | IBM | pva@zurich.ibm.com |
+| Maksym Lysak | IBM | mly@zurich.ibm.com |
+| Nikolaos Livathinos | IBM | nli@zurich.ibm.com |
+| Christoph Auer | IBM | cau@zurich.ibm.com |
+| Michele Dolfi | IBM | dol@zurich.ibm.com |
+| Said Gürbüz | IBM | Said.Gurbuz@ibm.com |
+| Marlene Wolfgruber | ABBY | marlene.wolfgruber@abbyy.com |
+| Maxime Vermeir | ABBY | maxime.vermeir@abbyy.com |
+| Morgan Logue | ABBY | morgan.logue@abbyy.com |
+| Alexander Eremenko | ABBY | ??? |
+| Christopher Giblin | IBM | cgi@zurich.ibm.com|
+| Jehlum Vitasta Pandit | RedHat | jepandit@redhat.com |
+| Ali Maredia | RedHat | amaredia@redhat.com |
+| Santosh Borse | IBM | ssborse@us.ibm.com |
+| Yousaf Shah | IBM | syshah@us.ibm.com |
+| Maroun Touma | IBM | touma@us.ibm.com |
 
 This International Standard specifies the DocTags format, a universal markup language for representing structured document content with semantic, geometric, and formatting information.
 
