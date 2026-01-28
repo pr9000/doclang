@@ -500,7 +500,7 @@ Below we list the reserved core metadata elements to be used within `<head>`:
 - `title`
 - each `author` element can optionally begin with one or more `affiliation` elements
 - `date`
-- `default_resolution`, containing attributes for the document-level default `width` and `heigth` resolution in pixels; if element is missing, width and height resolution values are considered to be "512".
+- `default_resolution`, containing attributes for the document-level default `width` and `heigth` resolution in pixels; if element is missing, 512x512 is considered the default resolution.
 - `page_size`, the actual page size. An element without the `page_no` attribute defines the default size for all pages, when `page_no` is specified it is counted from 1.
 - `language`, Identifies the (human) language of the document, e.g., English, German, French, Spanish, Japanese. The content MUST be an [ISO 639-3](https://iso639-3.sil.org/about) language identifier. Optional attributes: `classifier` (the tool/method used, e.g., fastText) and `score` (confidence in [0, 1]). Multiple `language` entries MAY be provided.
 - `generated_by`, upstream pipeline information, e.g. VLM ID
