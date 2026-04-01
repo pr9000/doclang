@@ -247,15 +247,15 @@ Usage examples:
 ```xml
 <!-- Bounding box on a title -->
 <heading level="1">
-  <location value="100"/><location value="620"/>
-  <location value="900"/><location value="680"/>
+  <location value="50"/><location value="310"/>
+  <location value="450"/><location value="340"/>
   Annual Report
 </heading>
 
 <!-- Paragraph anchored by a bounding box -->
 <text>
-  <location value="120"/><location value="540"/>
-  <location value="880"/><location value="520"/>
+  <location value="60"/><location value="260"/>
+  <location value="440"/><location value="270"/>
   This paragraph is spatially anchored on the page.
 </text>
 
