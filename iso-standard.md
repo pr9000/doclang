@@ -896,7 +896,7 @@ The following example illustrates a single `<head>` that combines Privacy and PI
 Implementations MAY choose to interpret these as organization-wide defaults for the document, and MAY override at component level using `<meta>` for finer-grained control.
 
 ```xml
-<doctag>
+<doclang>
   <head>
     <!-- core metadata (illustrative) -->
     <title>Customer Support Case File</title>
@@ -991,7 +991,7 @@ Implementations MAY choose to interpret these as organization-wide defaults for 
 
   </head>
   <!-- document content -->
-</doctag>
+</doclang>
 ```
 
 Notes:
