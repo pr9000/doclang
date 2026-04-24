@@ -394,12 +394,22 @@ Note: All math content is LaTeX; omit `$...$` or `\[...\]` delimiters since the 
 
 ### Tables
 
-DocLang separates the table’s structure from its surrounding semantics:
+A table is defined by a `table` element, that contains cells, as delimited by the respective structural tokens (e.g., `<fcel/>`, `<ched/>`).
 
-- `group`: Semantic container that may include `caption`, multiple `footnote` elements, and exactly one `table` child for the structure. Do not put coordinates on the `group`.
-- `table`: The structural table token sequence. Put the table region’s coordinates on `table` for each page fragment. Cells are created by structural tokens (e.g., `<fcel/>`, `<ched/>`) and their content follows immediately after each cell token.
+Basic example:
 
-Basic example
+```xml
+<table>
+  <location value="40"/><location value="130"/><location value="540"/><location value="320"/>
+  <ched/><text>Method</text><ched/><text>Accuracy</text><nl/>
+  <fcel/><text>Baseline</text><fcel/><text>0.85</text><nl/>
+  <fcel/><text>Proposed</text><fcel/><text>0.92</text><nl/>
+</table>
+```
+
+Example with caption and footnote:
+
+A `group` element can be employed for associating a table with other semantic elements, such as a caption or a footnote — for instance:
 
 ```xml
 <group>
@@ -409,15 +419,14 @@ Basic example
   </caption>
   <table>
     <location value="40"/><location value="130"/><location value="540"/><location value="320"/>
-    <ched/>Method<ched/>Accuracy<nl/>
-    <fcel/>Baseline<fcel/>0.85<nl/>
-    <fcel/>Proposed<fcel/>0.92<nl/>
+    <ched/><text>Method</text><ched/><text>Accuracy</text><nl/>
+    <fcel/><text>Baseline</text><fcel/><text>0.85</text><nl/>
+    <fcel/><text>Proposed</text><fcel/><text>0.92</text><nl/>
   </table>
   <footnote>Accuracy reported on validation set.</footnote>
 </group>
 ```
 
-Examples:
 <!--
 (TODO: following to be reviewed)
 Peculiarities and continuation
@@ -431,9 +440,9 @@ Use `<continue_row id="..."/>` at the end of the first fragment and the start of
   <caption>Table 2: Long Results</caption>
   <table>
     <location value="40"/><location value="120"/><location value="540"/><location value="760"/>
-    <ched/>ID<ched/>Name<ched/>Score<nl/>
-    <fcel/>1<fcel/>Alice<fcel/>91<nl/>
-    <fcel/>2<fcel/>Bob<fcel/>88<nl/>
+    <ched/><text>ID</text><ched/><text>Name</text><ched/><text>Score</text><nl/>
+    <fcel/><text>1</text><fcel/><text>Alice</text><fcel/><text>91</text><nl/>
+    <fcel/><text>2</text><fcel/><text>Bob</text><fcel/><text>88</text><nl/>
     <continue_row id="T-rows"/>
   </table>
 </group>
@@ -442,8 +451,8 @@ Use `<continue_row id="..."/>` at the end of the first fragment and the start of
   <table>
     <location value="40"/><location value="80"/><location value="540"/><location value="300"/>
     <continue_row id="T-rows"/>
-    <fcel/>3<fcel/>Cara<fcel/>95<nl/>
-    <fcel/>4<fcel/>Dan<fcel/>89<nl/>
+    <fcel/><text>3</text><fcel/><text>Cara</text><fcel/><text>95</text><nl/>
+    <fcel/><text>4</text><fcel/><text>Dan</text><fcel/><text>89</text><nl/>
   </table>
 </group>
 ```
@@ -457,9 +466,9 @@ Use `<continue_col id="..."/>` to indicate that columns continue on an adjacent 
 <group>
   <table>
     <location value="40"/><location value="120"/><location value="300"/><location value="760"/>
-    <ched/>Metric<ched/>Model A<nl/>
-    <fcel/>Accuracy<fcel/>0.92<nl/>
-    <fcel/>F1<fcel/>0.90<nl/>
+    <ched/><text>Metric</text><ched/><text>Model A</text><nl/>
+    <fcel/><text>Accuracy</text><fcel/><text>0.92</text><nl/>
+    <fcel/><text>F1</text><fcel/><text>0.90</text><nl/>
     <continue_col id="T-cols"/>
   </table>
 </group>
@@ -469,9 +478,9 @@ Use `<continue_col id="..."/>` to indicate that columns continue on an adjacent 
   <table>
     <location value="320"/><location value="120"/><location value="820"/><location value="760"/>
     <continue_col id="T-cols"/>
-    <ched/>Model B<nl/>
-    <fcel/>0.93<nl/>
-    <fcel/>0.91<nl/>
+    <ched/><text>Model B</text><nl/>
+    <fcel/><text>0.93</text><nl/>
+    <fcel/><text>0.91</text><nl/>
   </table>
 </group>
 ``` -->
@@ -483,7 +492,7 @@ Immediately after a cell-creating token (e.g., `<fcel/>`, `<ched/>`), place the 
   <caption>Table 3: Rich Cells</caption>
   <table>
     <location value="40"/><location value="200"/><location value="560"/><location value="620"/>
-    <ched/>Description<ched/>Details<nl/>
+    <ched/><text>Description</text><ched/><text>Details</text><nl/>
     <fcel/>
     <text>Pipeline steps</text>
     <fcel/>
@@ -1140,10 +1149,10 @@ Field region with mixed content:
         Affected Systems
       </field_heading>
       <table>
-      <ched/>IP Address<ched/>Port<ched/>Service<ched/>Version<nl/>
-      <fcell/>10.0.0.101<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
-      <fcell/>10.0.0.102<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
-      <fcell/>10.0.0.103<fcell/>80/tcp, 8088/tcp<fcell/>Werkzeug<fcell/>3.0.1<nl/>
+      <ched/><text>IP Address</text><ched/><text>Port</text><ched/><text>Service</text><ched/><text>Version</text><nl/>
+      <fcel/><text>10.0.0.101</text><fcel/><text>80/tcp, 8088/tcp</text><fcel/><text>Werkzeug</text><fcel/><text>3.0.1</text><nl/>
+      <fcel/><text>10.0.0.102</text><fcel/><text>80/tcp, 8088/tcp</text><fcel/><text>Werkzeug</text><fcel/><text>3.0.1</text><nl/>
+      <fcel/><text>10.0.0.103</text><fcel/><text>80/tcp, 8088/tcp</text><fcel/><text>Werkzeug</text><fcel/><text>3.0.1</text><nl/>
       </table>
   </field_region>
   ```
@@ -1387,15 +1396,17 @@ Field region with mixed content:
   ![Form Example](examples/form/form_17_tabular_form_with_many_elements.png)
 
   ```xml
-  <table>
-  <srow>Beiträge zur Altersvorsorge<srow>52</lcel></srow><nl>
-  <fcel/><ched/>Steuerpflichtige Person / Ehemann / Person A<ched/>Ehefrau / Person B<fcel/> <nl>
-  <fcel/>Arbeitnehmeranteil laut Nr. 23 a / b der Lohnsteuerbescheinigung<fcel/>*FORM1*,-<fcel/>*FORM2*,-<fcel/>@<nl>
-  <fcel/>Beiträge zur landwirtschaftlichen Alterskasse; zu berufsständ...<fcel/>*FORM3*,-<fcel/>*FORM4*,-<fcel/> <nl>
-  <fcel/>Beiträge zu gesetzlichen Rentenversicherungen...<fcel/>*FORM5*,-<fcel/>*FORM6*,-<fcel/> <nl>
-  <fcel/>Erstattete Beiträge und / oder steuerfreie Zuschüsse zu den...<fcel/>*FORM7*,-<fcel/>*FORM8*,-<fcel/>@<nl>
-  ...
-  </table>
+  <field_region>
+    <table>
+    <srow/><text>Beiträge zur Altersvorsorge</text>                                       <srow/>                                                           <srow/><text>52</text>                  <ecel/><nl>
+    <ecel/>                                                                               <ched/><text>Steuerpflichtige Person / Ehemann / Person A</text>  <ched/><text>Ehefrau / Person B</text>  <ecel/><nl>
+    <fcel/><text>Arbeitnehmeranteil laut Nr. 23 a / b der Lohnsteuerbescheinigung</text>  <fcel/><text>*FORM1*,-</text>                                     <fcel/><text>*FORM2*,-</text>           <fcel/><text>e</text><nl>
+    <fcel/><text>Beiträge zur landwirtschaftlichen Alterskasse; zu berufsständ...</text>  <fcel/><text>*FORM3*,-</text>                                     <fcel/><text>*FORM4*,-</text>           <ecel/><nl>
+    <fcel/><text>Beiträge zu gesetzlichen Rentenversicherungen...</text>                  <fcel/><text>*FORM5*,-</text>                                     <fcel/><text>*FORM6*,-</text>           <ecel/><nl>
+    <fcel/><text>Erstattete Beiträge und / oder steuerfreie Zuschüsse zu den...</text>    <fcel/><text>*FORM7*,-</text>                                     <fcel/><text>*FORM8*,-</text>           <fcel/><text>e</text><nl>
+    ...
+    </table>
+  </field_region>
   ...
   *FORMS referred above:
   *FORM1*: <field_item><key>300</key><value></value><hint>EUR</hint></field_item>
@@ -1423,12 +1434,12 @@ Field region with mixed content:
   <text>Figure Your Credit</text>
   <text>10</text>
   <table>
-  <ched/>If you checked (in Part l):<ched/>Enter<nl>
-  <fcel/>Box 1, 2, 4, or 7<fcel/>$5,000<nl>
-  <fcel/>Box 3, 5, or 6<fcel/>$7,500<nl>
-  <fcel/>Box 8 or 9<fcel/>$3,750<nl>
+    <ched/><text>If you checked (in Part l):</text><ched/><text>Enter</text><nl>
+    <fcel/><text>Box 1, 2, 4, or 7</text><fcel/><text>$5,000</text><nl>
+    <fcel/><text>Box 3, 5, or 6</text><fcel/><text>$7,500</text><nl>
+    <fcel/><text>Box 8 or 9</text><fcel/><text>$3,750</text><nl>
   </table>
-  <field_item><key>10</key><value></value></field_item>
+  <field_region><field_item><key>10</key><value></value></field_item></field_region>
   <text>11 If you checked (in Part I):</text>
   <list class="unordered">
       <ldiv/>
@@ -1438,11 +1449,11 @@ Field region with mixed content:
       <ldiv/>
       <text>BBox 5, add your taxable disabilit...</text>
   </list>
-  <field_item><key>11</key><value>.</value></field_item>
+  <field_region><field_item><key>11</key><value>.</value></field_item></field_region>
   <picture><class>pictogram</class></picture>
   <text>For more details on what to include on line 11...</text>
   <text>12 If you completed line 11, enter the smaller...</text>
-  <field_item><key>12</key><value>74,992</value></field_item>
+  <field_region><field_item><key>12</key><value>74,992</value></field_item></field_region>
   ...
   ```
 
@@ -1501,25 +1512,31 @@ Top-level tags which belong to the same item should have the same thread token.
 
 ```xml
 <text>
-    <loc_10/><loc_20/><loc_30/><loc_40/>
-    <thread thread_id="1"/>
-    where τ<subscript>x,y,z</subscript> are the Pauli matrices acting
-    on Nambu space. We consider a circular-shaped boundary, the nor-
+  <location value="10"/><location value="20"/>
+  <location value="30"/><location value="40"/>
+  <thread thread_id="1"/>
+
+  where τ<subscript>x,y,z</subscript> are the Pauli matrices acting
+  on Nambu space. We consider a circular-shaped boundary, the nor-
 </text>
 
 <caption>
-    <loc_15/><loc_25/><loc_35/><loc_45/>
-    FIG. 3. The modules of the inner product of two MES spinors
-    <formula>...<formula/>
-    ...
+  <location value="50"/><location value="60"/>
+  <location value="70"/><location value="80"/>
+
+  FIG. 3. The modules of the inner product of two MES spinors
+  <formula>...<formula/>
+  ...
 </caption>
 
 <text>
-    <loc_20/><loc_30/><loc_40/><loc_50/>
-    <thread thread_id="1"/>
-    mal direction of the boundary tangent for arbitrary angle θ is
-    <formula>ˆx⊥ = (cos θ, sin θ)</formula>
-    . Next, we assume an ansatz for the edge state wave function at θ as
+  <location value="90"/><location value="100"/>
+  <location value="110"/><location value="120"/>
+  <thread thread_id="1"/>
+
+  mal direction of the boundary tangent for arbitrary angle θ is
+  <formula>ˆx⊥ = (cos θ, sin θ)</formula>
+  . Next, we assume an ansatz for the edge state wave function at θ as
 	<formula>Ψu/l(x⊥) =eλx⊥ eik∥ x∥ ξu/l </formula>
 	with
 	<formula>k∥ = sin θkx − cos θky</formula>
@@ -1543,7 +1560,8 @@ The scenario in the above figure is represented as follows:
 ```xml
 ...
 <text>
-    <loc_10/><loc_20/><loc_30/><loc_40/>
+    <location value="10"/><location value="20"/>
+    <location value="30"/><location value="40"/>
     <![CDATA[Our multi-faceted DE&I program includes the following initiatives:]]>
 </text>
 
@@ -1551,24 +1569,28 @@ The scenario in the above figure is represented as follows:
     <thread thread_id="1"/>
     <ldiv/>
     <text>
-        <loc_15/><loc_25/><loc_35/><loc_45/>
+        <location value="15"/><location value="25"/>
+        <location value="35"/><location value="45"/>
         Mentorships and internship programs featuring diverse employees and students
     </text>
     ...
     <ldiv/>
     <text>
-        <loc_20/><loc_30/><loc_40/><loc_50/>
+        <location value="20"/><location value="30"/>
+        <location value="40"/><location value="50"/>
         Build Science, Technology, Engineering and Mathematics (STEM) employee candidate pipeline via involvement with:
         <list class="unordered">
             <ldiv/>
             <text>
-                <loc_25/><loc_35/><loc_45/><loc_55/>
+                <location value="25"/><location value="35"/>
+                <location value="45"/><location value="55"/>
                 Historically Black Colleges and Universities (HBCUs) site visits and career fairs
             </text>
             ...
             <ldiv/>
             <text>
-                <loc_30/><loc_40/><loc_50/><loc_60/>
+                <location value="30"/><location value="40"/>
+                <location value="50"/><location value="60"/>
                 San Diego Squared (STEM-focused nonprofit organization connecting underrepresented student to the power
                 of STEM by providing access to education, mentorship and resources to develop STEM careers)
             </text>
@@ -1576,7 +1598,11 @@ The scenario in the above figure is represented as follows:
     </text>
 <list>
 
-<page_footer><loc_35/><loc_45/><loc_55/><loc_65/>16 Neurocrine Biosciences</page_footer>
+<page_footer>
+    <location value="35"/><location value="45"/>
+    <location value="55"/><location value="65"/>
+    16 Neurocrine Biosciences
+</page_footer>
 
 <page_break/>
 
@@ -1584,7 +1610,8 @@ The scenario in the above figure is represented as follows:
     <thread thread_id="1"/>
     <ldiv/>
     <text>
-        <loc_40/><loc_50/><loc_60/><loc_70/>
+        <location value="40"/><location value="50"/>
+        <location value="60"/><location value="70"/>
         <![CDATA[Build upon DE&I employee education initiatives including: ...]]>
     </text>
     ...
@@ -1634,88 +1661,77 @@ to be reached to add the thread for "Europe" in the example above.
 ...
 <!-- page 1: -->
 <table>
-    <table><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <thread thread_id="1"/>
-        <h_thread h_thread_id="1"/>
+  <thread thread_id="1"/>
+  <h_thread h_thread_id="1"/>
 
-        <ecel/>                             <ecel/>                      <ecel/><nl/>
-        <ecel/>                             <ched/>Continent             <ched/>Country<nl/>
-        <rhed/><thread thread_id="2"/>             <rhed/>Asia                  <rhed/>Japan<nl/>
-    </table>
+  <ecel/>                                      <ecel/>                        <ecel/><nl/>
+  <ecel/>                                      <ched/><text>Continent</text>  <ched/><text>Country</text><nl/>
+  <rhed/><text><thread thread_id="2"/></text>  <rhed/><text>Asia</text>       <rhed/><text>Japan</text><nl/>
 </table>
 <page_break/>
 
 <!-- page 2: -->
 <table>
-    <table><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <thread thread_id="1"/>
-        <h_thread h_thread_id="2"/>
+  <thread thread_id="1"/>
+  <h_thread h_thread_id="2"/>
 
-        <rhed/><thread thread_id="2"/>G7 member    <rhed/><thread thread_id="3"/>Europe        <rhed/>France<nl/>
-        <ucel/>                             <ucel/>                            <rhed/>Germany<nl/>
-        <ucel/>                             <ucel/>                            <rhed/>Italy<nl/>
-    </table>
+  <rhed/><text><thread thread_id="2"/>G7 member</text>  <rhed/><text><thread thread_id="3"/>Europe</text>  <rhed/><text>France</text><nl/>
+  <ucel/>                                               <ucel/>                                            <rhed/><text>Germany</text><nl/>
+  <ucel/>                                               <ucel/>                                            <rhed/><text>Italy</text><nl/>
 </table>
 <page_break/>
 
 <!-- page 3: -->
 <table>
-    <table><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <thread thread_id="1"/>
-        <h_thread h_thread_id="3"/>
+  <thread thread_id="1"/>
+  <h_thread h_thread_id="3"/>
 
-        <rhed/><thread thread_id="2"/>             <rhed/><thread thread_id="3"/>            <rhed/>United Kingdom<nl/>
-        <ucel/>                             <rhed/>North America               <rhed/>Canada<nl/>
-        <ucel/>                             <ucel/>                            <rhed/>United States<nl/>
-    </table>
+  <rhed/><text><thread thread_id="2"/></text>  <rhed/><text><thread thread_id="3"/></text>  <rhed/><text>United Kingdom</text><nl/>
+  <ucel/>                                      <rhed/><text>North America</text>            <rhed/><text>Canada</text><nl/>
+  <ucel/>                                      <ucel/>                                      <rhed/><text>United States</text><nl/>
 </table>
 <page_break/>
 
 <!-- page 4: -->
 <table>
-    <table><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <h_thread h_thread_id="1"/>
+  <h_thread h_thread_id="1"/>
 
-        <ched/><h_thread h_thread_id="4"/>2025 d     <lcel/>                            <lcel/><nl/>
-        <ched/>GDP (PPP) per capita in USD  <ched/>Currency                    <ched/><h_thread h_thread_id="5"/>Key l<nl/>
-        <fcel/>46,097                       <fcel/>Japanese yen (JPY)          <fcel/>Shigeru Ishiba<nl/>
-    </table>
+  <ched/><text><h_thread h_thread_id="4"/>2025 d<text>  <lcel/>                                <lcel/><nl/>
+  <ched/><text>GDP (PPP) per capita in USD</text>       <ched/><text>Currency</text>            <ched/><text><h_thread h_thread_id="5"/>Key l</text><nl/>
+  <fcel/><text>46,097</text>                            <fcel/><text>Japanese yen (JPY)</text>  <fcel/><text>Shigeru Ishiba</text><nl/>
 </table>
 <page_break/>
 
 <!-- page 5: -->
 <table>
-    <table><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <h_thread h_thread_id="2"/>
+  <thread thread_id="1"/>
+  <h_thread h_thread_id="2"/>
 
-        <fcel/>54,465                       <fcel/>Euro (EUR)                  <fcel/>Emmanuel Macron<nl/>
-        <fcel/>62,830                       <fcel/>Euro (EUR)                  <fcel/>Friedrich Merz<nl/>
-        <fcel/>53,115                       <fcel/>Euro (EUR)                  <fcel/>Giorgia Meloni<nl/>
-    </table>
+  <fcel/><text>54,465</text>  <fcel/><text>Euro (EUR)</text>  <fcel/><text>Emmanuel Macron</text><nl/>
+  <fcel/><text>62,830</text>  <fcel/><text>Euro (EUR)</text>  <fcel/><text>Friedrich Merz</text><nl/>
+  <fcel/><text>53,115</text>  <fcel/><text>Euro (EUR)</text>  <fcel/><text>Giorgia Meloni</text><nl/>
 </table>
 <page_break/>
 
 <!-- page 6: -->
 <table>
-    <table><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <h_thread h_thread_id="3"/>
+  <thread thread_id="1"/>
+  <h_thread h_thread_id="3"/>
 
-        <fcel/>52,518                       <fcel/>Pound sterling (GBP)        <fcel/>Keir Starmer<nl/>
-        <fcel/>62,830                       <fcel/>Canadian dollar             <fcel/>Mark Carney<nl/>
-        <fcel/>53,115                       <fcel/>United States dollar (USD)  <fcel/>Donald Trump<nl/>
-    </table>
+  <fcel/><text>52,518</text>  <fcel/><text>Pound sterling (GBP)</text>        <fcel/><text>Keir Starmer</text><nl/>
+  <fcel/><text>62,830</text>  <fcel/><text>Canadian dollar</text>             <fcel/><text>Mark Carney</text><nl/>
+  <fcel/><text>53,115</text>  <fcel/><text>United States dollar (USD)</text>  <fcel/><text>Donald Trump</text><nl/>
 </table>
 <page_break/>
 
 <!-- page 7: -->
 <table>
-    <table><loc_x0/><loc_y0/><loc_x1/><loc_y1/>
-        <h_thread h_thread_id="1"/>
+  <thread thread_id="1"/>
+  <h_thread h_thread_id="1"/>
 
-        <ched/><h_thread h_thread_id="4"/>etails     <lcel/>                            <lcel/><nl/>
-        <ched/><h_thread h_thread_id="5"/>eader      <ched/>Population in millions      <ched/>Area in km2<nl/>
-        <fcel/>Prime Minister               <fcel/>125.1                       <fcel/>377,975<nl/>
-    </table>
+  <ched/><text><h_thread h_thread_id="4"/>etails</text>  <lcel/>                                     <lcel/><nl/>
+  <ched/><text><h_thread h_thread_id="5"/>eader</text>   <ched/><text>Population in millions</text>  <ched/><text>Area in km2</text><nl/>
+  <fcel/><text>Prime Minister</text>                     <fcel/><text>125.1</text>                   <fcel/><text>377,975</text><nl/>
 </table>
 <page_break/>
 ...
