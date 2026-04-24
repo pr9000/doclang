@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """
-Script to generate markdown documentation from an Excel file
+Script to generate markdown documentation from an Excel file and update iso-standard.md
 
 Process:
 1. Use docling to convert xlsx to intermediate markdown
 2. Parse the intermediate markdown to extract elements and attributes
 3. Generate structured output with H3 for categories, H4 for elements, and attributes arrays
+4. Update Appendix A in iso-standard.md with the generated content
 
 Usage:
-    python generate_reference.py <input_directory> <output_directory>
+    python generate_reference.py <input_directory>
 
     Arguments:
     - input_directory: Directory containing the Excel file with element definitions
       (also may contain .dclg.xml and .png files for examples)
-    - output_directory: Directory where reference.md will be written
-      (will be created if it doesn't exist)
 """
 
 import re
@@ -278,144 +277,183 @@ def linkify_element_references(text, all_elements):
     return text
 
 
-def generate_output_markdown(elements_by_category, attributes_by_element, content_types_by_element, category_order, category_descriptions, element_descriptions, element_contexts, element_context_header, input_dir, output_dir, output_file, iso_standard_path):
-    """Generate the final doclang_out.md file"""
-    print(f"Generating {output_file}...")
+def generate_reference_content(elements_by_category, attributes_by_element, content_types_by_element, category_order, category_descriptions, element_descriptions, element_contexts, element_context_header, input_dir, iso_standard_path):
+    """Generate the reference markdown content as a string"""
+    print("Generating reference content...")
 
-    with open(output_file, 'w', encoding='utf-8') as f:
-        # Use category order from categories table, or fall back to sorted keys
-        if category_order:
-            # Only include categories that have elements
-            ordered_categories = [cat for cat in category_order if cat in elements_by_category]
-        else:
-            ordered_categories = sorted(elements_by_category.keys())
+    output_lines = []
 
-        # Collect all elements for linkification
-        all_elements = []
-        for category in ordered_categories:
-            all_elements.extend(elements_by_category[category])
+    # Use category order from categories table, or fall back to sorted keys
+    if category_order:
+        # Only include categories that have elements
+        ordered_categories = [cat for cat in category_order if cat in elements_by_category]
+    else:
+        ordered_categories = sorted(elements_by_category.keys())
 
-        for category in ordered_categories:
-            # Write category as H3
-            # Format category for display (add "Elements" suffix)
-            display_category = format_category_for_display(category)
-            f.write(f"### {display_category}\n\n")
+    # Collect all elements for linkification
+    all_elements = []
+    for category in ordered_categories:
+        all_elements.extend(elements_by_category[category])
 
-            # Write category description if available
-            if category in category_descriptions and category_descriptions[category]:
-                f.write(f"{category_descriptions[category]}\n\n")
+    for category in ordered_categories:
+        # Write category as H3
+        # Format category for display (add "Elements" suffix)
+        display_category = format_category_for_display(category)
+        output_lines.append(f"### {display_category}\n\n")
 
-            # Get elements for this category
-            elements = elements_by_category[category]
+        # Write category description if available
+        if category in category_descriptions and category_descriptions[category]:
+            output_lines.append(f"{category_descriptions[category]}\n\n")
 
-            for element in elements:
-                # Write element as H4
-                # Normalize element name (keep backticks)
-                normalized_element = normalize_element_name(element)
-                f.write(f"#### {normalized_element}\n\n")
+        # Get elements for this category
+        elements = elements_by_category[category]
 
-                # Write element description if available (with linkified element references)
-                if element in element_descriptions and element_descriptions[element]:
-                    description = linkify_element_references(element_descriptions[element], all_elements)
-                    f.write(f"{description}\n\n")
+        for element in elements:
+            # Write element as H4
+            # Normalize element name (keep backticks)
+            normalized_element = normalize_element_name(element)
+            output_lines.append(f"#### {normalized_element}\n\n")
 
-                # Write element context if available (with linkified element references)
-                if element in element_contexts and element_contexts[element]:
-                    # Use the dynamically extracted header name, or default to "Context"
-                    context_heading = element_context_header if element_context_header else "Context"
-                    f.write(f"##### {context_heading}\n\n")
-                    context = linkify_element_references(element_contexts[element], all_elements)
-                    f.write(f"{context}\n\n")
+            # Write element description if available (with linkified element references)
+            if element in element_descriptions and element_descriptions[element]:
+                description = linkify_element_references(element_descriptions[element], all_elements)
+                output_lines.append(f"{description}\n\n")
 
-                # Write attributes table if they exist
-                if element in attributes_by_element:
-                    attributes = attributes_by_element[element]
-                    f.write("##### Attributes\n\n")
+            # Write element context if available (with linkified element references)
+            if element in element_contexts and element_contexts[element]:
+                # Use the dynamically extracted header name, or default to "Context"
+                context_heading = element_context_header if element_context_header else "Context"
+                output_lines.append(f"##### {context_heading}\n\n")
+                context = linkify_element_references(element_contexts[element], all_elements)
+                output_lines.append(f"{context}\n\n")
 
-                    # Write table header
-                    f.write("| Attribute | Required / Optional | Allowed Values | Description |\n")
-                    f.write("|-----------|----------|----------------|-------------|\n")
+            # Write attributes table if they exist
+            if element in attributes_by_element:
+                attributes = attributes_by_element[element]
+                output_lines.append("##### Attributes\n\n")
 
-                    # Write table rows (with linkified element references in description)
-                    for attr_data in attributes:
-                        attr_name = normalize_element_name(attr_data['attribute'])
-                        required = linkify_element_references(attr_data['required'], all_elements)
-                        allowed_values = linkify_element_references(attr_data['allowed_values'], all_elements)
-                        description = linkify_element_references(attr_data['description'], all_elements)
-                        f.write(f"| {attr_name} | {required} | {allowed_values} | {description} |\n")
+                # Write table header
+                output_lines.append("| Attribute | Required / Optional | Allowed Values | Description |\n")
+                output_lines.append("|-----------|----------|----------------|-------------|\n")
 
-                    f.write("\n")
+                # Write table rows (with linkified element references in description)
+                for attr_data in attributes:
+                    attr_name = normalize_element_name(attr_data['attribute'])
+                    required = linkify_element_references(attr_data['required'], all_elements)
+                    allowed_values = linkify_element_references(attr_data['allowed_values'], all_elements)
+                    description = linkify_element_references(attr_data['description'], all_elements)
+                    output_lines.append(f"| {attr_name} | {required} | {allowed_values} | {description} |\n")
+
+                output_lines.append("\n")
+            else:
+                output_lines.append("##### Attributes\n\nNone\n\n")
+
+            # Write content types table if they exist
+            if element in content_types_by_element and content_types_by_element[element]:
+                content_types = content_types_by_element[element]
+                output_lines.append("##### Allowed Content Types\n\n")
+
+                # If XML content is not allowed, the element is empty:
+                # omit the table and render a note. Otherwise, create a vertical
+                # table with Content Type and Allowed/Not allowed columns.
+                xml_content_value = content_types_by_element[element].get('XML content', '')
+                xml_content_allowed = linkify_element_references(xml_content_value, all_elements).lower() == 'true'
+
+                if not xml_content_allowed:
+                    output_lines.append("None (empty element).\n\n")
                 else:
-                    f.write("##### Attributes\n\nNone\n\n")
+                    # Write table header (vertical format)
+                    output_lines.append("| Content Type | Allowed / Not allowed |\n")
+                    output_lines.append("| --- | --- |\n")
 
-                # Write content types table if they exist
-                if element in content_types_by_element and content_types_by_element[element]:
-                    content_types = content_types_by_element[element]
-                    f.write("##### Allowed Content Types\n\n")
+                    # Write one row per content type
+                    for header, v in content_types.items():
+                        if header == 'XML content':
+                            continue
 
-                    # If XML content is not allowed, the element is empty:
-                    # omit the table and render a note. Otherwise, remove only
-                    # the XML content column and keep the remaining table.
-                    xml_content_value = content_types_by_element[element].get('XML content', '')
-                    xml_content_allowed = linkify_element_references(xml_content_value, all_elements).lower() == 'true'
+                        v_linked = linkify_element_references(v, all_elements)
+                        if v_linked.lower() == 'true':
+                            status = 'Allowed'
+                        elif v_linked.lower() == 'false':
+                            status = 'Not allowed'
+                        else:
+                            status = v_linked
 
-                    if not xml_content_allowed:
-                        f.write("None (empty element).\n\n")
-                    else:
-                        headers = []
-                        values = []
+                        output_lines.append(f"| {header} | {status} |\n")
 
-                        for header, v in content_types.items():
-                            if header == 'XML content':
-                                continue
+                    output_lines.append("\n")
 
-                            headers.append(header)
-                            v_linked = linkify_element_references(v, all_elements)
-                            if v_linked.lower() == 'true':
-                                values.append('Allowed')
-                            elif v_linked.lower() == 'false':
-                                values.append('Not allowed')
-                            else:
-                                values.append(v_linked)
+            # Check for and include example if it exists
+            xml_content, image_path = load_example_for_element(element, input_dir, iso_standard_path)
+            if xml_content:
+                output_lines.append("##### Example\n\n")
 
-                        # Write table header
-                        f.write("| " + " | ".join(headers) + " |\n")
-                        f.write("| " + " | ".join(["---"] * len(headers)) + " |\n")
+                # Include image if available
+                if image_path:
+                    output_lines.append("<details>\n")
+                    output_lines.append("  <summary>Show document picture</summary>\n")
+                    output_lines.append("\n")
+                    output_lines.append(f'  <img src="{image_path}" width="700">\n')
+                    output_lines.append("\n")
+                    output_lines.append("</details>\n\n")
 
-                        # Write single data row
-                        f.write("| " + " | ".join(values) + " |\n\n")
+                # Include XML content wrapped in markdown code block
+                output_lines.append("```xml\n")
+                output_lines.append(f"{xml_content}\n")
+                output_lines.append("```\n\n")
 
-                # Check for and include example if it exists
-                xml_content, image_path = load_example_for_element(element, input_dir, iso_standard_path)
-                if xml_content:
-                    f.write("##### Example\n\n")
+    print("Reference content generated successfully")
+    return "".join(output_lines)
 
-                    # Include image if available
-                    if image_path:
-                        f.write("<details>\n")
-                        f.write("  <summary>Show document picture</summary>\n")
-                        f.write("\n")
-                        f.write(f'  <img src="{image_path}" width="700">\n')
-                        f.write("\n")
-                        f.write("</details>\n\n")
 
-                    # Include XML content wrapped in markdown code block
-                    f.write("```xml\n")
-                    f.write(f"{xml_content}\n")
-                    f.write("```\n\n")
+def update_iso_standard_appendix(reference_content, iso_standard_file):
+    """Update Appendix A in iso-standard.md with generated reference content"""
+    import re
 
-    print(f"Output file generated: {output_file}")
+    print(f"\nUpdating Appendix A in {iso_standard_file}...")
+
+    try:
+        iso_content = Path(iso_standard_file).read_text(encoding='utf-8')
+
+        # Find Appendix A and B section markers
+        appendix_a_pattern = r'(## Appendix A: Reference\n\n)'
+        appendix_b_pattern = r'(## Appendix B:)'
+
+        match_a = re.search(appendix_a_pattern, iso_content)
+        match_b = re.search(appendix_b_pattern, iso_content)
+
+        if not match_a:
+            print("Error: Could not find '## Appendix A: Reference' marker in iso-standard.md")
+            return False
+
+        if not match_b:
+            print("Error: Could not find '## Appendix B:' marker in iso-standard.md")
+            return False
+
+        # Reconstruct the file: before Appendix A + reference content + from Appendix B onwards
+        before_appendix_a = iso_content[:match_a.end()]
+        from_appendix_b = iso_content[match_b.start():]
+        # Strip trailing whitespace from reference content to avoid extra blank lines
+        new_content = before_appendix_a + reference_content.rstrip() + "\n\n" + from_appendix_b
+
+        # Write back to iso-standard.md
+        Path(iso_standard_file).write_text(new_content, encoding='utf-8')
+        print(f"✓ Successfully updated Appendix A in {iso_standard_file}")
+        return True
+
+    except Exception as e:
+        print(f"Error updating iso-standard.md: {e}")
+        return False
 
 
 def main():
-    # Check if both input and output directories are provided
-    if len(sys.argv) < 3:
-        print("Error: Both input and output directory paths are required.")
-        print("Usage: python generate_reference.py <input_directory> <output_directory>")
+    # Check if input directory is provided
+    if len(sys.argv) < 2:
+        print("Error: Input directory path is required.")
+        print("Usage: python generate_reference.py <input_directory>")
         sys.exit(1)
 
     input_dir = sys.argv[1]
-    output_dir_arg = sys.argv[2]
 
     # Validate input directory exists
     if not os.path.exists(input_dir):
@@ -451,11 +489,6 @@ def main():
     intermediate_dir = repo_root / 'build'
     intermediate_dir.mkdir(exist_ok=True)
 
-    # Use the output directory provided as argument (create if doesn't exist)
-    output_dir = Path(output_dir_arg).resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / 'reference.md'
-
     # Path to iso-standard.md (at repo root)
     iso_standard_path = repo_root / 'iso-standard.md'
 
@@ -468,13 +501,20 @@ def main():
     # Step 2: Parse the intermediate markdown
     elements_by_category, attributes_by_element, content_types_by_element, category_order, category_descriptions, element_descriptions, element_contexts, element_context_header = parse_intermediate_markdown(intermediate_file)
 
-    # Step 3: Generate the output markdown
-    generate_output_markdown(elements_by_category, attributes_by_element, content_types_by_element, category_order, category_descriptions, element_descriptions, element_contexts, element_context_header, input_dir, str(output_dir), str(output_file), str(iso_standard_path))
+    # Step 3: Generate the reference content
+    reference_content = generate_reference_content(
+        elements_by_category, attributes_by_element, content_types_by_element,
+        category_order, category_descriptions, element_descriptions,
+        element_contexts, element_context_header, input_dir, str(iso_standard_path)
+    )
 
-    print("\nProcess completed successfully!")
+    # Step 4: Update Appendix A in iso-standard.md with the generated reference
+    update_iso_standard_appendix(reference_content, str(iso_standard_path))
+
+    print("\nAll tasks completed successfully!")
     print(f"- Input: {input_file}")
     print(f"- Intermediate: {intermediate_file}")
-    print(f"- Output: {output_file}")
+    print(f"- Updated: {iso_standard_path}")
 
 
 if __name__ == '__main__':

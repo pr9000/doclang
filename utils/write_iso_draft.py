@@ -76,12 +76,81 @@ def add_toc(document: Document) -> None:
     hint._r.append(fld_end)
 
 
+
+def process_html_paragraph(document: Document, text: str) -> None:
+    """Process paragraph text that contains HTML elements like <ul>, <li>, and <br>.
+
+    Splits the text into segments and processes each appropriately:
+    - Text before/after HTML elements as regular paragraphs
+    - <ul>...</ul> as bulleted lists
+    - <br> or <br/> as line breaks within paragraphs
+    """
+    # Pattern to match <ul>...</ul> blocks
+    ul_pattern = re.compile(r'<ul>(.*?)</ul>', re.DOTALL | re.IGNORECASE)
+    # Pattern to match <li>...</li> items
+    li_pattern = re.compile(r'<li>(.*?)</li>', re.DOTALL | re.IGNORECASE)
+
+    cursor = 0
+
+    # Find all <ul> blocks
+    for ul_match in ul_pattern.finditer(text):
+        # Process text before the <ul>
+        if ul_match.start() > cursor:
+            pre_text = text[cursor:ul_match.start()].strip()
+            if pre_text:
+                # Process <br> tags in the pre-text
+                process_br_tags(document, pre_text)
+
+        # Process the <ul> content
+        ul_content = ul_match.group(1)
+        for li_match in li_pattern.finditer(ul_content):
+            li_text = li_match.group(1).strip()
+            # HTML unescape but preserve markdown formatting (backticks, etc.)
+            li_text = _html_unescape(li_text)
+            p = document.add_paragraph(style="List Bullet")
+            # Process markdown formatting (inline code, links, bold)
+            _add_inline_formatted_runs(p, li_text)
+
+        cursor = ul_match.end()
+
+    # Process remaining text after last <ul>
+    if cursor < len(text):
+        post_text = text[cursor:].strip()
+        if post_text:
+            process_br_tags(document, post_text)
+
+
+def process_br_tags(document: Document, text: str) -> None:
+    """Process text containing <br> tags by splitting into multiple runs with line breaks."""
+    br_pattern = re.compile(r'<br\s*/?>', re.IGNORECASE)
+
+    # Split by <br> tags
+    segments = br_pattern.split(text)
+
+    if len(segments) == 1:
+        # No <br> tags, process as normal paragraph
+        add_formatted_paragraph(document, text)
+    else:
+        # Create a single paragraph with line breaks
+        p = document.add_paragraph()
+        for idx, segment in enumerate(segments):
+            segment = segment.strip()
+            if segment:
+                _add_inline_formatted_runs(p, segment)
+            # Add line break after each segment except the last
+            if idx < len(segments) - 1:
+                p.add_run().add_break(WD_BREAK.LINE)
+
 def finalize_paragraph_buf(document: Document, buf: List[str]) -> None:
     if not buf:
         return
     text = " ".join(line.strip() for line in buf).strip()
     if text:
-        add_formatted_paragraph(document, text)
+        # Check if text contains HTML lists or line breaks that should be processed
+        if '<ul>' in text or '<br' in text:
+            process_html_paragraph(document, text)
+        else:
+            add_formatted_paragraph(document, text)
     buf.clear()
 
 
@@ -133,6 +202,23 @@ _IMAGE_RE = re.compile(r'!\[(?P<alt>[^\]]*)\]\((?P<src>[^)\s]+)(?:\s+"(?P<title>
 _LINK_OR_URL_RE = re.compile(
     r'(?:\[(?P<link_text>[^\]]+)\]\((?P<link_url>[^)\s]+)(?:\s+"[^"]*")?\))|(?P<bare>(?:https?://|mailto:)[^\s<)]+)'
 )
+
+
+def _strip_markdown_formatting(text: str) -> str:
+    """Strip markdown formatting from text (inline code, links, bold).
+
+    Converts:
+    - `code` -> code
+    - [text](url) -> text
+    - **bold** -> bold
+    """
+    # Remove inline code backticks
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+    # Convert markdown links to just the link text
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    # Remove bold markers
+    text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
+    return text
 
 
 def parse_table_block(lines: List[str], start: int) -> Tuple[int, List[List[str]], Optional[List[str]]]:
@@ -247,6 +333,8 @@ def _add_links_and_text_runs(paragraph, text: str) -> None:
 
     This does not handle inline code; the caller should have already split
     code spans and pass only normal text here.
+
+    For anchor links like [text](#anchor), only the text is shown (no hyperlink).
     """
     pos = 0
     for m in _LINK_OR_URL_RE.finditer(text):
@@ -257,7 +345,11 @@ def _add_links_and_text_runs(paragraph, text: str) -> None:
         if m.group("link_url") is not None:
             link_text = m.group("link_text")
             link_url = m.group("link_url")
-            add_hyperlink(paragraph, link_url, link_text)
+            # For anchor links (starting with #), just show the text without hyperlink
+            if link_url.startswith("#"):
+                _add_bold_and_text_runs(paragraph, link_text)
+            else:
+                add_hyperlink(paragraph, link_url, link_text)
         else:
             url = m.group("bare")
             add_hyperlink(paragraph, url, url)
@@ -267,13 +359,67 @@ def _add_links_and_text_runs(paragraph, text: str) -> None:
 
 
 def _add_inline_formatted_runs(paragraph, text: str) -> None:
-    # First, split into code and non-code spans
+    """Process inline formatting: links (with embedded code), code spans, bold.
+
+    Links are processed first to handle cases like [`<element>`](#anchor) where
+    the link text contains inline code.
+    """
+    # First pass: extract and process markdown links, preserving their structure
+    cursor = 0
+    segments = []  # List of (is_link, content) tuples
+
+    for m in _LINK_OR_URL_RE.finditer(text):
+        # Add text before the link
+        if m.start() > cursor:
+            segments.append((False, text[cursor:m.start()]))
+
+        # Handle the link
+        if m.group("link_url") is not None:
+            link_text = m.group("link_text")
+            link_url = m.group("link_url")
+            # For anchor links, just add the text (with potential code formatting)
+            if link_url.startswith("#"):
+                segments.append((False, link_text))
+            else:
+                # For real URLs, we'll add as hyperlink later
+                segments.append((True, (link_url, link_text)))
+        else:
+            # Bare URL
+            url = m.group("bare")
+            segments.append((True, (url, url)))
+
+        cursor = m.end()
+
+    # Add remaining text
+    if cursor < len(text):
+        segments.append((False, text[cursor:]))
+
+    # Second pass: process each segment for code spans and bold
+    for is_link, content in segments:
+        if is_link:
+            # Add hyperlink (content is tuple of (url, text))
+            url, link_text = content
+            # Process link text for code/bold before adding
+            temp_p = paragraph._element.getparent().makeelement(paragraph._element.tag)
+            temp_para = paragraph.__class__(temp_p, paragraph._parent)
+            _process_code_and_bold(temp_para, link_text)
+            # If temp paragraph has runs, use their text; otherwise use original
+            if temp_para.runs:
+                link_text = "".join(r.text or "" for r in temp_para.runs)
+            add_hyperlink(paragraph, url, link_text)
+        else:
+            # Regular text: process for code spans and bold
+            _process_code_and_bold(paragraph, content)
+
+
+def _process_code_and_bold(paragraph, text: str) -> None:
+    """Process text for inline code spans and bold, adding runs to paragraph."""
     cursor = 0
     for m in CODE_SPAN_RE.finditer(text):
         if m.start() > cursor:
             normal_text = text[cursor : m.start()]
             if normal_text:
-                _add_links_and_text_runs(paragraph, normal_text)
+                _add_bold_and_text_runs(paragraph, normal_text)
         code_txt = m.group(2) if m.group(2) is not None else m.group(3)
         r = paragraph.add_run(code_txt)
         r.font.name = "Consolas"
@@ -284,7 +430,7 @@ def _add_inline_formatted_runs(paragraph, text: str) -> None:
         cursor = m.end()
     if cursor < len(text):
         tail = text[cursor:]
-        _add_links_and_text_runs(paragraph, tail)
+        _add_bold_and_text_runs(paragraph, tail)
 
 
 def add_formatted_paragraph(document: Document, text: str):
@@ -571,6 +717,8 @@ def parse_markdown_to_docx(document: Document, md_text: str, base_dir: Path) -> 
             level = len(mhead.group(1))
             text = mhead.group(2).strip()
             # python-docx supports heading levels 0..9; use 1..6 for Markdown.
+            # Strip markdown formatting from heading text before adding
+            text = _strip_markdown_formatting(text)
             document.add_heading(text, level=level)
             current_heading_level = level
             i += 1
