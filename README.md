@@ -14,10 +14,10 @@ uv run python utils/write_iso_draft.py
 
 ## Reference
 
-To generate the reference from the input Excel file & example DocLang & image files, run:
+To generate the reference from the input Excel file & example DocLang & image files and update Appendix A in `iso-standard.md`, run:
 
 ```bash
-uv run python utils/generate_reference.py reference/input reference/output
+uv run python utils/generate_reference.py reference/input
 ```
 
 ## Validation
