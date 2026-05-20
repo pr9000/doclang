@@ -13,10 +13,10 @@ This document was prepared by
 | Christoph Auer | IBM | cau@zurich.ibm.com |
 | Michele Dolfi | IBM | dol@zurich.ibm.com |
 | Said Gürbüz | IBM | Said.Gurbuz@ibm.com |
-| Marlene Wolfgruber | ABBY | marlene.wolfgruber@abbyy.com |
-| Maxime Vermeir | ABBY | maxime.vermeir@abbyy.com |
-| Morgan Logue | ABBY | morgan.logue@abbyy.com |
-| Andrew Pery | ABBY | ??? |
+| Marlene Wolfgruber | ABBYY | marlene.wolfgruber@abbyy.com |
+| Maxime Vermeir | ABBYY | maxime.vermeir@abbyy.com |
+| Morgan Logue | ABBYY | morgan.logue@abbyy.com |
+| Andrew Pery | ABBYY | andrew.pery@abbyy.com |
 | Christopher Giblin | IBM | cgi@zurich.ibm.com|
 | Jehlum Vitasta Pandit | RedHat | jepandit@redhat.com |
 | Ali Maredia | RedHat | amaredia@redhat.com |
